@@ -1,0 +1,136 @@
+"use client";
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+} from "react";
+
+import {
+  DEFAULT_LOCALE,
+  type Locale,
+  type TranslationDictionary,
+} from "@/types/locale";
+
+const LOCALE_STORAGE_KEY = "nazma-locale";
+
+interface LanguageContextValue {
+  locale: Locale;
+  setLocale: (locale: Locale) => void;
+  t: (key: string) => string;
+  isLoading: boolean;
+}
+
+const LanguageContext = createContext<LanguageContextValue | null>(null);
+
+async function loadTranslations(locale: Locale): Promise<TranslationDictionary> {
+  const response = await fetch(`/locales/${locale}/common.json`);
+
+  if (!response.ok) {
+    throw new Error(`Failed to load translations for locale: ${locale}`);
+  }
+
+  return response.json() as Promise<TranslationDictionary>;
+}
+
+function getStoredLocale(): Locale {
+  if (typeof window === "undefined") {
+    return DEFAULT_LOCALE;
+  }
+
+  const stored = window.localStorage.getItem(LOCALE_STORAGE_KEY);
+
+  if (stored === "en" || stored === "bn") {
+    return stored;
+  }
+
+  return DEFAULT_LOCALE;
+}
+
+interface LanguageProviderProps {
+  children: React.ReactNode;
+}
+
+export function LanguageProvider({ children }: LanguageProviderProps) {
+  const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE);
+  const [translations, setTranslations] = useState<TranslationDictionary>({});
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    setLocaleState(getStoredLocale());
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchTranslations() {
+      setIsLoading(true);
+
+      try {
+        const dictionary = await loadTranslations(locale);
+
+        if (!cancelled) {
+          setTranslations(dictionary);
+        }
+      } catch {
+        if (!cancelled && locale !== DEFAULT_LOCALE) {
+          const fallback = await loadTranslations(DEFAULT_LOCALE);
+          setTranslations(fallback);
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void fetchTranslations();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [locale]);
+
+  useEffect(() => {
+    document.documentElement.lang = locale;
+  }, [locale]);
+
+  const setLocale = useCallback((nextLocale: Locale) => {
+    setLocaleState(nextLocale);
+    window.localStorage.setItem(LOCALE_STORAGE_KEY, nextLocale);
+  }, []);
+
+  const t = useCallback(
+    (key: string): string => {
+      return translations[key] ?? key;
+    },
+    [translations],
+  );
+
+  const value = useMemo<LanguageContextValue>(
+    () => ({
+      locale,
+      setLocale,
+      t,
+      isLoading,
+    }),
+    [locale, setLocale, t, isLoading],
+  );
+
+  return (
+    <LanguageContext.Provider value={value}>{children}</LanguageContext.Provider>
+  );
+}
+
+export function useLanguage(): LanguageContextValue {
+  const context = useContext(LanguageContext);
+
+  if (!context) {
+    throw new Error("useLanguage must be used within a LanguageProvider");
+  }
+
+  return context;
+}

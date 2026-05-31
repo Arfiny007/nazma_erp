@@ -1,13 +1,248 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../src/generated/prisma"
+  provider = "prisma-client-js"
 }
 
 datasource db {
   provider = "postgresql"
+}
+
+enum UserRole {
+  Super_Admin
+  Manager
+  Accounts
+  SR
+}
+
+enum OrderStatus {
+  Draft
+  Pending_Approval
+  Approved
+  Rejected
+  Delivered
+}
+
+enum InvoiceStatus {
+  Draft
+  Issued
+  Paid
+  Partial
+  Overdue
+}
+
+enum PaymentMethod {
+  Cash
+  Bank
+  Cheque
+  Mobile_Banking
+}
+
+enum DeliveryMode {
+  Truck
+  Courier
+  Pickup
+  Company_Delivery
+}
+
+model User {
+  id          String   @id @default(uuid())
+  name        String
+  email       String   @unique
+  password    String
+  role        UserRole
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Dealer {
+  id                String   @id @default(uuid())
+
+  dealerCode        String   @unique
+
+  companyName       String
+  proprietorName    String?
+
+  mobile            String
+  email             String?
+
+  address           String
+
+  district          String
+  territory         String
+
+  creditLimit       Decimal  @db.Decimal(18,2)
+  currentBalance    Decimal  @default(0) @db.Decimal(18,2)
+
+  isActive          Boolean  @default(true)
+
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  orders            SalesOrder[]
+  invoices          Invoice[]
+  collections       Collection[]
+  ledgerEntries     LedgerEntry[]
+  dueReports        DueReport[]
+}
+
+model Product {
+  id                String   @id @default(uuid())
+
+  sku               String   @unique
+
+  nameEn            String
+  nameBn            String
+
+  unitPrice         Decimal  @db.Decimal(18,2)
+
+  vatRate           Decimal  @db.Decimal(5,2)
+
+  createdAt         DateTime @default(now())
+
+  orderItems        SalesOrderItem[]
+}
+
+model SalesOrder {
+  id                String   @id @default(uuid())
+
+  orderNo           String   @unique
+
+  dealerCode        String
+
+  dealer            Dealer   @relation(fields: [dealerCode], references: [dealerCode])
+
+  status            OrderStatus
+
+  subtotal          Decimal @db.Decimal(18,2)
+  discount          Decimal @db.Decimal(18,2)
+  vat               Decimal @db.Decimal(18,2)
+  grandTotal        Decimal @db.Decimal(18,2)
+
+  createdAt         DateTime @default(now())
+
+  items             SalesOrderItem[]
+}
+
+model SalesOrderItem {
+  id                String @id @default(uuid())
+
+  orderId           String
+
+  order             SalesOrder @relation(fields: [orderId], references: [id])
+
+  productId         String
+
+  product           Product  @relation(fields: [productId], references: [id])
+
+  quantity          Decimal @db.Decimal(18,2)
+
+  unitPrice         Decimal @db.Decimal(18,2)
+
+  discount          Decimal @db.Decimal(18,2)
+
+  total             Decimal @db.Decimal(18,2)
+}
+
+model Invoice {
+  id                  String @id @default(uuid())
+
+  invoiceNo           String @unique
+
+  dealerCode          String
+
+  dealer              Dealer   @relation(fields: [dealerCode], references: [dealerCode])
+
+  orderId             String @unique
+
+  subtotal            Decimal @db.Decimal(18,2)
+  discount            Decimal @db.Decimal(18,2)
+  vat                 Decimal @db.Decimal(18,2)
+
+  previousDue         Decimal @db.Decimal(18,2)
+  collectionReceived  Decimal @db.Decimal(18,2)
+
+  grandTotal          Decimal @db.Decimal(18,2)
+  currentDue          Decimal @db.Decimal(18,2)
+
+  deliveryMode        DeliveryMode
+
+  vehicleNo           String?
+  driverName          String?
+
+  createdAt           DateTime @default(now())
+}
+
+model Collection {
+  id                  String @id @default(uuid())
+
+  receiptNo           String @unique
+
+  dealerCode          String
+
+  dealer              Dealer   @relation(fields: [dealerCode], references: [dealerCode])
+
+  amount              Decimal @db.Decimal(18,2)
+
+  paymentMethod       PaymentMethod
+
+  referenceNo         String?
+
+  attachmentUrl       String?
+
+  createdAt           DateTime @default(now())
+}
+
+model LedgerEntry {
+  id                  String @id @default(uuid())
+
+  dealerCode          String
+
+  dealer              Dealer   @relation(fields: [dealerCode], references: [dealerCode])
+
+  transactionDate     DateTime
+
+  referenceType       String
+  referenceId         String
+
+  debit               Decimal @db.Decimal(18,2)
+  credit              Decimal @db.Decimal(18,2)
+  balance             Decimal @db.Decimal(18,2)
+
+  remarks             String?
+
+  createdAt           DateTime @default(now())
+}
+
+model DueReport {
+  id                  String @id @default(uuid())
+
+  dealerCode          String
+
+  dealer              Dealer   @relation(fields: [dealerCode], references: [dealerCode])
+
+  totalDue            Decimal @db.Decimal(18,2)
+
+  overdueAmount       Decimal @db.Decimal(18,2)
+
+  overdueDays         Int
+
+  createdAt           DateTime @default(now())
+}
+
+model AuditLog {
+  id                  String @id @default(uuid())
+
+  userId              String
+
+  entityType          String
+
+  entityId            String
+
+  action              String
+
+  oldValue            Json?
+  newValue            Json?
+
+  createdAt           DateTime @default(now())
 }

@@ -1,0 +1,105 @@
+import {
+  BookOpen,
+  ClipboardList,
+  FileText,
+  LayoutDashboard,
+  Receipt,
+  Settings,
+  Shield,
+  Store,
+  Users,
+  Wallet,
+} from "lucide-react";
+
+import type { NavSection } from "@/types/navigation";
+
+export const NAV_SECTIONS: NavSection[] = [
+  {
+    id: "main",
+    items: [
+      {
+        id: "dashboard",
+        labelKey: "nav.dashboard",
+        href: "/",
+        icon: LayoutDashboard,
+        permission: "dashboard:view",
+      },
+      {
+        id: "dealers",
+        labelKey: "nav.dealers",
+        href: "/dealers",
+        icon: Store,
+        permission: "dealers:view",
+      },
+      {
+        id: "products",
+        labelKey: "nav.products",
+        href: "/products",
+        icon: ClipboardList,
+        permission: "products:view",
+      },
+      {
+        id: "orders",
+        labelKey: "nav.orders",
+        href: "/orders",
+        icon: FileText,
+        permission: "orders:view",
+      },
+      {
+        id: "invoices",
+        labelKey: "nav.invoices",
+        href: "/invoices",
+        icon: Receipt,
+        permission: "invoices:view",
+      },
+      {
+        id: "collections",
+        labelKey: "nav.collections",
+        href: "/collections",
+        icon: Wallet,
+        permission: "collections:view",
+      },
+      {
+        id: "ledger",
+        labelKey: "nav.ledger",
+        href: "/ledger",
+        icon: BookOpen,
+        permission: "ledger:view",
+      },
+    ],
+  },
+  {
+    id: "admin",
+    labelKey: "nav.administration",
+    items: [
+      {
+        id: "reports",
+        labelKey: "nav.reports",
+        href: "/reports",
+        icon: FileText,
+        permission: "reports:view",
+      },
+      {
+        id: "audit",
+        labelKey: "nav.audit",
+        href: "/audit",
+        icon: Shield,
+        permission: "audit:view",
+      },
+      {
+        id: "users",
+        labelKey: "nav.users",
+        href: "/users",
+        icon: Users,
+        permission: "users:manage",
+      },
+      {
+        id: "settings",
+        labelKey: "nav.settings",
+        href: "/settings",
+        icon: Settings,
+        permission: "settings:view",
+      },
+    ],
+  },
+];
