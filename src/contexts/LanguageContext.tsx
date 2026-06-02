@@ -55,34 +55,40 @@ interface LanguageProviderProps {
 }
 
 export function LanguageProvider({ children }: LanguageProviderProps) {
-  const [locale, setLocaleState] = useState<Locale>(DEFAULT_LOCALE);
+  const [locale, setLocaleState] = useState<Locale>(() => getStoredLocale());
   const [translations, setTranslations] = useState<TranslationDictionary>({});
-  const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    setLocaleState(getStoredLocale());
-  }, []);
+  const [loadedLocale, setLoadedLocale] = useState<Locale | null>(null);
+  const isLoading = loadedLocale !== locale;
 
   useEffect(() => {
     let cancelled = false;
 
     async function fetchTranslations() {
-      setIsLoading(true);
-
       try {
         const dictionary = await loadTranslations(locale);
 
         if (!cancelled) {
           setTranslations(dictionary);
+          setLoadedLocale(locale);
         }
       } catch {
-        if (!cancelled && locale !== DEFAULT_LOCALE) {
-          const fallback = await loadTranslations(DEFAULT_LOCALE);
-          setTranslations(fallback);
+        if (cancelled) {
+          return;
         }
-      } finally {
+
+        if (locale !== DEFAULT_LOCALE) {
+          try {
+            const fallback = await loadTranslations(DEFAULT_LOCALE);
+            if (!cancelled) {
+              setTranslations(fallback);
+            }
+          } catch {
+            // Keep previous translations when fallback loading fails.
+          }
+        }
+
         if (!cancelled) {
-          setIsLoading(false);
+          setLoadedLocale(locale);
         }
       }
     }

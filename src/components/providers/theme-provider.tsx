@@ -57,30 +57,25 @@ interface ThemeProviderProps {
 }
 
 export function ThemeProvider({ children }: ThemeProviderProps) {
-  const [theme, setThemeState] = useState<Theme>("system");
-  const [resolvedTheme, setResolvedTheme] = useState<"light" | "dark">("light");
+  const [theme, setThemeState] = useState<Theme>(() => getStoredTheme());
+  const [systemTheme, setSystemTheme] = useState<"light" | "dark">(() =>
+    getSystemTheme(),
+  );
+
+  const resolvedTheme = useMemo<"light" | "dark">(
+    () => (theme === "system" ? systemTheme : theme),
+    [theme, systemTheme],
+  );
 
   useEffect(() => {
-    setThemeState(getStoredTheme());
-  }, []);
+    applyTheme(resolvedTheme);
+  }, [resolvedTheme]);
 
   useEffect(() => {
-    const nextResolved = theme === "system" ? getSystemTheme() : theme;
-    setResolvedTheme(nextResolved);
-    applyTheme(nextResolved);
-  }, [theme]);
-
-  useEffect(() => {
-    if (theme !== "system") {
-      return;
-    }
-
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
 
     const handleChange = (): void => {
-      const nextResolved = getSystemTheme();
-      setResolvedTheme(nextResolved);
-      applyTheme(nextResolved);
+      setSystemTheme(mediaQuery.matches ? "dark" : "light");
     };
 
     mediaQuery.addEventListener("change", handleChange);
