@@ -1,0 +1,40 @@
+# Dependency directories (Never let the AI read these)
+node_modules/
+.pnp/
+.pnp.js
+
+# Next.js & Build outputs
+.next/
+out/
+build/
+dist/
+.cache/
+
+# Docker configurations (The AI doesn't need to read them after setup)
+.dockerignore
+
+# Git history
+.git/
+.gitignore
+
+# Media and heavy static assets (Saves massive context)
+public/images/
+public/videos/
+public/fonts/
+*.mp4
+*.zip
+*.pdf
+
+# Environment secrets (Critical for safety)
+.env
+.env.local
+.env.production
+*.key
+credentials.json
+
+# Logs and system files
+*.log
+npm-debug.log*
+yarn-error.log*
+.DS_Store
+Thumbs.db

@@ -2,7 +2,7 @@
 
 Current Phase:
 
-PHASE_02A_DEALER_DATABASE
+PHASE_02B_DEALER_LIST_UI
 
 Status:
 
@@ -12,53 +12,60 @@ COMPLETE
 
 ## Objectives
 
-Build the backend and data layer for Dealer Management (no UI):
+Build the Dealer List page and supporting UI components (read-only listing):
 
-* Dealer domain types
-* Zod validation (mobile + credit limit)
-* Dealer code generator (DLR-0001 format)
-* Credit limit utility (green / yellow / red)
-* Dealer server actions (create, update, delete, get, list)
-* Typed, serializable error responses
+* Dealer listing table (TanStack Table)
+* Debounced search input
+* Server-driven pagination controls
+* Loading skeletons
+* Empty + no-results states
+* Credit status badge (green / yellow / red)
+* English / Bengali localization
 
 ---
 
 ## Deliverables
 
-src/types/dealer.ts
+src/app/(dashboard)/dealers/page.tsx
 
-src/lib/validators/dealer.schema.ts
+src/components/dealers/dealer-table.tsx
 
-src/lib/utils/dealer-code.ts
+src/components/dealers/dealer-search.tsx
 
-src/lib/utils/credit-limit.ts
+src/components/dealers/dealer-credit-badge.tsx
 
-src/lib/actions/dealers/create-dealer.ts
+src/components/dealers/dealer-empty-state.tsx
 
-src/lib/actions/dealers/update-dealer.ts
+public/locales/en/common.json (dealer keys)
 
-src/lib/actions/dealers/delete-dealer.ts
+public/locales/bn/common.json (dealer keys)
 
-src/lib/actions/dealers/get-dealer.ts
+---
 
-src/lib/actions/dealers/list-dealers.ts
+## Implementation Notes
 
-src/lib/actions/dealers/helpers.ts
+* Uses the existing dashboard layout shell ((dashboard)/layout.tsx) and PageContainer.
+* Consumes the existing `listDealers` server action and `DealerDTO` types (no new data layer).
+* Server-side pagination and sorting via the action's page / sortBy / sortOrder params;
+  sortable columns are limited to those in `DEALER_SORT_FIELDS`.
+* Credit bands reuse the pre-computed `credit` utilization on each `DealerDTO`:
+  green 0-84%, yellow 85-99%, red 100%+.
+* Sticky table header, horizontal scroll for mobile, dimmed refetch state.
+* No mock data, no create/edit form, no profile page.
 
 ---
 
 ## Completion Criteria
 
-Phase 02A is complete when:
+Phase 02B is complete when:
 
-* Dealer model is verified against schema.prisma
-* Dealer code auto-generation works (DLR-0001, DLR-0002, ...)
-* Credit utilization returns green / yellow / red bands
-* All inputs validated with Zod (strict typing, no `any`)
-* Server actions use Prisma transactions where appropriate
-* Errors are returned as typed, serializable responses
-* TypeScript passes
-* ESLint passes
+* Dealer list renders real data from `listDealers`
+* Search, pagination, and column sorting work end-to-end
+* Credit status badge maps utilization to green / yellow / red
+* Loading skeletons, empty state, and error state are present
+* All user-facing strings use localization keys (en + bn)
+* TypeScript passes (`tsc --noEmit`)
+* ESLint passes (0 errors)
 
 All criteria met.
 
@@ -66,4 +73,4 @@ All criteria met.
 
 ## Next Phase
 
-PHASE_02B_DEALER_UI
+PHASE_02C_DEALER_FORMS
