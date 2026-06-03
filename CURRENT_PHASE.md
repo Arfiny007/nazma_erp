@@ -120,3 +120,46 @@ package.json (prisma.seed + seed script + tsx devDependency)
 ## Next Phase
 
 PHASE_03B_PRODUCT_LIST_UI
+
+---
+
+---
+
+# PHASE_03B_PRODUCT_LIST_UI
+
+Status: COMPLETE
+
+## Objectives
+
+Create a read-only Product List module matching the visual quality and UX pattern of the Dealer List module.
+
+## Deliverables
+
+src/app/(dashboard)/products/page.tsx
+
+src/components/products/product-table.tsx
+
+src/components/products/product-search.tsx
+
+src/components/products/product-status-badge.tsx
+
+src/components/products/product-empty-state.tsx
+
+public/locales/en/common.json (product translation keys)
+
+public/locales/bn/common.json (product translation keys)
+
+## Implementation Notes
+
+* `ProductTable` calls `listProducts()` server action with search, sort, and pagination params — no new backend APIs.
+* Price is formatted with `Intl.NumberFormat` (BDT, narrowSymbol) using the `currentPrice` decimal string from `ProductDTO`; no floating-point arithmetic.
+* `ProductStatusBadge` renders green (emerald) for active and gray (slate) for inactive — consistent with enterprise design system.
+* All UI strings use `t()` translation keys; zero hardcoded human strings.
+* Columns: Model Number, SKU, Product Name (with Bengali subtitle), Category, Current Price (right-aligned), Status.
+* Sticky table header, horizontal scroll on small viewports (`min-w-[760px]`), loading skeleton, empty state, error state with retry button.
+* Architecture mirrors `DealerTable` exactly: TanStack Table, manual sort/pagination, cancel-on-unmount fetch, `FetchStatus` discriminated state.
+* `tsc --noEmit` exits 0. ESLint exits 0 (1 expected TanStack warning, same as dealer module).
+
+## Next Phase
+
+PHASE_03C_PRODUCT_FORMS

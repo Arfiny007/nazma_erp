@@ -1,6 +1,7 @@
 "use client";
 
 import { Bell, Menu, Moon, Search, Sun, User } from "lucide-react";
+import { useEffect, useState } from "react";
 
 import { LanguageSwitcher } from "@/components/shared/language-switcher";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -22,6 +23,17 @@ export function Header({
 }: HeaderProps) {
   const { t } = useLanguage();
   const { theme, setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      setMounted(true);
+    }, 0);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+    };
+  }, []);
 
   const cycleTheme = (): void => {
     if (theme === "light") {
@@ -87,7 +99,9 @@ export function Header({
           aria-label={t("theme.toggle")}
           className="inline-flex size-9 items-center justify-center rounded-lg text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200"
         >
-          {resolvedTheme === "dark" ? (
+          {!mounted ? (
+            <Sun aria-hidden="true" className="size-4" />
+          ) : resolvedTheme === "dark" ? (
             <Moon aria-hidden="true" className="size-4" />
           ) : (
             <Sun aria-hidden="true" className="size-4" />
