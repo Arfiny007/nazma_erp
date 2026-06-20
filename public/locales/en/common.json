@@ -194,5 +194,22 @@
   "products.pagination.previous": "Previous",
   "products.pagination.next": "Next",
   "products.pagination.showing": "Showing",
-  "products.pagination.products": "products"
+  "products.pagination.products": "products",
+  "auth.login.title": "Sign In",
+  "auth.login.subtitle": "Sign in to continue to your dashboard",
+  "auth.login.formLabel": "Sign in form",
+  "auth.login.emailLabel": "Email address",
+  "auth.login.emailPlaceholder": "you@example.com",
+  "auth.login.passwordLabel": "Password",
+  "auth.login.passwordPlaceholder": "Enter your password",
+  "auth.login.showPassword": "Show password",
+  "auth.login.hidePassword": "Hide password",
+  "auth.login.signIn": "Sign In",
+  "auth.login.signingIn": "Signing in…",
+  "auth.error.emailRequired": "Email address is required.",
+  "auth.error.emailInvalid": "Enter a valid email address.",
+  "auth.error.passwordRequired": "Password is required.",
+  "auth.error.invalidCredentials": "Invalid email or password. Please try again.",
+  "auth.error.accountDisabled": "Your account has been deactivated. Please contact an administrator.",
+  "auth.error.unknown": "An unexpected error occurred. Please try again."
 }

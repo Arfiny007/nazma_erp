@@ -194,5 +194,22 @@
   "products.pagination.previous": "পূর্ববর্তী",
   "products.pagination.next": "পরবর্তী",
   "products.pagination.showing": "দেখানো হচ্ছে",
-  "products.pagination.products": "পণ্য"
+  "products.pagination.products": "পণ্য",
+  "auth.login.title": "সাইন ইন",
+  "auth.login.subtitle": "আপনার ড্যাশবোর্ডে প্রবেশ করতে সাইন ইন করুন",
+  "auth.login.formLabel": "সাইন ইন ফর্ম",
+  "auth.login.emailLabel": "ইমেইল ঠিকানা",
+  "auth.login.emailPlaceholder": "you@example.com",
+  "auth.login.passwordLabel": "পাসওয়ার্ড",
+  "auth.login.passwordPlaceholder": "আপনার পাসওয়ার্ড লিখুন",
+  "auth.login.showPassword": "পাসওয়ার্ড দেখুন",
+  "auth.login.hidePassword": "পাসওয়ার্ড লুকান",
+  "auth.login.signIn": "সাইন ইন",
+  "auth.login.signingIn": "সাইন ইন হচ্ছে…",
+  "auth.error.emailRequired": "ইমেইল ঠিকানা আবশ্যক।",
+  "auth.error.emailInvalid": "একটি বৈধ ইমেইল ঠিকানা লিখুন।",
+  "auth.error.passwordRequired": "পাসওয়ার্ড আবশ্যক।",
+  "auth.error.invalidCredentials": "ইমেইল বা পাসওয়ার্ড সঠিক নয়। আবার চেষ্টা করুন।",
+  "auth.error.accountDisabled": "আপনার অ্যাকাউন্ট নিষ্ক্রিয় করা হয়েছে। অনুগ্রহ করে প্রশাসকের সাথে যোগাযোগ করুন।",
+  "auth.error.unknown": "একটি অপ্রত্যাশিত ত্রুটি ঘটেছে। আবার চেষ্টা করুন।"
 }

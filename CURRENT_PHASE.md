@@ -2,7 +2,7 @@
 
 Current Phase:
 
-PHASE_03A_REVIEW_PRODUCT_SEEDS
+PHASE_AUTH_01_FOUNDATION
 
 Status:
 
@@ -12,116 +12,94 @@ COMPLETE
 
 ## Objectives
 
-Create the complete Product domain layer (catalog) that Orders and Invoices
-will later consume. Nazma Metal products are organized by Category and
-identified primarily by their Model Number (e.g. FV-222, FV-223-C, OVP6-507).
+Implement production-grade authentication for Nazma ERP using Auth.js v5 (next-auth@beta).
 
-* Category model (catalog grouping)
-* Product model keyed by unique SKU and unique Model Number
-* Decimal-safe pricing (`currentPrice`)
-* Type-safe domain layer (types, validators, server actions)
-* No UI, pages, forms, or mock data in this phase
+* Credentials-based login (email + password)
+* bcrypt password hashing
+* JWT session management
+* Middleware route protection (dashboard, dealers, products)
+* Super Admin seed (admin@nazma.local / Admin123!)
+* Inactive user blocking (isActive check)
+* Reusable auth helpers for future RBAC phase
+* Strict TypeScript, Zod validation, no any
 
 ---
 
 ## Deliverables
 
-prisma/schema.prisma (added `Category`, reshaped `Product`)
+auth.ts (project root) — Auth.js v5 NextAuth configuration
 
-src/types/product.ts
+middleware.ts (project root) — JWT-based route protection
 
-src/lib/validators/product.schema.ts
+src/types/auth.ts — AuthUser, AuthSession type definitions
 
-src/lib/actions/products/helpers.ts
+src/types/next-auth.d.ts — Module augmentation for Session, User, JWT
 
-src/lib/actions/products/create-product.ts
+src/lib/auth/helpers.ts — getSession, getCurrentUser, getCurrentRole, requireUser, requireRole
 
-src/lib/actions/products/update-product.ts
+src/lib/actions/auth/login.ts — loginAction server action (Zod + signIn)
 
-src/lib/actions/products/delete-product.ts
+src/app/(auth)/layout.tsx — Auth shell layout (no sidebar)
 
-src/lib/actions/products/get-product.ts
+src/app/(auth)/login/page.tsx — Login page (Server Component)
 
-src/lib/actions/products/list-products.ts
+src/components/auth/login-form.tsx — Login form (Client Component, RHF + Zod)
+
+src/components/providers/session-provider.tsx — NextAuth SessionProvider wrapper
+
+src/app/api/auth/[...nextauth]/route.ts — Auth.js route handler
+
+prisma/seeds/admin-user.ts — Idempotent Super Admin seed (bcrypt hashed)
+
+prisma/seed.ts (updated) — Includes admin user seed
+
+src/app/layout.tsx (updated) — Wraps app with SessionProvider
+
+public/locales/en/common.json (updated) — auth.* translation keys
+
+public/locales/bn/common.json (updated) — auth.* translation keys (Bengali)
 
 ---
 
 ## Implementation Notes
 
-* `Category` -> `Product` is a one-to-many relation; `Product` keeps its
-  existing `orderItems SalesOrderItem[]` relation so Orders can reference it.
-* `currentPrice` is `Decimal @db.Decimal(18,2)`; it is serialized to a
-  fixed-precision decimal string in `ProductDTO` (Decimal is not serializable
-  across the Server/Client boundary).
-* SKU and Model Number are validated, normalized to uppercase, and enforced as
-  unique both at the application level (precise field errors inside the
-  transaction) and via database unique constraints (`fromPrismaError` P2002).
-* Server actions follow the Dealer module patterns exactly: Zod validation,
-  Prisma `$transaction`, the `ActionResult<T>` discriminated union, typed
-  error envelopes with localization `messageKey`s, and DTO serialization.
-* `createProduct` / `updateProduct` verify the referenced category exists;
-  `deleteProduct` blocks removal when dependent order items exist
-  (PRODUCT_HAS_DEPENDENCIES), preferring deactivation.
-* `getProduct` resolves by `id`, `sku`, or `modelNumber`; `listProducts`
-  supports search, category/active filters, sorting, and pagination, with the
-  owning category eagerly included.
-* Strict TypeScript throughout: no `any`, no mock data, no UI.
+* Auth.js v5 (next-auth@beta.31) uses JWT strategy — no database sessions, no PrismaAdapter required
+* `AUTH_SECRET` added to .env
+* Credentials provider validates via Zod then bcrypt.compare
+* Custom CredentialsSignin subclasses: `InvalidCredentialsError` (code: invalid_credentials) and `AccountDisabledError` (code: account_disabled)
+* Middleware wraps `auth()` from auth.ts; authenticated users redirected away from /login
+* All protected routes (/*, /dealers, /products, etc.) require session
+* Super Admin seed is idempotent — re-running is safe
+* Password: bcrypt with 12 salt rounds
+* `requireUser()` and `requireRole()` helpers ready for RBAC phase
+* TypeScript strict mode — 0 errors
+* ESLint — 0 errors on new files (2 pre-existing TanStack warnings in dealer/product modules unchanged)
 
 ---
 
 ## Completion Criteria
 
-Phase 03A is complete when:
-
-* `Category` and `Product` models exist with the required fields and relations
-* Product domain types, Zod validators, and CRUD + list server actions exist
-* SKU and Model Number uniqueness are validated
-* Decimal fields are serialized safely in the DTO layer
-* `prisma generate` succeeds
-* TypeScript passes (`tsc --noEmit`)
-* ESLint passes (0 errors)
-
-All criteria met.
-
----
-
----
-
-## Objectives (PHASE_03A_REVIEW_PRODUCT_SEEDS)
-
-Create a seed structure for Nazma Metal product categories.
-
-* `prisma/seeds/product-categories.ts` — idempotent upsert of all 12 categories
-* `prisma/seed.ts` — Prisma seed entry point
-* `package.json` — `prisma.seed` configured, `seed` script added, `tsx` installed
-
----
-
-## Deliverables
-
-prisma/seeds/product-categories.ts
-
-prisma/seed.ts
-
-package.json (prisma.seed + seed script + tsx devDependency)
-
----
-
-## Implementation Notes
-
-* Upsert is keyed on `slug` (unique constraint). Re-running the seed updates
-  `name` and `isActive` in place — no duplicate rows, fully idempotent.
-* No products seeded.
-* No Product CRUD actions modified.
-* `tsc --noEmit` exits 0.
+* Login works: ✓
+* Password hashing: ✓ (bcrypt, 12 rounds)
+* Session management: ✓ (JWT)
+* Middleware protection: ✓
+* Super Admin seed: ✓ (admin@nazma.local / Admin123!)
+* Inactive users blocked: ✓
+* TypeScript passes: ✓ (tsc --noEmit exits 0)
+* ESLint passes: ✓ (0 errors on auth files)
+* Governance files updated: ✓
 
 ---
 
 ## Next Phase
 
-PHASE_03B_PRODUCT_LIST_UI
+PHASE_AUTH_02_RBAC
 
 ---
+
+---
+
+# Previous Phases
 
 ---
 
