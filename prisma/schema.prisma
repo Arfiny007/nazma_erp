@@ -1,4 +1,3 @@
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -46,227 +45,313 @@ enum DeliveryMode {
 }
 
 model User {
-  id          String   @id @default(uuid())
-  name        String
-  email       String   @unique
-  password    String
-  role        UserRole
+  id       String   @id @default(uuid())
+  name     String
+  email    String   @unique
+  password String
+  role     UserRole
 
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  ordersCreated  SalesOrder[] @relation("OrderCreatedBy")
+  ordersApproved SalesOrder[] @relation("OrderApprovedBy")
+  auditLogs      AuditLog[]
 }
 
 model Dealer {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  dealerCode        String   @unique
+  dealerCode String @unique
 
-  companyName       String
-  proprietorName    String?
+  companyName    String
+  proprietorName String?
 
-  mobile            String
-  email             String?
+  mobile String
+  email  String?
 
-  address           String
+  address String
 
-  district          String
-  territory         String
+  district  String
+  territory String
 
-  creditLimit       Decimal  @db.Decimal(18,2)
-  currentBalance    Decimal  @default(0) @db.Decimal(18,2)
+  creditLimit    Decimal @db.Decimal(18, 2)
+  currentBalance Decimal @default(0) @db.Decimal(18, 2)
 
-  isActive          Boolean  @default(true)
+  isActive Boolean @default(true)
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  orders            SalesOrder[]
-  invoices          Invoice[]
-  collections       Collection[]
-  ledgerEntries     LedgerEntry[]
-  dueReports        DueReport[]
+  projects      Project[]
+  orders        SalesOrder[]
+  invoices      Invoice[]
+  collections   Collection[]
+  ledgerEntries LedgerEntry[]
+  dueReports    DueReport[]
+}
+
+model Project {
+  id       String @id @default(cuid())
+  dealerId String
+  dealer   Dealer @relation(fields: [dealerId], references: [id])
+
+  projectCode  String  @unique
+  name         String
+  address      String?
+  contactName  String?
+  contactPhone String?
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  orders SalesOrder[]
+
+  @@unique([dealerId, name])
+  @@index([dealerId])
+  @@index([name])
 }
 
 model Category {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  name              String
-  slug              String   @unique
+  name String
+  slug String @unique
 
-  isActive          Boolean  @default(true)
+  isActive Boolean @default(true)
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  products          Product[]
+  products Product[]
 }
 
 model Product {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  sku               String   @unique
-  modelNumber       String   @unique
+  sku         String @unique
+  modelNumber String @unique
 
-  name              String
-  nameBn            String?
+  name   String
+  nameBn String?
 
-  categoryId        String
-  category          Category @relation(fields: [categoryId], references: [id])
+  categoryId String
+  category   Category @relation(fields: [categoryId], references: [id])
 
-  unit              String   @default("PCS")
+  unit String @default("PCS")
 
-  description       String?
+  description String?
 
-  currentPrice      Decimal  @db.Decimal(18,2)
+  currentPrice Decimal @db.Decimal(18, 2)
 
-  isActive          Boolean  @default(true)
+  isActive Boolean @default(true)
 
-  createdAt         DateTime @default(now())
-  updatedAt         DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
-  orderItems        SalesOrderItem[]
+  orderItems SalesOrderItem[]
 }
 
 model SalesOrder {
-  id                String   @id @default(uuid())
+  id String @id @default(uuid())
 
-  orderNo           String   @unique
+  orderNo String @unique
 
-  dealerCode        String
+  dealerCode String
 
-  dealer            Dealer   @relation(fields: [dealerCode], references: [dealerCode])
+  dealer Dealer @relation(fields: [dealerCode], references: [dealerCode])
 
-  status            OrderStatus
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id])
 
-  subtotal          Decimal @db.Decimal(18,2)
-  discount          Decimal @db.Decimal(18,2)
-  vat               Decimal @db.Decimal(18,2)
-  grandTotal        Decimal @db.Decimal(18,2)
+  status OrderStatus
 
-  createdAt         DateTime @default(now())
+  subtotal   Decimal @db.Decimal(18, 2)
+  discount   Decimal @db.Decimal(18, 2)
+  vat        Decimal @db.Decimal(18, 2)
+  grandTotal Decimal @db.Decimal(18, 2)
 
-  items             SalesOrderItem[]
+  createdById String?
+  createdBy   User?   @relation("OrderCreatedBy", fields: [createdById], references: [id])
+
+  approvedById String?
+  approvedBy   User?   @relation("OrderApprovedBy", fields: [approvedById], references: [id])
+
+  approvedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items   SalesOrderItem[]
+  invoice Invoice?
+
+  @@index([dealerCode])
+  @@index([projectId])
+  @@index([status])
+  @@index([createdById])
+  @@index([approvedById])
+  @@index([createdAt])
 }
 
 model SalesOrderItem {
-  id                String @id @default(uuid())
+  id String @id @default(uuid())
 
-  orderId           String
+  orderId String
 
-  order             SalesOrder @relation(fields: [orderId], references: [id])
+  order SalesOrder @relation(fields: [orderId], references: [id])
 
-  productId         String
+  productId String
 
-  product           Product  @relation(fields: [productId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
 
-  quantity          Decimal @db.Decimal(18,2)
+  quantity Decimal @db.Decimal(18, 2)
 
-  unitPrice         Decimal @db.Decimal(18,2)
+  unitPrice Decimal @db.Decimal(18, 2)
 
-  discount          Decimal @db.Decimal(18,2)
+  discount Decimal @db.Decimal(18, 2)
 
-  total             Decimal @db.Decimal(18,2)
+  total Decimal @db.Decimal(18, 2)
+
+  @@index([orderId])
+  @@index([productId])
 }
 
 model Invoice {
-  id                  String @id @default(uuid())
+  id String @id @default(uuid())
 
-  invoiceNo           String @unique
+  invoiceNo String @unique
 
-  dealerCode          String
+  dealerCode String
 
-  dealer              Dealer   @relation(fields: [dealerCode], references: [dealerCode])
+  dealer Dealer @relation(fields: [dealerCode], references: [dealerCode])
 
-  orderId             String @unique
+  orderId String     @unique
+  order   SalesOrder @relation(fields: [orderId], references: [id])
 
-  subtotal            Decimal @db.Decimal(18,2)
-  discount            Decimal @db.Decimal(18,2)
-  vat                 Decimal @db.Decimal(18,2)
+  status InvoiceStatus @default(Draft)
 
-  previousDue         Decimal @db.Decimal(18,2)
-  collectionReceived  Decimal @db.Decimal(18,2)
+  subtotal Decimal @db.Decimal(18, 2)
+  discount Decimal @db.Decimal(18, 2)
+  vat      Decimal @db.Decimal(18, 2)
 
-  grandTotal          Decimal @db.Decimal(18,2)
-  currentDue          Decimal @db.Decimal(18,2)
+  previousDue        Decimal @db.Decimal(18, 2)
+  collectionReceived Decimal @db.Decimal(18, 2)
 
-  deliveryMode        DeliveryMode
+  grandTotal Decimal @db.Decimal(18, 2)
+  currentDue Decimal @db.Decimal(18, 2)
 
-  vehicleNo           String?
-  driverName          String?
+  deliveryMode DeliveryMode
 
-  createdAt           DateTime @default(now())
+  vehicleNo  String?
+  driverName String?
+
+  issueDate DateTime @default(now())
+  dueDate   DateTime
+
+  createdAt DateTime @default(now())
+
+  collections Collection[]
+
+  @@index([dealerCode])
+  @@index([status])
+  @@index([dueDate])
+  @@index([createdAt])
 }
 
 model Collection {
-  id                  String @id @default(uuid())
+  id String @id @default(uuid())
 
-  receiptNo           String @unique
+  receiptNo String @unique
 
-  dealerCode          String
+  dealerCode String
 
-  dealer              Dealer   @relation(fields: [dealerCode], references: [dealerCode])
+  dealer Dealer @relation(fields: [dealerCode], references: [dealerCode])
 
-  amount              Decimal @db.Decimal(18,2)
+  invoiceId String?
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id])
 
-  paymentMethod       PaymentMethod
+  amount Decimal @db.Decimal(18, 2)
 
-  referenceNo         String?
+  paymentMethod PaymentMethod
 
-  attachmentUrl       String?
+  referenceNo String?
 
-  createdAt           DateTime @default(now())
+  attachmentUrl String?
+
+  createdAt DateTime @default(now())
+
+  @@index([dealerCode])
+  @@index([invoiceId])
+  @@index([paymentMethod])
+  @@index([createdAt])
 }
 
 model LedgerEntry {
-  id                  String @id @default(uuid())
+  id String @id @default(uuid())
 
-  dealerCode          String
+  dealerCode String
 
-  dealer              Dealer   @relation(fields: [dealerCode], references: [dealerCode])
+  dealer Dealer @relation(fields: [dealerCode], references: [dealerCode])
 
-  transactionDate     DateTime
+  transactionDate DateTime
 
-  referenceType       String
-  referenceId         String
+  referenceType String
+  referenceId   String
 
-  debit               Decimal @db.Decimal(18,2)
-  credit              Decimal @db.Decimal(18,2)
-  balance             Decimal @db.Decimal(18,2)
+  debit   Decimal @db.Decimal(18, 2)
+  credit  Decimal @db.Decimal(18, 2)
+  balance Decimal @db.Decimal(18, 2)
 
-  remarks             String?
+  remarks String?
 
-  createdAt           DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@index([dealerCode])
+  @@index([transactionDate])
+  @@index([referenceType, referenceId])
 }
 
 model DueReport {
-  id                  String @id @default(uuid())
+  id String @id @default(uuid())
 
-  dealerCode          String
+  dealerCode String
 
-  dealer              Dealer   @relation(fields: [dealerCode], references: [dealerCode])
+  dealer Dealer @relation(fields: [dealerCode], references: [dealerCode])
 
-  totalDue            Decimal @db.Decimal(18,2)
+  totalDue Decimal @db.Decimal(18, 2)
 
-  overdueAmount       Decimal @db.Decimal(18,2)
+  overdueAmount Decimal @db.Decimal(18, 2)
 
-  overdueDays         Int
+  overdueDays Int
 
-  createdAt           DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@index([dealerCode])
+  @@index([createdAt])
 }
 
 model AuditLog {
-  id                  String @id @default(uuid())
+  id String @id @default(uuid())
 
-  userId              String
+  userId String
+  user   User   @relation(fields: [userId], references: [id])
 
-  entityType          String
+  entityType String
 
-  entityId            String
+  entityId String
 
-  action              String
+  action String
 
-  oldValue            Json?
-  newValue            Json?
+  oldValue Json?
+  newValue Json?
 
-  createdAt           DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([entityType, entityId])
+  @@index([createdAt])
 }
