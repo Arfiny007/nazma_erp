@@ -14,8 +14,11 @@ import {
   ChevronsUpDown,
   ChevronDown,
   ChevronUp,
+  Pencil,
 } from "lucide-react";
+import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { useSession } from "next-auth/react";
 
 import { ProductEmptyState } from "@/components/products/product-empty-state";
 import { ProductSearch } from "@/components/products/product-search";
@@ -23,6 +26,7 @@ import { ProductStatusBadge } from "@/components/products/product-status-badge";
 import { TableSkeleton } from "@/components/shared/loading-skeleton";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { listProducts } from "@/lib/actions/products/list-products";
+import { hasPermission } from "@/lib/permissions";
 import { cn } from "@/lib/utils";
 import {
   PRODUCT_SORT_FIELDS,
@@ -31,9 +35,10 @@ import {
   type ProductSortField,
   type SortOrder,
 } from "@/types/product";
+import type { UserRole } from "@prisma/client";
 
 const PAGE_SIZE = 20;
-const COLUMN_COUNT = 6;
+const COLUMN_COUNT = 7;
 
 type FetchStatus = "idle" | "loading" | "success" | "error";
 
@@ -45,6 +50,9 @@ const columnHelper = createColumnHelper<ProductDTO>();
 
 export function ProductTable() {
   const { t, locale } = useLanguage();
+  const { data: session } = useSession();
+  const userRole = session?.user?.role as UserRole | undefined;
+  const canEdit = userRole ? hasPermission(userRole, "products:edit") : false;
 
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
@@ -199,8 +207,24 @@ export function ProductTable() {
         enableSorting: false,
         cell: (info) => <ProductStatusBadge isActive={info.getValue()} />,
       }),
+      columnHelper.display({
+        id: "actions",
+        header: () => null,
+        enableSorting: false,
+        cell: (info) =>
+          canEdit ? (
+            <Link
+              href={`/products/${info.row.original.id}/edit`}
+              aria-label={t("products.actions.editProduct")}
+              className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900 dark:text-slate-400 dark:hover:bg-slate-800 dark:hover:text-slate-100"
+            >
+              <Pencil aria-hidden="true" className="size-3.5" />
+              {t("products.actions.edit")}
+            </Link>
+          ) : null,
+      }),
     ],
-    [t, formatMoney],
+    [t, formatMoney, canEdit],
   );
 
   const table = useReactTable({

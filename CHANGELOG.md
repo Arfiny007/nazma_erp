@@ -4,6 +4,37 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_03C_PRODUCT_FORMS] — 2026-06-20
+
+### Added
+
+- **ProductForm** — `src/components/products/product-form.tsx`: Shared create/edit form with money input, toggle, category select, unsaved-change indicator, success feedback, and field-level error display
+- **ProductFormSection** — `src/components/products/product-form-section.tsx`: Section card wrapper for grouping product form fields
+- **DeactivateProductDialog** — `src/components/products/deactivate-product-dialog.tsx`: Accessible confirmation modal for soft-deactivating a product (isActive = false)
+- **New Product page** — `/products/new`: Server Component enforces `products:create`; fetches categories server-side; renders client form
+- **Edit Product page** — `/products/[id]/edit`: Server Component enforces `products:edit`; fetches product + categories; renders client form with prefilled values
+- **listActiveCategories** — `src/lib/actions/products/list-categories.ts`: Returns active categories alphabetically for the category dropdown
+- **ADR-004** — `docs/ADR/ADR-004-product-forms.md`: Documents hybrid page architecture, three-layer RBAC, and soft-delete decision
+
+### Modified
+
+- `src/lib/actions/products/create-product.ts` — `requirePermission("products:create")` guard added at the top of the action
+- `src/lib/actions/products/update-product.ts` — `requirePermission("products:edit")` guard added at the top of the action
+- `src/components/products/product-table.tsx` — Edit link column added (visible only to `products:edit` users via `useSession`)
+- `src/app/(dashboard)/products/page.tsx` — New Product button added (visible only to `products:create` users via `useSession`)
+- `middleware.ts` — `/products/new` → `products:create` and `/dealers/new` → `dealers:create` added as more-specific routes before the general view-only prefixes
+- `public/locales/en/common.json` — 60+ new keys: `products.form.*`, `products.deactivate.*`, `products.actions.*`, `validation.*` (sku, modelNumber, name, nameBn, categoryId, unit, description)
+- `public/locales/bn/common.json` — Bengali translations for all new keys
+
+### Architecture Notes
+
+- **Three-layer RBAC**: middleware prefix → `enforcePermission()` in server component → `requirePermission()` in server action
+- **Soft-delete only**: Deactivate sets `isActive = false`; no hard delete exposed in UI; historical data integrity preserved
+- **Hybrid page pattern**: Server Component shell for enforcement + data fetch; Client Component for UI + translations
+- **Category select**: Populated from live database at request time; only active categories shown
+
+---
+
 ## [PHASE_AUTH_02_RBAC] — 2026-06-20
 
 ### Added

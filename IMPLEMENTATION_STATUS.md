@@ -15,9 +15,67 @@ Last updated: 2026-06-20
 | PHASE_03A_PRODUCT_BACKEND | Product domain: Category + Product models, CRUD | ✅ COMPLETE |
 | PHASE_03A_REVIEW_PRODUCT_SEEDS | Product category seeds (12 categories, 20 products) | ✅ COMPLETE |
 | PHASE_03B_PRODUCT_LIST_UI | Product list with table, search, pagination | ✅ COMPLETE |
+| PHASE_03C_PRODUCT_FORMS | Product create/edit forms, deactivate workflow | ✅ COMPLETE |
 | PHASE_00B_SCHEMA_HARDENING | Full Prisma schema with all domain models | ✅ COMPLETE |
 | PHASE_AUTH_01_FOUNDATION | Auth.js v5 Credentials, login page, middleware, seed | ✅ COMPLETE |
 | PHASE_AUTH_02_RBAC | Role-Based Access Control, permission matrix, guards, 403 page | ✅ COMPLETE |
+
+---
+
+## Product Forms Module — Verification
+
+| Criterion | Status |
+|-----------|--------|
+| Create Product page at /products/new | ✅ |
+| Edit Product page at /products/[id]/edit | ✅ |
+| Category select populated from live database | ✅ |
+| Deactivate (soft-delete) with confirmation dialog | ✅ |
+| Form prefill on edit mode | ✅ |
+| Success feedback + auto-redirect to /products | ✅ |
+| Unsaved changes indicator | ✅ |
+| Error state for product not found (edit) | ✅ |
+| RBAC: enforcePermission in server component pages | ✅ |
+| RBAC: requirePermission in server actions | ✅ |
+| RBAC: role-aware New Product button | ✅ |
+| RBAC: role-aware Edit links in product table | ✅ |
+| Middleware: /products/new → products:create | ✅ |
+| Money input (Decimal-safe, no floating-point) | ✅ |
+| EN + BN translations (60+ keys) | ✅ |
+| TypeScript strict — tsc --noEmit exits 0 | ✅ |
+| ESLint — 0 errors | ✅ |
+| ADR-004 created | ✅ |
+
+---
+
+## Files Created — PHASE_03C_PRODUCT_FORMS
+
+```
+src/lib/actions/products/list-categories.ts
+src/components/products/product-form-section.tsx
+src/components/products/product-form.tsx
+src/components/products/deactivate-product-dialog.tsx
+src/app/(dashboard)/products/new/page.tsx
+src/app/(dashboard)/products/new/page-client.tsx
+src/app/(dashboard)/products/[id]/edit/page.tsx
+src/app/(dashboard)/products/[id]/edit/page-client.tsx
+docs/ADR/ADR-004-product-forms.md
+```
+
+## Files Modified — PHASE_03C_PRODUCT_FORMS
+
+```
+src/lib/actions/products/create-product.ts
+src/lib/actions/products/update-product.ts
+src/components/products/product-table.tsx
+src/app/(dashboard)/products/page.tsx
+middleware.ts
+public/locales/en/common.json
+public/locales/bn/common.json
+CURRENT_PHASE.md
+CHANGELOG.md
+IMPLEMENTATION_STATUS.md
+NEXT_ACTION.md
+```
 
 ---
 
@@ -125,7 +183,6 @@ package.json (next-auth, bcryptjs, @auth/prisma-adapter added)
 
 | Phase | Description |
 |-------|-------------|
-| PHASE_03C_PRODUCT_FORMS | Product create/edit forms |
 | PHASE_04_SALES_ORDERS | Sales order workflow |
 | PHASE_05_INVOICE_ENGINE | Invoice generation |
 | PHASE_06_COLLECTIONS | Payment collections |

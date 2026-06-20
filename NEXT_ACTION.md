@@ -2,51 +2,55 @@
 
 ## Current State
 
-PHASE_AUTH_02_RBAC is COMPLETE.
+PHASE_03C_PRODUCT_FORMS is COMPLETE.
 
-RBAC infrastructure is fully in place:
-- Centralized permission matrix in src/lib/permissions.ts
-- RBAC helpers (canView, canCreate, canEdit, canDelete, canApprove) in src/lib/rbac/index.ts
-- Server action guards (requirePermission, ForbiddenError) in src/lib/rbac/guards.ts
-- Server component guards (enforcePermission, enforceAuth) in src/lib/rbac/guards.ts
-- Middleware enforces 11 route prefixes with permission-based redirects
-- 403 Access Denied page at /access-denied (bilingual, responsive)
-- Dashboard layout reads real session and passes userRole to sidebar
-- Sidebar and MobileNav filter navigation by actual user role
+Product management module is fully functional:
+- Create Product at /products/new (enforces products:create)
+- Edit Product at /products/[id]/edit (enforces products:edit)
+- Deactivate Product via confirmation dialog (soft-delete, isActive = false)
+- Role-aware New Product button and Edit links
+- Three-layer RBAC: middleware → enforcePermission → requirePermission
+- Full EN + BN localization
+- All server actions protected with requirePermission guards
 
 ---
 
-## Next Phase: PHASE_03C_PRODUCT_FORMS
+## Next Phase: PHASE_04_SALES_ORDERS
 
 ### Objective
 
-Build Product create/edit forms following the established Dealer Forms pattern.
+Build the Sales Order module following the established module pattern.
+
+### Prerequisites
+
+- Product Management is complete ✅
+- Dealer Management is complete ✅
+- RBAC infrastructure is in place ✅
 
 ### Tasks
 
-1. Create `src/app/(dashboard)/products/new/page.tsx` — new product form
-2. Create `src/app/(dashboard)/products/[sku]/edit/page.tsx` — edit product form
-3. Reuse `src/components/dealers/dealer-form.tsx` pattern for product form
-4. Use `enforcePermission("products:create")` in new product page
-5. Use `enforcePermission("products:edit")` in edit product page
-6. Use `requirePermission("products:create")` in createProduct server action
-7. Use `requirePermission("products:edit")` in updateProduct server action
-8. Add product form translation keys to locales
+1. Design and validate Sales Order schema (already scaffolded in PHASE_00B)
+2. Create order domain types and validators
+3. Create server actions: createOrder, updateOrder, listOrders, getOrder
+4. Build Order list UI with table, search, pagination
+5. Build Order create form (select dealer, add product lines, pricing)
+6. Implement order approval workflow (Manager role)
+7. RBAC: SR can create, Manager can approve, all can view
 
-### Guard Usage Pattern for Future Modules
+### Guard Usage Pattern
 
 ```typescript
 // In Server Component pages (page.tsx)
 import { enforcePermission } from "@/lib/rbac/guards";
-await enforcePermission("products:create"); // redirects to /access-denied if unauthorized
+await enforcePermission("orders:create");
 
 // In Server Actions
 import { requirePermission } from "@/lib/rbac/guards";
-const user = await requirePermission("products:create"); // throws ForbiddenError if unauthorized
+const user = await requirePermission("orders:create");
 
 // In Client Components (conditional rendering)
-import { canCreate } from "@/lib/rbac";
-const showButton = canCreate(userRole, "products");
+import { hasPermission } from "@/lib/permissions";
+const canApprove = hasPermission(userRole, "orders:approve");
 ```
 
 ---
@@ -61,9 +65,10 @@ const showButton = canCreate(userRole, "products");
 
 ## Notes
 
-- Do NOT begin Orders, Invoices, Collections, Ledger, or Due Reports
+- Do NOT begin Invoices, Collections, Ledger, or Due Reports
 - All new server actions MUST call `requirePermission()` at the top
 - All new protected pages MUST call `enforcePermission()` at the top
 - Never expose raw Prisma errors to the client
 - Never use `any` type
 - Never hardcode role checks — use helpers from src/lib/rbac/
+- Follow hybrid Server Component + Client Component page pattern established in PHASE_03C

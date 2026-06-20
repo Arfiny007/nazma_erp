@@ -2,13 +2,122 @@
 
 Current Phase:
 
-PHASE_AUTH_02_RBAC
+PHASE_03C_PRODUCT_FORMS
 
 Status:
 
 COMPLETE
 
 ---
+
+## Objectives
+
+Build production-grade Create, Edit, and Deactivate workflows for the Product module.
+
+* Shared `ProductForm` component (create + edit modes)
+* `/products/new` — New Product page (Server Component + RBAC guard)
+* `/products/[id]/edit` — Edit Product page (Server Component + RBAC guard)
+* Soft-delete deactivation via `DeactivateProductDialog` (isActive = false)
+* Live category select from database (no hardcoded options)
+* Three-layer RBAC: middleware + server component guard + server action guard
+* Enterprise UX: loading skeleton, error state, unsaved changes indicator, success feedback
+* EN + BN localization — 60+ new translation keys
+* TypeScript strict — 0 errors
+* ESLint — 0 errors
+
+---
+
+## Deliverables
+
+src/lib/actions/products/list-categories.ts (new) — listActiveCategories() server action
+
+src/components/products/product-form-section.tsx (new) — Section card wrapper for form groups
+
+src/components/products/product-form.tsx (new) — Shared ProductForm (create/edit modes, money input, toggle, category select)
+
+src/components/products/deactivate-product-dialog.tsx (new) — Accessible modal for soft-delete confirmation
+
+src/app/(dashboard)/products/new/page.tsx (new) — Server Component shell; enforces products:create
+
+src/app/(dashboard)/products/new/page-client.tsx (new) — Client Component; translated page header + ProductForm
+
+src/app/(dashboard)/products/[id]/edit/page.tsx (new) — Server Component shell; enforces products:edit; fetches product + categories
+
+src/app/(dashboard)/products/[id]/edit/page-client.tsx (new) — Client Component; edit page rendering, deactivate trigger, error state
+
+src/lib/actions/products/create-product.ts (updated) — requirePermission("products:create") guard added
+
+src/lib/actions/products/update-product.ts (updated) — requirePermission("products:edit") guard added
+
+src/components/products/product-table.tsx (updated) — Edit link column (canEdit-aware), useSession for role check
+
+src/app/(dashboard)/products/page.tsx (updated) — New Product button (canCreate-aware)
+
+middleware.ts (updated) — /products/new and /dealers/new added as more-specific routes
+
+public/locales/en/common.json (updated) — products.form.*, products.deactivate.*, validation.* keys
+
+public/locales/bn/common.json (updated) — Bengali translations for all new keys
+
+docs/ADR/ADR-004-product-forms.md (new) — Architecture decisions documented
+
+---
+
+## RBAC Architecture
+
+### Three-Layer Defense
+
+| Layer | Location | Mechanism |
+|-------|----------|-----------|
+| Middleware | middleware.ts | `/products/new` → `products:create` prefix match |
+| Server Component | page.tsx | `enforcePermission()` → redirects to /access-denied |
+| Server Action | create-product.ts, update-product.ts | `requirePermission()` → returns INTERNAL_ERROR result |
+
+### Role Access Matrix (Products)
+
+| Role | View | Create | Edit | Deactivate |
+|------|------|--------|------|------------|
+| Super_Admin | ✅ | ✅ | ✅ | ✅ |
+| Manager | ✅ | ✅ | ✅ | ✅ |
+| Accounts | ✅ | ❌ | ❌ | ❌ |
+| SR | ✅ | ❌ | ❌ | ❌ |
+
+---
+
+## Completion Criteria
+
+* Create Product works (form, validation, success redirect): ✓
+* Edit Product works (prefill, update, success redirect): ✓
+* Deactivate sets isActive = false (soft-delete, no hard delete): ✓
+* Deactivate confirmation dialog shown before action: ✓
+* RBAC enforced — unauthorized users cannot reach create/edit pages: ✓
+* Server actions reject unauthorized calls: ✓
+* Category select uses live database data: ✓
+* Unsaved changes indicator present: ✓
+* Error states for load failure (edit page not found): ✓
+* Success feedback with auto-redirect: ✓
+* TypeScript strict — tsc --noEmit exits 0: ✓
+* ESLint — 0 errors: ✓
+* English + Bengali localization: ✓
+* ADR-004 created: ✓
+
+---
+
+## Next Phase
+
+PHASE_04_SALES_ORDERS
+
+---
+
+---
+
+# Previous Phases
+
+---
+
+# PHASE_AUTH_02_RBAC
+
+Status: COMPLETE
 
 ## Objectives
 
@@ -49,88 +158,9 @@ public/locales/bn/common.json (updated) — rbac.* Bengali translation keys
 
 ---
 
-## Permission Matrix Implemented
-
-| Resource    | Super_Admin | Manager     | Accounts    | SR          |
-|-------------|-------------|-------------|-------------|-------------|
-| Dealers     | Full        | Full        | Read        | Create/Edit |
-| Products    | Full        | Full        | Read        | Read        |
-| Projects    | Full        | Full        | Read        | Create/Edit |
-| Orders      | Full        | Approve     | Read        | Create      |
-| Invoices    | Full        | Read        | Full        | Read        |
-| Collections | Full        | Read        | Full        | Read        |
-| Ledger      | Full        | Read        | Full        | Read        |
-| Due Reports | Full        | Read        | Full        | Read        |
-| Audit Logs  | Yes         | No          | No          | No          |
-| Users       | Yes         | No          | No          | No          |
-| Settings    | Yes         | No          | No          | No          |
-
----
-
-## Architecture
-
-### Permission Layer (src/lib/permissions.ts)
-- Single source of truth for all role→permission assignments
-- No permission logic exists outside this file
-- `hasPermission(role, permission)` — edge-runtime safe, pure object lookup
-- Used by: middleware, sidebar, mobile-nav, rbac guards
-
-### RBAC Helpers (src/lib/rbac/index.ts)
-- Resource-oriented: `canView(role, resource)` — no magic strings at call sites
-- `getCapabilities(role, resource)` — returns all 5 capability booleans at once
-- `buildPermissionContext()` — audit-ready, emits full context for future AuditLog
-
-### Guards (src/lib/rbac/guards.ts)
-- **Server Actions** — `requirePermission()`, throws ForbiddenError (structured, catchable)
-- **Server Components** — `enforcePermission()`, redirects to /access-denied
-- **Passive checks** — `checkPermission()`, returns boolean for conditional rendering
-
-### Sidebar / MobileNav
-- Already consume `hasPermission(userRole, item.permission)` from NAV_SECTIONS
-- `userRole` now flows from a real session (dashboard layout reads getCurrentUser())
-
-### Middleware
-- Route → permission mapping in ROUTE_PERMISSIONS array
-- Unauthenticated → redirect /login
-- Authenticated but no permission → redirect /access-denied
-- access-denied page always accessible to authenticated users
-
----
-
-## Implementation Notes
-
-* `import type { UserRole }` used in permissions.ts — no Prisma runtime in permission layer
-* ForbiddenError carries `.permission` and `.userRole` metadata for future logging
-* PermissionCheckContext has `checkedAt` field ready for AuditLog integration
-* DashboardShell defaults to "SR" (most restrictive) as defensive fallback
-* No changes to dealer or product server actions (not required)
-* NAV_SECTIONS already has `projects`, `orders`, `invoices`, `collections`, `ledger`, `reports`, `audit`, `users`, `settings` entries
-* Sidebar filtering is fully working as it was wired in Phase AUTH_01
-
----
-
-## Completion Criteria
-
-* Roles are centralized: ✓
-* Permissions are centralized: ✓
-* Sidebar is role-aware: ✓
-* Unauthorized access is blocked: ✓ (middleware + page guards)
-* Access denied page exists: ✓
-* TypeScript passes: ✓ (tsc --noEmit exits 0)
-* ESLint passes: ✓ (0 errors)
-* Governance files updated: ✓
-
----
-
 ## Next Phase
 
 PHASE_03C_PRODUCT_FORMS
-
----
-
----
-
-# Previous Phases
 
 ---
 
@@ -141,51 +171,6 @@ Status: COMPLETE
 ## Objectives
 
 Implement production-grade authentication for Nazma ERP using Auth.js v5 (next-auth@beta).
-
-* Credentials-based login (email + password)
-* bcrypt password hashing
-* JWT session management
-* Middleware route protection (dashboard, dealers, products)
-* Super Admin seed (admin@nazma.local / Admin123!)
-* Inactive user blocking (isActive check)
-* Reusable auth helpers for future RBAC phase
-* Strict TypeScript, Zod validation, no any
-
----
-
-## Deliverables
-
-auth.ts (project root) — Auth.js v5 NextAuth configuration
-
-middleware.ts (project root) — JWT-based route protection
-
-src/types/auth.ts — AuthUser, AuthSession type definitions
-
-src/types/next-auth.d.ts — Module augmentation for Session, User, JWT
-
-src/lib/auth/helpers.ts — getSession, getCurrentUser, getCurrentRole, requireUser, requireRole
-
-src/lib/actions/auth/login.ts — loginAction server action (Zod + signIn)
-
-src/app/(auth)/layout.tsx — Auth shell layout (no sidebar)
-
-src/app/(auth)/login/page.tsx — Login page (Server Component)
-
-src/components/auth/login-form.tsx — Login form (Client Component, RHF + Zod)
-
-src/components/providers/session-provider.tsx — NextAuth SessionProvider wrapper
-
-src/app/api/auth/[...nextauth]/route.ts — Auth.js route handler
-
-prisma/seeds/admin-user.ts — Idempotent Super Admin seed (bcrypt hashed)
-
-prisma/seed.ts (updated) — Includes admin user seed
-
-src/app/layout.tsx (updated) — Wraps app with SessionProvider
-
-public/locales/en/common.json (updated) — auth.* translation keys
-
-public/locales/bn/common.json (updated) — auth.* translation keys (Bengali)
 
 ---
 

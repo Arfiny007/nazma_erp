@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 
+import { requirePermission } from "@/lib/rbac/guards";
 import { prisma } from "@/lib/prisma";
 import { createProductSchema } from "@/lib/validators/product.schema";
 import type { ActionResult, ProductDTO } from "@/types/product";
@@ -25,6 +26,12 @@ import {
 export async function createProduct(
   input: unknown,
 ): Promise<ActionResult<ProductDTO>> {
+  try {
+    await requirePermission("products:create");
+  } catch {
+    return fail<ProductDTO>("INTERNAL_ERROR", "rbac.noAccess");
+  }
+
   const parsed = createProductSchema.safeParse(input);
   if (!parsed.success) {
     return fromZodError(parsed.error);

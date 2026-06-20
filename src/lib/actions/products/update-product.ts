@@ -3,6 +3,7 @@
 import { Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
+import { requirePermission } from "@/lib/rbac/guards";
 import { prisma } from "@/lib/prisma";
 import { updateProductSchema } from "@/lib/validators/product.schema";
 import type { ActionResult, ProductDTO } from "@/types/product";
@@ -25,6 +26,12 @@ import {
 export async function updateProduct(
   input: unknown,
 ): Promise<ActionResult<ProductDTO>> {
+  try {
+    await requirePermission("products:edit");
+  } catch {
+    return fail<ProductDTO>("INTERNAL_ERROR", "rbac.noAccess");
+  }
+
   const parsed = updateProductSchema.safeParse(input);
   if (!parsed.success) {
     return fromZodError(parsed.error);
