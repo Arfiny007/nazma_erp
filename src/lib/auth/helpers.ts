@@ -1,6 +1,8 @@
 import { auth } from "../../../auth";
 import type { UserRole } from "@prisma/client";
 import type { AuthUser, AuthSession } from "@/types/auth";
+import type { Permission } from "@/lib/permissions";
+import { hasPermission } from "@/lib/permissions";
 
 /**
  * Returns the current authenticated session.
@@ -57,6 +59,24 @@ export async function requireRole(...roles: UserRole[]): Promise<AuthUser> {
 
   if (!roles.includes(user.role)) {
     throw new Error(`Forbidden: required role(s): ${roles.join(", ")}`);
+  }
+
+  return user;
+}
+
+/**
+ * Asserts that the current user has the specified permission.
+ * Throws when the user is missing or lacks the required permission.
+ *
+ * Delegates to the centralized RBAC layer.
+ * Prefer `requirePermission` from `@/lib/rbac/guards` in new server actions
+ * for richer error types (ForbiddenError with permission + role metadata).
+ */
+export async function requirePermission(permission: Permission): Promise<AuthUser> {
+  const user = await requireUser();
+
+  if (!hasPermission(user.role, permission)) {
+    throw new Error(`Forbidden: required permission: ${permission}`);
   }
 
   return user;

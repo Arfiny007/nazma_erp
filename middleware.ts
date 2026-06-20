@@ -1,18 +1,65 @@
 import { auth } from "./auth";
 import { NextResponse } from "next/server";
+import type { UserRole } from "@prisma/client";
 
-// Routes that are always public (no authentication required)
+import type { Permission } from "@/lib/permissions";
+import { hasPermission } from "@/lib/permissions";
+
+// ---------------------------------------------------------------------------
+// Public routes — no authentication required
+// ---------------------------------------------------------------------------
+
 const PUBLIC_ROUTES = ["/login", "/api/auth"];
 
 function isPublicRoute(pathname: string): boolean {
   return PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
 }
 
+// ---------------------------------------------------------------------------
+// Route → required permission mapping
+//
+// Order matters: more specific prefixes should come before general ones.
+// The access-denied page itself must NOT be in this list — it is always
+// accessible to authenticated users regardless of role.
+// ---------------------------------------------------------------------------
+
+const ROUTE_PERMISSIONS: ReadonlyArray<{
+  prefix: string;
+  permission: Permission;
+}> = [
+  { prefix: "/dealers", permission: "dealers:view" },
+  { prefix: "/products", permission: "products:view" },
+  { prefix: "/projects", permission: "projects:view" },
+  { prefix: "/orders", permission: "orders:view" },
+  { prefix: "/invoices", permission: "invoices:view" },
+  { prefix: "/collections", permission: "collections:view" },
+  { prefix: "/ledger", permission: "ledger:view" },
+  { prefix: "/reports", permission: "reports:view" },
+  { prefix: "/audit", permission: "audit:view" },
+  { prefix: "/users", permission: "users:manage" },
+  { prefix: "/settings", permission: "settings:view" },
+];
+
+/**
+ * Returns the permission required for the given pathname, or null if no
+ * specific permission is required (e.g. the dashboard at "/").
+ */
+function getRequiredPermission(pathname: string): Permission | null {
+  const match = ROUTE_PERMISSIONS.find(({ prefix }) =>
+    pathname.startsWith(prefix),
+  );
+  return match?.permission ?? null;
+}
+
+// ---------------------------------------------------------------------------
+// Middleware
+// ---------------------------------------------------------------------------
+
 export default auth((req) => {
   const { pathname } = req.nextUrl;
   const session = req.auth;
 
-  // Allow public routes
+  // 1. Always allow public routes
   if (isPublicRoute(pathname)) {
     // Redirect already-authenticated users away from the login page
     if (pathname === "/login" && session?.user) {
@@ -21,11 +68,25 @@ export default auth((req) => {
     return NextResponse.next();
   }
 
-  // Require authentication for all protected routes
+  // 2. Require authentication for all protected routes
   if (!session?.user) {
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // 3. The access-denied page is accessible to any authenticated user
+  if (pathname === "/access-denied") {
+    return NextResponse.next();
+  }
+
+  // 4. Check route-level permission
+  const requiredPermission = getRequiredPermission(pathname);
+  if (requiredPermission) {
+    const role = session.user.role as UserRole;
+    if (!hasPermission(role, requiredPermission)) {
+      return NextResponse.redirect(new URL("/access-denied", req.url));
+    }
   }
 
   return NextResponse.next();

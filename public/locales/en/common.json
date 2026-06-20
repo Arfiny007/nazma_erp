@@ -211,5 +211,17 @@
   "auth.error.passwordRequired": "Password is required.",
   "auth.error.invalidCredentials": "Invalid email or password. Please try again.",
   "auth.error.accountDisabled": "Your account has been deactivated. Please contact an administrator.",
-  "auth.error.unknown": "An unexpected error occurred. Please try again."
+  "auth.error.unknown": "An unexpected error occurred. Please try again.",
+  "rbac.accessDenied.code": "403",
+  "rbac.accessDenied.title": "Access Denied",
+  "rbac.accessDenied.subtitle": "You don't have permission to view this page.",
+  "rbac.accessDenied.description": "Your current role does not grant access to this section. If you believe this is a mistake, please contact your administrator.",
+  "rbac.accessDenied.backToDashboard": "Back to Dashboard",
+  "rbac.accessDenied.contactAdmin": "Contact Administrator",
+  "rbac.role.Super_Admin": "Super Admin",
+  "rbac.role.Manager": "Manager",
+  "rbac.role.Accounts": "Accounts",
+  "rbac.role.SR": "Sales Representative",
+  "rbac.yourRole": "Your role",
+  "rbac.noAccess": "No access"
 }

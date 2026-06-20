@@ -211,5 +211,17 @@
   "auth.error.passwordRequired": "পাসওয়ার্ড আবশ্যক।",
   "auth.error.invalidCredentials": "ইমেইল বা পাসওয়ার্ড সঠিক নয়। আবার চেষ্টা করুন।",
   "auth.error.accountDisabled": "আপনার অ্যাকাউন্ট নিষ্ক্রিয় করা হয়েছে। অনুগ্রহ করে প্রশাসকের সাথে যোগাযোগ করুন।",
-  "auth.error.unknown": "একটি অপ্রত্যাশিত ত্রুটি ঘটেছে। আবার চেষ্টা করুন।"
+  "auth.error.unknown": "একটি অপ্রত্যাশিত ত্রুটি ঘটেছে। আবার চেষ্টা করুন।",
+  "rbac.accessDenied.code": "৪০৩",
+  "rbac.accessDenied.title": "প্রবেশাধিকার নেই",
+  "rbac.accessDenied.subtitle": "এই পাতাটি দেখার অনুমতি আপনার নেই।",
+  "rbac.accessDenied.description": "আপনার বর্তমান ভূমিকায় এই বিভাগে প্রবেশের অনুমতি নেই। যদি মনে করেন এটি ভুল, অনুগ্রহ করে আপনার প্রশাসকের সাথে যোগাযোগ করুন।",
+  "rbac.accessDenied.backToDashboard": "ড্যাশবোর্ডে ফিরুন",
+  "rbac.accessDenied.contactAdmin": "প্রশাসকের সাথে যোগাযোগ করুন",
+  "rbac.role.Super_Admin": "সুপার অ্যাডমিন",
+  "rbac.role.Manager": "ম্যানেজার",
+  "rbac.role.Accounts": "অ্যাকাউন্টস",
+  "rbac.role.SR": "সেলস রিপ্রেজেন্টেটিভ",
+  "rbac.yourRole": "আপনার ভূমিকা",
+  "rbac.noAccess": "প্রবেশাধিকার নেই"
 }

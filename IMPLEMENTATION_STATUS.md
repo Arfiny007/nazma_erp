@@ -17,6 +17,56 @@ Last updated: 2026-06-20
 | PHASE_03B_PRODUCT_LIST_UI | Product list with table, search, pagination | ✅ COMPLETE |
 | PHASE_00B_SCHEMA_HARDENING | Full Prisma schema with all domain models | ✅ COMPLETE |
 | PHASE_AUTH_01_FOUNDATION | Auth.js v5 Credentials, login page, middleware, seed | ✅ COMPLETE |
+| PHASE_AUTH_02_RBAC | Role-Based Access Control, permission matrix, guards, 403 page | ✅ COMPLETE |
+
+---
+
+## RBAC Module — Verification
+
+| Criterion | Status |
+|-----------|--------|
+| Permission matrix centralized in permissions.ts | ✅ |
+| Granular permissions (view/create/edit/delete/approve per resource) | ✅ |
+| ROLE_PERMISSIONS correct for all 4 roles per matrix | ✅ |
+| canView / canCreate / canEdit / canDelete / canApprove helpers | ✅ |
+| requirePermission() for server actions (throws ForbiddenError) | ✅ |
+| enforcePermission() for server components (redirects) | ✅ |
+| checkPermission() for passive boolean checks | ✅ |
+| Middleware protects 11 route prefixes with permission checks | ✅ |
+| Unauthorized routes redirect to /access-denied | ✅ |
+| 403 Access Denied page — bilingual, responsive, shows user role | ✅ |
+| Dashboard layout reads real session, passes actual userRole | ✅ |
+| Sidebar filters nav items by role (was already wired, now gets real role) | ✅ |
+| MobileNav filters nav items by role (same) | ✅ |
+| Audit-ready: PermissionCheckContext with checkedAt field | ✅ |
+| TypeScript strict — tsc --noEmit exits 0 | ✅ |
+| ESLint — 0 errors on RBAC files | ✅ |
+| English + Bengali localization for rbac.* keys | ✅ |
+
+---
+
+## Files Created — PHASE_AUTH_02_RBAC
+
+```
+src/lib/rbac/index.ts
+src/lib/rbac/guards.ts
+src/app/(dashboard)/access-denied/page.tsx
+```
+
+## Files Modified — PHASE_AUTH_02_RBAC
+
+```
+src/lib/permissions.ts
+src/lib/auth/helpers.ts
+middleware.ts
+src/app/(dashboard)/layout.tsx
+public/locales/en/common.json
+public/locales/bn/common.json
+CURRENT_PHASE.md
+CHANGELOG.md
+IMPLEMENTATION_STATUS.md
+NEXT_ACTION.md
+```
 
 ---
 
@@ -75,7 +125,6 @@ package.json (next-auth, bcryptjs, @auth/prisma-adapter added)
 
 | Phase | Description |
 |-------|-------------|
-| PHASE_AUTH_02_RBAC | Role-based access control, permission checks |
 | PHASE_03C_PRODUCT_FORMS | Product create/edit forms |
 | PHASE_04_SALES_ORDERS | Sales order workflow |
 | PHASE_05_INVOICE_ENGINE | Invoice generation |

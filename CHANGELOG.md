@@ -4,6 +4,36 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_AUTH_02_RBAC] — 2026-06-20
+
+### Added
+
+- **Centralized permission matrix** — `src/lib/permissions.ts` expanded with granular `Resource × Action` permissions for all 11 resources
+- **RBAC helpers** — `src/lib/rbac/index.ts`: `canView()`, `canCreate()`, `canEdit()`, `canDelete()`, `canApprove()`, `canWrite()`, `getCapabilities()`, `buildPermissionContext()`
+- **Server action guards** — `src/lib/rbac/guards.ts`: `requirePermission()`, `requireAllPermissions()`, `requireAnyPermission()`, `ForbiddenError`, `UnauthorizedError`
+- **Server component guards** — `enforcePermission()`, `enforceAuth()`, `checkPermission()` (all in guards.ts)
+- **Route-level middleware protection** — 11 route prefixes mapped to permissions; unauthorized → `/access-denied`
+- **403 Access Denied page** — `/access-denied`, bilingual (EN/BN), shows user's role, responsive, premium design
+- **Real session in DashboardLayout** — dashboard layout now reads `getCurrentUser()` and passes actual `userRole` to `DashboardShell` (was hardcoded `Super_Admin`)
+- **RBAC localization keys** — `rbac.*` keys added to English and Bengali locale files
+
+### Modified
+
+- `src/lib/permissions.ts` — Added `Resource`, `Action` types; expanded `Permission` union with 25 granular permissions; corrected `ROLE_PERMISSIONS` for all 4 roles to match official matrix; changed to `import type` for Prisma `UserRole`
+- `src/lib/auth/helpers.ts` — Added `requirePermission()` helper
+- `middleware.ts` — Added `ROUTE_PERMISSIONS` map and permission check; unauthorized routes redirect to `/access-denied`
+- `src/app/(dashboard)/layout.tsx` — Made async; reads session; passes real `userRole` to `DashboardShell`
+- `public/locales/en/common.json` — Added `rbac.*` keys
+- `public/locales/bn/common.json` — Added `rbac.*` Bengali keys
+
+### Architecture Notes
+
+- Audit-ready: `PermissionCheckContext` type with `checkedAt` field ready for future AuditLog service
+- Sidebar and MobileNav already consumed `hasPermission()` — no changes needed; now receive real role from session
+- No dealer or product server actions modified
+
+---
+
 ## [PHASE_AUTH_01_FOUNDATION] — 2026-06-20
 
 ### Added
