@@ -31,6 +31,8 @@ const ROUTE_PERMISSIONS: ReadonlyArray<{
   { prefix: "/dealers/new", permission: "dealers:create" },
   // More specific product routes must come before the general /products prefix
   { prefix: "/products/new", permission: "products:create" },
+  // More specific order routes must come before the general /orders prefix
+  { prefix: "/orders/new", permission: "orders:create" },
   { prefix: "/dealers", permission: "dealers:view" },
   { prefix: "/products", permission: "products:view" },
   { prefix: "/projects", permission: "projects:view" },

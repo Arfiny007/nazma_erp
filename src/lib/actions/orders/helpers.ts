@@ -103,6 +103,7 @@ function normalizeUniqueTarget(target: unknown): string[] {
 export const orderSummaryInclude = {
   dealer: { select: { dealerCode: true, companyName: true } },
   project: { select: { id: true, projectCode: true, name: true } },
+  createdBy: { select: { id: true, name: true } },
   _count: { select: { items: true, invoices: true } },
 } satisfies Prisma.SalesOrderInclude;
 
@@ -264,6 +265,7 @@ export function toOrderSummaryDTO(order: OrderSummaryRecord): OrderSummaryDTO {
     itemCount: order._count.items,
     invoiceCount: order._count.invoices,
     createdById: order.createdById,
+    createdByName: order.createdBy?.name ?? null,
     approvedById: order.approvedById,
     approvedAt: order.approvedAt?.toISOString() ?? null,
     createdAt: order.createdAt.toISOString(),
@@ -291,6 +293,7 @@ export function toOrderDetailDTO(
     itemCount: order._count.items,
     invoiceCount: order._count.invoices,
     createdById: order.createdById,
+    createdByName: order.createdBy?.name ?? null,
     approvedById: order.approvedById,
     approvedAt: order.approvedAt?.toISOString() ?? null,
     createdAt: order.createdAt.toISOString(),

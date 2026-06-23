@@ -59,7 +59,7 @@ export async function cancelOrder(
 
       await tx.salesOrder.update({
         where: { id },
-        data: { status: OrderStatus.Cancelled },
+        data: { status: OrderStatus.Cancelled},
       });
 
       await recordOrderAudit(tx, {

@@ -2,13 +2,91 @@
 
 Current Phase:
 
-PHASE_04A_ORDER_BACKEND
+PHASE_04B_ORDER_UI
 
 Status:
 
 COMPLETE
 
 ---
+
+## Objectives
+
+Build the complete Sales Order **UI** on top of the existing backend. Reuse the
+existing DTOs, validators, server actions, RBAC, and financial calculator — no
+duplicated business logic.
+
+* Order List `/orders` — search, status / dealer / date-range filters, sorting, pagination
+* Create Order `/orders/new` — dealer selector, project (existing or inline), product line grid (add/remove rows, per-line price override)
+* Live Financial Summary — Subtotal, Discount %, Discount Amount, Grand Total (server calculator, no client math)
+* Order Detail `/orders/[id]` — order info, dealer, project, items, financial summary, approval status, audit timeline
+* Edit Order `/orders/[id]/edit` — status-aware submit, workflow-respecting; approved orders editable by Manager / Super_Admin
+* Approval UI — Approve / Reject / Cancel, visible only when state + role permit, calling existing actions
+* Enterprise status badges (Draft, Pending_Approval, Approved, Rejected, Cancelled)
+* Centralized RBAC (middleware + page guard + conditional rendering); no inline role checks
+* EN + BN localization for all strings; loading / error / empty states; responsive; keyboard-friendly
+* ADR-009 documents UI architecture, approval-workflow UX, pricing-override rationale
+
+---
+
+## UI-Support Backend (additive, no business logic duplicated)
+
+| Piece | Purpose |
+|-------|---------|
+| `previewOrderTotals` action | Runs existing `calculateOrderTotals` for the live summary; converts order-level discount % → per-line amounts server-side |
+| `listDealerProjects` action | Read-only list of a dealer's active projects for the "existing project" selector |
+| `OrderSummaryDTO.createdByName` | Additive display field for the list's "Created By" column |
+
+No schema changes. No tables/columns/indexes altered.
+
+---
+
+## RBAC (Orders UI)
+
+| Action | Permission | Roles |
+|--------|------------|-------|
+| View / List | `orders:view` | All roles |
+| Create | `orders:create` | SR, Manager, Super_Admin |
+| Edit | `orders:edit` | Manager, Super_Admin |
+| Approve / Reject | `orders:approve` | Manager, Super_Admin |
+| Cancel | `orders:edit` | Manager, Super_Admin |
+
+Middleware: `/orders/new → orders:create` added as a more-specific route.
+
+---
+
+## Completion Criteria
+
+* Order List (search/filters/sort/pagination/badges): ✓
+* Create Order (dealer, project existing+inline, line grid, price override): ✓
+* Live Financial Summary via server calculator (no client math): ✓
+* Order Detail (info/dealer/project/items/summary/approval/audit): ✓
+* Edit Order (status-aware, workflow-respecting): ✓
+* Approval UI (Approve/Reject/Cancel, role+state gated): ✓
+* Centralized RBAC (middleware + page + render); no inline checks: ✓
+* EN + BN localization; loading/error/empty states; responsive: ✓
+* ADR-009 created: ✓
+* `npx tsc --noEmit` — 0 errors: ✓
+* `npx eslint` — 0 errors (3 pre-existing `useReactTable` warnings only): ✓
+* No Invoice / Collection / Ledger built; schema unchanged: ✓
+
+---
+
+## Next Phase
+
+PHASE_05_INVOICE_ENGINE
+
+---
+
+---
+
+# Previous Phases
+
+---
+
+# PHASE_04A_ORDER_BACKEND
+
+Status: COMPLETE
 
 ## Objectives
 
@@ -27,9 +105,7 @@ Build the complete Sales Order **backend** layer (no UI, no Invoice engine).
 * Centralized RBAC on every mutating action; no inline role checks
 * ADR-008 documents workflow / approval / multi-invoice / RBAC decisions
 
----
-
-## Schema Changes
+### Schema Changes
 
 | Model | Before | After |
 |-------|--------|-------|
@@ -37,20 +113,7 @@ Build the complete Sales Order **backend** layer (no UI, no Invoice engine).
 
 Only an additive enum value was needed. No tables, columns, or indexes changed.
 
----
-
-## Workflow
-
-| Transition | Rule |
-|-----------|------|
-| Approve | Blocked from `Cancelled` (and no-op on `Approved`); Super_Admin may override a `Rejected` order |
-| Reject | Blocked from `Approved` (cannot reject approved) |
-| Cancel | Blocked when the order has ≥ 1 invoice (cannot cancel invoiced) |
-| Edit | Allowed on `Approved` (Manager / Super_Admin); blocked only on `Cancelled` |
-
----
-
-## RBAC (Orders)
+### RBAC (Orders)
 
 | Action | Permission | Roles |
 |--------|------------|-------|
@@ -60,41 +123,6 @@ Only an additive enum value was needed. No tables, columns, or indexes changed.
 | Reject | `orders:approve` | Manager, Super_Admin |
 | Cancel | `orders:edit` | Manager, Super_Admin |
 | View / List | `orders:view` | All roles |
-
-Matrix updated: **Manager** gained `orders:create` and `orders:edit`.
-
----
-
-## Completion Criteria
-
-* Order validators (create/update/approve/reject/cancel/list/identify): ✓
-* DTO layer (Summary / Detail / Item / Approval History): ✓
-* Server actions (create/update/approve/reject/cancel/get/list): ✓
-* Order creation in a single transaction (order + items + totals): ✓
-* Decimal-safe calculation engine; VAT = 0.00: ✓
-* Status workflow guards (approve/reject/cancel rules): ✓
-* Approval audit via existing fields + AuditLog: ✓
-* Inline project support (existing or inline): ✓
-* Search backend (number/dealer/project/status/date range): ✓
-* Index review — no unnecessary schema changes: ✓
-* RBAC enforced on all actions (centralized): ✓
-* ADR-008 created: ✓
-* `npx prisma generate` succeeds: ✓
-* `npx tsc --noEmit` — 0 errors: ✓
-* `npx eslint` — 0 errors: ✓
-* No UI / Invoice / Collection / Ledger built: ✓
-
----
-
-## Next Phase
-
-PHASE_04B_ORDER_UI
-
----
-
----
-
-# Previous Phases
 
 ---
 

@@ -218,6 +218,44 @@ export const listOrdersSchema = z
   );
 
 /* -------------------------------------------------------------------------- */
+/*                          Live financial preview (UI)                       */
+/* -------------------------------------------------------------------------- */
+
+/** A single line fed to the live total preview; price is always explicit. */
+const previewLineSchema = z.object({
+  quantity: quantitySchema,
+  unitPrice: moneyNonNegativeSchema,
+});
+
+/** Order-level discount expressed as a percentage in the range 0–100. */
+const discountPercentSchema = z
+  .union([z.string(), z.number()], { error: "validation.discountPercent.invalid" })
+  .transform((value) =>
+    typeof value === "number" ? value.toString() : value.trim(),
+  )
+  .refine((value) => /^\d{1,3}(\.\d{1,2})?$/.test(value), {
+    error: "validation.discountPercent.invalid",
+  })
+  .refine((value) => Number.parseFloat(value) <= 100, {
+    error: "validation.discountPercent.range",
+  });
+
+/**
+ * Input to {@link previewOrderTotals}. All monetary arithmetic is performed by
+ * the server-side calculation engine; the client only supplies raw quantities,
+ * unit prices, and an optional order-level discount percentage.
+ */
+export const previewOrderTotalsSchema = z.object({
+  items: z.array(previewLineSchema).min(1, { error: "validation.order.itemsRequired" }),
+  discountPercent: discountPercentSchema.optional(),
+});
+
+/** Identifies the dealer whose projects should be listed (by dealer code). */
+export const dealerProjectsSchema = z.object({
+  dealerCode: dealerCodeSchema,
+});
+
+/* -------------------------------------------------------------------------- */
 /*                              Inferred input types                          */
 /* -------------------------------------------------------------------------- */
 
@@ -231,3 +269,5 @@ export type CancelOrderInput = z.input<typeof cancelOrderSchema>;
 export type OrderIdentifierInput = z.input<typeof orderIdentifierSchema>;
 export type ListOrdersInput = z.input<typeof listOrdersSchema>;
 export type ListOrdersData = z.output<typeof listOrdersSchema>;
+export type PreviewOrderTotalsInput = z.input<typeof previewOrderTotalsSchema>;
+export type DealerProjectsInput = z.input<typeof dealerProjectsSchema>;

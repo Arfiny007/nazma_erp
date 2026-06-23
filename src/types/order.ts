@@ -81,6 +81,8 @@ export interface OrderSummaryDTO {
   /** Number of invoices generated from this order (one order → many invoices). */
   invoiceCount: number;
   createdById: string | null;
+  /** Display name of the user who created the order, when available. */
+  createdByName: string | null;
   approvedById: string | null;
   approvedAt: string | null;
   createdAt: string;
@@ -168,3 +170,35 @@ export interface OrderError {
 export type ActionResult<T> =
   | { success: true; data: T }
   | { success: false; error: OrderError };
+
+/* -------------------------------------------------------------------------- */
+/*                          Live financial preview                            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * A single computed line in a live order-total preview. All amounts are
+ * fixed-precision decimal strings produced by the backend calculation engine.
+ */
+export interface OrderLinePreviewDTO {
+  /** `quantity * unitPrice`, rounded to 2 dp. */
+  lineSubtotal: string;
+  /** Per-line discount amount derived from the order-level percentage. */
+  discount: string;
+  /** `lineSubtotal - discount`, rounded to 2 dp. */
+  total: string;
+}
+
+/**
+ * Result of the live financial preview. The per-line `discount` amounts are
+ * authoritative and are submitted verbatim to the create/update actions, so the
+ * client never performs monetary arithmetic itself.
+ */
+export interface OrderTotalsPreviewDTO {
+  lines: OrderLinePreviewDTO[];
+  subtotal: string;
+  /** Order-level discount percentage echoed back, normalized to 2 dp. */
+  discountPercent: string;
+  discountAmount: string;
+  vat: string;
+  grandTotal: string;
+}

@@ -2,23 +2,22 @@
 
 ## Current State
 
-PHASE_04A_ORDER_BACKEND is COMPLETE.
+PHASE_04B_ORDER_UI is COMPLETE.
 
-The Sales Order **backend** is fully implemented (no UI):
+The Sales Order **UI** is fully implemented on top of the existing backend:
 
-- Validators — `src/lib/validators/order.schema.ts` (create / update / approve / reject / cancel / list / identify)
-- DTOs — `src/types/order.ts` (Summary / Detail / Item / Approval History)
-- Server actions — `src/lib/actions/orders/` (`createOrder`, `updateOrder`, `approveOrder`, `rejectOrder`, `cancelOrder`, `getOrder`, `listOrders`)
-- Decimal-safe calculation engine — `src/lib/utils/order-calculator.ts` (VAT already in price → vat = 0.00)
-- Status workflow guards — `src/lib/orders/workflow.ts`
-- Approval audit via `createdById` / `approvedById` / `approvedAt` + `AuditLog`
-- Order numbers `ORD-NNNNNN`; inline projects `PRJ-NNNNNN`
-- Search backend: order number, dealer, project, status, date range
-- RBAC: Manager now has `orders:create` + `orders:edit`; `orders:approve` for approve/reject; `orders:edit` for cancel
-- ADR-008 documents the decisions
-- Verified: `prisma generate`, `prisma format`, `tsc --noEmit`, `eslint` — all clean; 22/22 logic checks pass
+- Order List `/orders` — search, status / dealer / date-range filters, sorting, pagination, status badges, "Created By" column
+- Create Order `/orders/new` — dealer selector, project (existing or inline), product line grid (add/remove rows, per-line price override)
+- Live Financial Summary — Subtotal / Discount % / Discount Amount / Grand Total via the server calculator (`previewOrderTotals`); no client-side money math
+- Order Detail `/orders/[id]` — order info, dealer, project, items, financial summary, approval status, audit timeline
+- Edit Order `/orders/[id]/edit` — status-aware submit, workflow-respecting; approved orders editable by Manager / Super_Admin
+- Approval UI — Approve / Reject / Cancel, shown only when state + role permit; reuses existing actions
+- UI-support actions — `preview-order-totals.ts`, `list-dealer-projects.ts` (RBAC-guarded, no duplicated logic)
+- Centralized RBAC (middleware + `enforcePermission` + `hasPermission`); EN + BN localization; loading / error / empty states; responsive
+- ADR-009 documents UI architecture, approval-workflow UX, pricing-override rationale
+- Verified: `tsc --noEmit` 0 errors; `eslint` 0 errors (3 pre-existing `useReactTable` warnings)
 
-PHASE_00C (prior) corrected `Invoice` ↔ `SalesOrder` to one-to-many.
+PHASE_04A (prior) delivered the order backend; PHASE_00C corrected `Invoice` ↔ `SalesOrder` to one-to-many.
 
 ---
 
@@ -30,25 +29,18 @@ PHASE_00C (prior) corrected `Invoice` ↔ `SalesOrder` to one-to-many.
   2. The `Invoice.orderId` `@unique` removal + `@@index([orderId])` (PHASE_00C).
 
   Run `npx prisma migrate dev --name order_backend_and_invoice_relation` (or a
-  descriptive name) once a database is available.
+  descriptive name) once a database is available. The Order UI cannot be
+  exercised end-to-end against a live DB until this migration is applied.
 
 ---
 
-## Next Phase: PHASE_04B_ORDER_UI
+## Next Phase: PHASE_05_INVOICE_ENGINE
 
 ### Objective
 
-Build the Sales Order UI on top of the completed backend, following the hybrid
-Server Component + Client Component pattern established in PHASE_03C.
-
-### Tasks
-
-1. Order list page — table, search (number/dealer/project/status/date range), pagination, status badges
-2. Create Order form — dealer select, project (existing or inline), product line editor with live Decimal-safe totals
-3. Order detail page — items, totals, approval history timeline
-4. Approval workflow UI — Approve / Reject / Cancel actions (role-aware buttons)
-5. RBAC: `enforcePermission()` in pages; role-aware action buttons via `hasPermission()`
-6. EN + BN localization for all new `order.*` and `validation.*` keys used by the backend
+Build the Invoice engine on top of the completed Order module (one Order →
+many Invoices), following the same backend-then-UI, Decimal-safe, RBAC-guarded
+patterns.
 
 ### Guard Usage Pattern
 
@@ -57,7 +49,7 @@ Server Component + Client Component pattern established in PHASE_03C.
 import { enforcePermission } from "@/lib/rbac/guards";
 await enforcePermission("orders:view");
 
-// In Server Actions (already implemented in the backend)
+// In Server Actions
 import { requirePermission } from "@/lib/rbac/guards";
 const user = await requirePermission("orders:create");
 
@@ -65,16 +57,6 @@ const user = await requirePermission("orders:create");
 import { hasPermission } from "@/lib/permissions";
 const canApprove = hasPermission(userRole, "orders:approve");
 ```
-
-### Localization Keys Used by the Backend (to add in PHASE_04B)
-
-`order.error.*` (dealerNotFound, inactiveDealer, projectNotFound, duplicateProject,
-productNotFound, inactiveProduct, notFound, duplicateOrderNo, orderNoGenerationFailed,
-invalidReference, invalidTransition, cancelledImmutable, locked, cannotApproveCancelled,
-alreadyApproved, cannotRejectApproved, alreadyRejected, invoiced, alreadyCancelled),
-`validation.*` (quantity.*, dealerCode.*, projectId.*, productId.*, projectName.*,
-contactName.*, contactPhone.*, orderNo.*, order.itemsRequired, project.ambiguous,
-dateRange.invalid, discount.exceedsLine, reason.tooLong).
 
 ---
 

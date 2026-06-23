@@ -21,6 +21,70 @@ Last updated: 2026-06-23
 | PHASE_AUTH_02_RBAC | Role-Based Access Control, permission matrix, guards, 403 page | ✅ COMPLETE |
 | PHASE_00C_INVOICE_RELATION_CORRECTION | Invoice ↔ SalesOrder corrected to one-to-many | ✅ COMPLETE |
 | PHASE_04A_ORDER_BACKEND | Sales Order backend: validators, DTOs, actions, calc engine, workflow, audit | ✅ COMPLETE |
+| PHASE_04B_ORDER_UI | Sales Order UI: list, create/edit forms, detail, live summary, approval workflow | ✅ COMPLETE |
+
+---
+
+## Order UI Module — Verification
+
+| Criterion | Status |
+|-----------|--------|
+| Order List: search / status / dealer / date-range filters | ✅ |
+| Order List: sorting + pagination + status badges + Created By | ✅ |
+| Create Order: dealer selector, project (existing + inline) | ✅ |
+| Create Order: product grid (Product/SKU/Category/Qty/Unit Price/Line Total) | ✅ |
+| Create Order: add / remove rows; per-line price override | ✅ |
+| Live Financial Summary (Subtotal / Discount % / Discount Amt / Grand Total) | ✅ |
+| Live summary uses server calculator — no duplicated client math | ✅ |
+| Order Detail: info / dealer / project / items / summary / approval / audit | ✅ |
+| Edit Order: status-aware, workflow-respecting | ✅ |
+| Approved orders editable only by Manager / Super_Admin | ✅ |
+| Approval UI (Approve / Reject / Cancel) shown only when allowed | ✅ |
+| VAT not shown, not calculated | ✅ |
+| Centralized RBAC (middleware + page guard + render); no inline checks | ✅ |
+| EN + BN localization; loading / error / empty states; responsive | ✅ |
+| No schema change | ✅ |
+| `npx tsc --noEmit` — 0 errors | ✅ |
+| `npx eslint` — 0 errors (3 pre-existing useReactTable warnings) | ✅ |
+| ADR-009 created | ✅ |
+| No Invoice / Collection / Ledger built | ✅ |
+
+### Files Created — PHASE_04B_ORDER_UI
+
+```
+src/lib/actions/orders/preview-order-totals.ts
+src/lib/actions/orders/list-dealer-projects.ts
+src/components/orders/order-status-badge.tsx
+src/components/orders/order-empty-state.tsx
+src/components/orders/order-form-section.tsx
+src/components/orders/dealer-combobox.tsx
+src/components/orders/product-line-editor.tsx
+src/components/orders/order-financial-summary.tsx
+src/components/orders/order-form.tsx
+src/components/orders/approval-actions.tsx
+src/components/orders/order-history-timeline.tsx
+src/components/orders/order-detail-view.tsx
+src/components/orders/order-table.tsx
+src/app/(dashboard)/orders/page.tsx
+src/app/(dashboard)/orders/new/page.tsx
+src/app/(dashboard)/orders/new/page-client.tsx
+src/app/(dashboard)/orders/[id]/page.tsx
+src/app/(dashboard)/orders/[id]/page-client.tsx
+src/app/(dashboard)/orders/[id]/edit/page.tsx
+src/app/(dashboard)/orders/[id]/edit/page-client.tsx
+docs/ADR/ADR-009-order-ui.md
+```
+
+### Files Modified — PHASE_04B_ORDER_UI
+
+```
+src/types/order.ts                       (createdByName, preview DTOs)
+src/lib/actions/orders/helpers.ts        (include createdBy; populate createdByName)
+src/lib/validators/order.schema.ts       (previewOrderTotalsSchema, dealerProjectsSchema)
+middleware.ts                            (/orders/new → orders:create)
+public/locales/en/common.json            (Order UI keys)
+public/locales/bn/common.json            (Order UI keys)
+```
 
 ---
 

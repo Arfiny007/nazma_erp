@@ -4,6 +4,43 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_04B_ORDER_UI] — 2026-06-23
+
+### Added
+
+- **Order List** — `src/app/(dashboard)/orders/page.tsx` + `src/components/orders/order-table.tsx`: search, status / dealer / date-range filters, sortable columns, pagination, "Created By" column, status badges
+- **Create Order** — `src/app/(dashboard)/orders/new/page.tsx` (+ `page-client.tsx`) and `src/components/orders/order-form.tsx`: dealer selector, project (existing or inline), product line grid with add/remove rows and per-line price override
+- **Order Detail** — `src/app/(dashboard)/orders/[id]/page.tsx` (+ `page-client.tsx`) and `src/components/orders/order-detail-view.tsx`: order info, dealer, project, items, financial summary, approval status, audit timeline
+- **Edit Order** — `src/app/(dashboard)/orders/[id]/edit/page.tsx` (+ `page-client.tsx`): reuses `OrderForm` in edit mode with status-aware submit; approved orders editable by Manager / Super_Admin
+- **Approval UI** — `src/components/orders/approval-actions.tsx`: Approve / Reject / Cancel, shown only when state + role permit, with confirmation dialogs and optional reason; calls existing `approveOrder` / `rejectOrder` / `cancelOrder`
+- **Live Financial Summary** — `src/components/orders/order-financial-summary.tsx`: real-time Subtotal / Discount % / Discount Amount / Grand Total, debounced, driven entirely by the server calculator
+- **Shared order components** — `order-status-badge.tsx`, `order-empty-state.tsx`, `order-form-section.tsx`, `dealer-combobox.tsx`, `product-line-editor.tsx`, `order-history-timeline.tsx`
+- **UI-support server actions** — `src/lib/actions/orders/preview-order-totals.ts` (runs existing `calculateOrderTotals`; converts order-level discount % → per-line amounts) and `src/lib/actions/orders/list-dealer-projects.ts` (read-only active-project list). Both RBAC-guarded by `orders:view`
+- **ADR-009** — `docs/ADR/ADR-009-order-ui.md`: UI architecture, approval-workflow UX, pricing-override / discount-percentage rationale
+
+### Changed
+
+- `src/types/order.ts` — added `OrderSummaryDTO.createdByName` (and `OrderDetailDTO.createdByName`); added `OrderLinePreviewDTO` / `OrderTotalsPreviewDTO` for the live preview
+- `src/lib/actions/orders/helpers.ts` — `orderSummaryInclude` / `orderDetailInclude` now include `createdBy { id, name }`; DTO serializers populate `createdByName`
+- `src/lib/validators/order.schema.ts` — added `previewOrderTotalsSchema` and `dealerProjectsSchema` (+ inferred input types)
+- `middleware.ts` — added `/orders/new → orders:create` as a more-specific route before the general `/orders` prefix
+- `public/locales/en/common.json` & `public/locales/bn/common.json` — full EN + BN translation keys for the Order UI
+
+### Architecture Notes
+
+- **No client-side money math**: the live summary and submit path both call `previewOrderTotals`, which runs the existing Decimal engine; the per-line discount amounts returned by the preview are the exact values submitted to create/update
+- **Order-level discount %** is a UI affordance converted to per-line amounts on the server — no schema change required
+- **Hybrid Server/Client**: pages enforce RBAC and pre-load data; client components own interactivity
+- **Centralized RBAC**: page guards (`enforcePermission`), middleware, and conditional rendering (`hasPermission`); no inline role checks
+- **VAT never shown or computed** (already included in price)
+
+### Verification
+
+- `npx tsc --noEmit` — 0 errors (strict)
+- `npx eslint` — 0 errors (3 pre-existing `react-hooks/incompatible-library` warnings on `useReactTable`, shared with the Product/Dealer tables)
+
+---
+
 ## [PHASE_04A_ORDER_BACKEND] — 2026-06-23
 
 ### Added
