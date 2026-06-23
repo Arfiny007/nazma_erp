@@ -2,13 +2,105 @@
 
 Current Phase:
 
-PHASE_00C_INVOICE_RELATION_CORRECTION
+PHASE_04A_ORDER_BACKEND
 
 Status:
 
 COMPLETE
 
 ---
+
+## Objectives
+
+Build the complete Sales Order **backend** layer (no UI, no Invoice engine).
+
+* Production-grade Zod validators — create / update / approve / reject / cancel / list / identify
+* DTO layer — Order Summary, Order Detail, Order Item, Approval History
+* Server actions — `createOrder`, `updateOrder`, `approveOrder`, `rejectOrder`, `cancelOrder`, `getOrder`, `getOrders` (`listOrders`)
+* Transaction safety — order + items + totals created in a single Prisma transaction
+* Decimal-safe financial calculation engine (no float math; VAT already in price → vat = 0.00)
+* Order status workflow guards (Draft → Pending_Approval → Approved / Rejected / Cancelled)
+* Approval audit via existing `createdById` / `approvedById` / `approvedAt` + `AuditLog`
+* Inline project support (reference existing OR create inline)
+* Search backend — order number, dealer, project, status, date range
+* Index review (existing indexes sufficient; no new indexes added)
+* Centralized RBAC on every mutating action; no inline role checks
+* ADR-008 documents workflow / approval / multi-invoice / RBAC decisions
+
+---
+
+## Schema Changes
+
+| Model | Before | After |
+|-------|--------|-------|
+| OrderStatus (enum) | Draft, Pending_Approval, Approved, Rejected, Delivered | + **Cancelled** (additive) |
+
+Only an additive enum value was needed. No tables, columns, or indexes changed.
+
+---
+
+## Workflow
+
+| Transition | Rule |
+|-----------|------|
+| Approve | Blocked from `Cancelled` (and no-op on `Approved`); Super_Admin may override a `Rejected` order |
+| Reject | Blocked from `Approved` (cannot reject approved) |
+| Cancel | Blocked when the order has ≥ 1 invoice (cannot cancel invoiced) |
+| Edit | Allowed on `Approved` (Manager / Super_Admin); blocked only on `Cancelled` |
+
+---
+
+## RBAC (Orders)
+
+| Action | Permission | Roles |
+|--------|------------|-------|
+| Create | `orders:create` | SR, Manager, Super_Admin |
+| Update | `orders:edit` | Manager, Super_Admin |
+| Approve | `orders:approve` | Manager, Super_Admin |
+| Reject | `orders:approve` | Manager, Super_Admin |
+| Cancel | `orders:edit` | Manager, Super_Admin |
+| View / List | `orders:view` | All roles |
+
+Matrix updated: **Manager** gained `orders:create` and `orders:edit`.
+
+---
+
+## Completion Criteria
+
+* Order validators (create/update/approve/reject/cancel/list/identify): ✓
+* DTO layer (Summary / Detail / Item / Approval History): ✓
+* Server actions (create/update/approve/reject/cancel/get/list): ✓
+* Order creation in a single transaction (order + items + totals): ✓
+* Decimal-safe calculation engine; VAT = 0.00: ✓
+* Status workflow guards (approve/reject/cancel rules): ✓
+* Approval audit via existing fields + AuditLog: ✓
+* Inline project support (existing or inline): ✓
+* Search backend (number/dealer/project/status/date range): ✓
+* Index review — no unnecessary schema changes: ✓
+* RBAC enforced on all actions (centralized): ✓
+* ADR-008 created: ✓
+* `npx prisma generate` succeeds: ✓
+* `npx tsc --noEmit` — 0 errors: ✓
+* `npx eslint` — 0 errors: ✓
+* No UI / Invoice / Collection / Ledger built: ✓
+
+---
+
+## Next Phase
+
+PHASE_04B_ORDER_UI
+
+---
+
+---
+
+# Previous Phases
+
+---
+
+# PHASE_00C_INVOICE_RELATION_CORRECTION
+
+Status: COMPLETE
 
 ## Objectives
 
@@ -23,41 +115,13 @@ Correct the `Invoice` ↔ `SalesOrder` relationship to support the business rule
 * Verified with `npx prisma format` + `npx prisma generate`
 * Migration intentionally deferred; Orders module not built in this phase
 
----
-
-## Schema Changes
+### Schema Changes
 
 | Model | Before | After |
 |-------|--------|-------|
 | Invoice | `orderId String @unique` | `orderId String` |
 | Invoice | (implicit unique index) | `@@index([orderId])` |
 | SalesOrder | `invoice Invoice?` | `invoices Invoice[]` |
-
----
-
-## Completion Criteria
-
-* `@unique` removed from `Invoice.orderId`, relation preserved: ✓
-* `@@index([orderId])` added to `Invoice`: ✓
-* `SalesOrder.invoices Invoice[]` one-to-many back-relation: ✓
-* No other models modified: ✓
-* ADR-007 created: ✓
-* `npx prisma format` passes (relation valid): ✓
-* `npx prisma generate` succeeds: ✓
-* Schema supports One Order → Many Invoices: ✓
-* No migration run, no Orders code built: ✓
-
----
-
-## Next Phase
-
-PHASE_04_SALES_ORDERS
-
----
-
----
-
-# Previous Phases
 
 ---
 

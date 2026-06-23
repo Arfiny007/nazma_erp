@@ -4,6 +4,44 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_04A_ORDER_BACKEND] — 2026-06-23
+
+### Added
+
+- **Order domain types** — `src/types/order.ts`: `OrderSummaryDTO`, `OrderDetailDTO`, `OrderItemDTO`, `ApprovalHistoryDTO`, error codes, `ActionResult<T>`, sort fields (money/quantity exposed as fixed-precision decimal strings)
+- **Order validators** — `src/lib/validators/order.schema.ts`: `createOrderSchema`, `updateOrderSchema`, `approveOrderSchema`, `rejectOrderSchema`, `cancelOrderSchema`, `listOrdersSchema`, `orderIdentifierSchema` (localization-key error messages)
+- **Financial calculation engine** — `src/lib/utils/order-calculator.ts`: pure, Decimal-only engine (`calculateOrderTotals`, `findInvalidLineIndex`); no float math; VAT always `0.00` (already included in price)
+- **Order status workflow** — `src/lib/orders/workflow.ts`: transition matrix + guards (`assertCanApprove`, `assertCanReject`, `assertCanCancel`, `assertCanChangeStatusOnUpdate`, `assertEditable`) raising typed `OrderWorkflowError`
+- **Order number generator** — `src/lib/utils/order-number.ts`: sequential `ORD-NNNNNN` codes (transaction-safe, retry on collision)
+- **Project code generator** — `src/lib/utils/project-code.ts`: sequential `PRJ-NNNNNN` codes for inline project creation
+- **Order server actions** — `src/lib/actions/orders/`: `createOrder`, `updateOrder`, `approveOrder`, `rejectOrder`, `cancelOrder`, `getOrder`, `listOrders` (+ shared `helpers.ts`)
+- **Approval audit** — every lifecycle event (CREATE/SUBMIT/UPDATE/APPROVE/REJECT/CANCEL) writes an `AuditLog` row inside the mutation transaction; `ApprovalHistoryDTO` is derived from these rows
+- **ADR-008** — `docs/ADR/ADR-008-order-backend.md`: workflow, approval rules, multi-invoice architecture, calculation strategy, and RBAC decisions
+
+### Changed
+
+- `prisma/schema.prisma` — `OrderStatus` enum: added **`Cancelled`** (additive; `Delivered` retained, reserved). No tables, columns, or indexes changed
+- `src/lib/permissions.ts` — **Manager** granted `orders:create` and `orders:edit` (in addition to `orders:approve`) per business rules ("Manager can create"; "approved orders may be edited by Manager and Super_Admin")
+
+### Architecture Notes
+
+- **Transaction safety**: `createOrder` validates dealer/project/products, optionally creates an inline project, calculates totals, generates the order number, and persists the order + items + audit entry — all in one `prisma.$transaction`
+- **Decimal discipline**: all monetary and quantity math uses `Prisma.Decimal` (`ROUND_HALF_UP`, 2dp); DTOs expose decimal strings; no `number` ever touches money
+- **Multi-invoice aware**: cancellation is blocked once any invoice exists; `invoiceCount` surfaced in DTOs (invoice creation itself deferred to PHASE_05)
+- **Index review**: existing `SalesOrder` / `SalesOrderItem` indexes fully cover the search dimensions; no new indexes added
+- **Centralized RBAC**: every action calls `requirePermission()`; no inline role checks
+- **Migration deferred**: the `Cancelled` enum value (and the deferred PHASE_00C invoice-relation change) must be migrated before PHASE_05
+
+### Verification
+
+- `npx prisma generate` — succeeds
+- `npx prisma format` — schema valid
+- `npx tsc --noEmit` — 0 errors (strict)
+- `npx eslint` — 0 errors on all new files
+- Logic harness (calculator + workflow + validators) — 22/22 pass
+
+---
+
 ## [PHASE_00C_INVOICE_RELATION_CORRECTION] — 2026-06-23
 
 ### Changed

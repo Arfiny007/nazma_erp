@@ -88,7 +88,7 @@ export type Permission =
 // Dealers      Super_Admin=Full  Manager=Full     Accounts=Read   SR=Create/Edit
 // Products     Super_Admin=Full  Manager=Full     Accounts=Read   SR=Read
 // Projects     Super_Admin=Full  Manager=Full     Accounts=Read   SR=Create/Edit
-// Orders       Super_Admin=Full  Manager=Approve  Accounts=Read   SR=Create
+// Orders       Super_Admin=Full  Manager=Create/Edit/Approve  Accounts=Read  SR=Create
 // Invoices     Super_Admin=Full  Manager=Read     Accounts=Full   SR=Read
 // Collections  Super_Admin=Full  Manager=Read     Accounts=Full   SR=Read
 // Ledger       Super_Admin=Full  Manager=Read     Accounts=Full   SR=Read
@@ -156,8 +156,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     "projects:create",
     "projects:edit",
     "projects:delete",
-    // Orders — Approve only (view + approve; no create/edit/delete)
+    // Orders — Create / Edit / Approve (no hard delete)
     "orders:view",
+    "orders:create",
+    "orders:edit",
     "orders:approve",
     // Invoices — Read
     "invoices:view",

@@ -20,6 +20,67 @@ Last updated: 2026-06-23
 | PHASE_AUTH_01_FOUNDATION | Auth.js v5 Credentials, login page, middleware, seed | ✅ COMPLETE |
 | PHASE_AUTH_02_RBAC | Role-Based Access Control, permission matrix, guards, 403 page | ✅ COMPLETE |
 | PHASE_00C_INVOICE_RELATION_CORRECTION | Invoice ↔ SalesOrder corrected to one-to-many | ✅ COMPLETE |
+| PHASE_04A_ORDER_BACKEND | Sales Order backend: validators, DTOs, actions, calc engine, workflow, audit | ✅ COMPLETE |
+
+---
+
+## Order Backend Module — Verification
+
+| Criterion | Status |
+|-----------|--------|
+| Order validators (create/update/approve/reject/cancel/list/identify) | ✅ |
+| DTO layer (Summary / Detail / Item / Approval History) | ✅ |
+| Server actions (create/update/approve/reject/cancel/get/list) | ✅ |
+| Order creation in a single Prisma transaction (order + items + totals) | ✅ |
+| Decimal-safe calculation engine; no float math | ✅ |
+| VAT not calculated (already in price) → vat = 0.00 | ✅ |
+| Workflow: cannot approve cancelled order | ✅ |
+| Workflow: cannot reject approved order | ✅ |
+| Workflow: cannot cancel invoiced order | ✅ |
+| Approved orders editable (Manager / Super_Admin) | ✅ |
+| Approval audit via createdById / approvedById / approvedAt + AuditLog | ✅ |
+| Inline project support (existing OR inline) | ✅ |
+| Search backend (order no / dealer / project / status / date range) | ✅ |
+| Index review — existing indexes sufficient, none added | ✅ |
+| Only additive schema change (OrderStatus + Cancelled) | ✅ |
+| RBAC enforced on all actions (centralized, no inline checks) | ✅ |
+| Manager granted orders:create + orders:edit | ✅ |
+| `npx prisma generate` succeeds | ✅ |
+| `npx tsc --noEmit` — 0 errors | ✅ |
+| `npx eslint` — 0 errors | ✅ |
+| ADR-008 created | ✅ |
+| No UI / Invoice / Collection / Ledger built | ✅ |
+
+### Files Created — PHASE_04A_ORDER_BACKEND
+
+```
+src/types/order.ts
+src/lib/validators/order.schema.ts
+src/lib/utils/order-calculator.ts
+src/lib/utils/order-number.ts
+src/lib/utils/project-code.ts
+src/lib/orders/workflow.ts
+src/lib/actions/orders/helpers.ts
+src/lib/actions/orders/create-order.ts
+src/lib/actions/orders/update-order.ts
+src/lib/actions/orders/approve-order.ts
+src/lib/actions/orders/reject-order.ts
+src/lib/actions/orders/cancel-order.ts
+src/lib/actions/orders/get-order.ts
+src/lib/actions/orders/list-orders.ts
+docs/ADR/ADR-008-order-backend.md
+```
+
+### Files Modified — PHASE_04A_ORDER_BACKEND
+
+```
+prisma/schema.prisma          (OrderStatus + Cancelled)
+src/lib/permissions.ts        (Manager: orders:create, orders:edit)
+CURRENT_PHASE.md
+CHANGELOG.md
+IMPLEMENTATION_STATUS.md
+NEXT_ACTION.md
+```
 
 ---
 
@@ -211,7 +272,7 @@ package.json (next-auth, bcryptjs, @auth/prisma-adapter added)
 
 | Phase | Description |
 |-------|-------------|
-| PHASE_04_SALES_ORDERS | Sales order workflow |
+| PHASE_04B_ORDER_UI | Sales order UI (list, create form, approval workflow UI) |
 | PHASE_05_INVOICE_ENGINE | Invoice generation |
 | PHASE_06_COLLECTIONS | Payment collections |
 | PHASE_07_LEDGER | Financial ledger |
