@@ -2,13 +2,53 @@
 
 Current Phase:
 
-PHASE_04B_ORDER_UI
+PHASE_04C_ORDER_COMBOBOX_DIAGNOSTICS
 
 Status:
 
 COMPLETE
 
 ---
+
+## Objectives (PHASE_04C)
+
+Fix the `DealerCombobox` on Create Order so dealers are visible and selectable,
+and harden the transport / error boundary.
+
+* Remove `overflow-hidden` from `OrderFormSection` (dropdown was clipped)
+* Elevate Dealer & Project section stacking (`relative z-20`) so the list paints above the next card
+* Wrap the `listDealers` call in `try/catch`
+* Replace the `results` + `loading` pair with a `loading | ready | error` state machine
+* Distinguish empty result vs transport / permission / session / stale-action failures
+* Never coerce a failure into `[]`
+* Render meaningful, localized error states with a Retry / Refresh action
+* ADR-010 documents both defects and decisions
+
+### Root Cause
+
+1. **Visibility** — `OrderFormSection.overflow-hidden` clipped the absolutely positioned dropdown; rows existed in DOM/state but were not visible.
+2. **Transport** — Stale Server Action references could throw; missing error handling masked failures as empty.
+
+### Completion Criteria
+
+* Section overflow no longer clips dealer dropdown: ✓
+* Dealer section stacks above Order Items card when open: ✓
+* `try/catch` around dealer loading: ✓
+* Failure classes distinguished (empty / action / network / permission / session / stale): ✓
+* Failures never collapse to `[]`: ✓
+* Localized error UI + Retry/Refresh: ✓
+* EN + BN keys added: ✓
+* `npx tsc --noEmit` — 0 errors: ✓
+* `npx eslint` — 0 errors (3 pre-existing warnings): ✓
+* ADR-010 created: ✓
+* Product Form (`product-form-section.tsx`) untouched: ✓
+* No Invoice / Collection / Ledger work; schema unchanged: ✓
+
+---
+
+# PHASE_04B_ORDER_UI
+
+Status: COMPLETE
 
 ## Objectives
 

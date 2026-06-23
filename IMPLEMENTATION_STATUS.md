@@ -1,6 +1,6 @@
 # IMPLEMENTATION STATUS
 
-Last updated: 2026-06-23
+Last updated: 2026-06-24 (PHASE_04C_ORDER_COMBOBOX_DIAGNOSTICS — visibility fix)
 
 ---
 
@@ -22,6 +22,28 @@ Last updated: 2026-06-23
 | PHASE_00C_INVOICE_RELATION_CORRECTION | Invoice ↔ SalesOrder corrected to one-to-many | ✅ COMPLETE |
 | PHASE_04A_ORDER_BACKEND | Sales Order backend: validators, DTOs, actions, calc engine, workflow, audit | ✅ COMPLETE |
 | PHASE_04B_ORDER_UI | Sales Order UI: list, create/edit forms, detail, live summary, approval workflow | ✅ COMPLETE |
+| PHASE_04C_ORDER_COMBOBOX_DIAGNOSTICS | DealerCombobox: transport error boundary + OrderFormSection overflow/stacking visibility fix | ✅ COMPLETE |
+
+---
+
+## DealerCombobox — Verification
+
+| Criterion | Status |
+|-----------|--------|
+| Dropdown visible on `/orders/new` (not clipped by section) | ✅ |
+| Dealer rows selectable after open | ✅ |
+| Dealer section paints above Order Items card (`z-20`) | ✅ |
+| `try/catch` around dealer loading | ✅ |
+| Distinguishes empty / action / network / permission / session / stale | ✅ |
+| Failures never silently coerced to `[]` | ✅ |
+| Localized error UI + Retry / Refresh | ✅ |
+| Empty / error / stale states work | ✅ |
+| EN + BN localization | ✅ |
+| Product Form sections untouched (`product-form-section.tsx`) | ✅ |
+| `npx tsc --noEmit` — 0 errors | ✅ |
+| `npx eslint` — 0 errors (3 pre-existing warnings) | ✅ |
+| ADR-010 created | ✅ |
+| No Invoice / Collection / Ledger built; schema unchanged | ✅ |
 
 ---
 

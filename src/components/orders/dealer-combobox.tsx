@@ -1,12 +1,111 @@
 "use client";
 
-import { Check, ChevronsUpDown, Loader2, Search, X } from "lucide-react";
-import { useEffect, useId, useRef, useState } from "react";
+import {
+  AlertTriangle,
+  Check,
+  ChevronsUpDown,
+  Loader2,
+  RefreshCw,
+  Search,
+  X,
+} from "lucide-react";
+import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
 import { listDealers } from "@/lib/actions/dealers/list-dealers";
 import { cn } from "@/lib/utils";
-import type { DealerDTO } from "@/types/dealer";
+import type { DealerDTO, DealerError } from "@/types/dealer";
+
+/**
+ * Why a dealer load failed. We deliberately separate these so the UI can show a
+ * meaningful, actionable message instead of masking everything as "empty".
+ *
+ * - `ACTION_FAILURE`  — the action ran and returned a typed `{ success: false }`
+ *   envelope (validation / internal error).
+ * - `NETWORK`         — the POST never reached the server (offline, DNS, CORS,
+ *   aborted) — a thrown `TypeError: Failed to fetch`.
+ * - `PERMISSION`      — middleware/guard rejected the request (redirect to
+ *   `/access-denied`).
+ * - `SESSION`         — the session expired and the request was redirected to
+ *   sign-in.
+ * - `STALE_ACTION`    — the client bundle referenced a Server Action id that no
+ *   longer exists on the server (typical after a redeploy / Docker rebuild /
+ *   HMR). Next throws "Failed to find Server Action … from an older or newer
+ *   deployment".
+ */
+type DealerLoadErrorKind =
+  | "ACTION_FAILURE"
+  | "NETWORK"
+  | "PERMISSION"
+  | "SESSION"
+  | "STALE_ACTION";
+
+type DealerLoadState =
+  | { status: "loading" }
+  | { status: "ready"; items: DealerDTO[] }
+  | { status: "error"; kind: DealerLoadErrorKind; messageKey: string };
+
+const DEALER_LOAD_ERROR_MESSAGE_KEY: Record<DealerLoadErrorKind, string> = {
+  ACTION_FAILURE: "order.form.dealer.error.failed",
+  NETWORK: "order.form.dealer.error.network",
+  PERMISSION: "order.form.dealer.error.permission",
+  SESSION: "order.form.dealer.error.session",
+  STALE_ACTION: "order.form.dealer.error.stale",
+};
+
+/** Dev-only diagnostics. Produces no output in production builds. */
+function logDealerDiagnostic(
+  event: string,
+  detail: Record<string, unknown>,
+): void {
+  if (process.env.NODE_ENV === "production") {
+    return;
+  }
+  console.warn(`[DealerCombobox] ${event}`, detail);
+}
+
+/** Maps a typed action-failure envelope to a load-error classification. */
+function classifyActionError(error: DealerError): DealerLoadErrorKind {
+  // `listDealers` only emits VALIDATION_ERROR / INTERNAL_ERROR today, but we
+  // keep the switch exhaustive-friendly so future codes are handled explicitly.
+  switch (error.code) {
+    case "VALIDATION_ERROR":
+    case "INTERNAL_ERROR":
+    default:
+      return "ACTION_FAILURE";
+  }
+}
+
+/**
+ * Classifies an error thrown out of the Server Action call. These are transport
+ * / framework failures (never the typed `{ success: false }` envelope), so the
+ * only signal we have is the message / digest string.
+ */
+function classifyThrownError(error: unknown): DealerLoadErrorKind {
+  const message = error instanceof Error ? error.message : String(error);
+  const digest =
+    typeof error === "object" && error !== null && "digest" in error
+      ? String((error as { digest?: unknown }).digest ?? "")
+      : "";
+  const combined = `${message} ${digest}`;
+
+  if (/Failed to find Server Action|older or newer deployment/i.test(combined)) {
+    return "STALE_ACTION";
+  }
+  if (/NEXT_REDIRECT/i.test(combined)) {
+    if (/access-denied|forbidden|unauthorized/i.test(combined)) {
+      return "PERMISSION";
+    }
+    return "SESSION";
+  }
+  if (
+    error instanceof TypeError ||
+    /failed to fetch|networkerror|load failed|fetch/i.test(combined)
+  ) {
+    return "NETWORK";
+  }
+  return "ACTION_FAILURE";
+}
 
 interface DealerComboboxProps {
   value: DealerDTO | null;
@@ -40,11 +139,15 @@ export function DealerCombobox({
 
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState("");
-  const [results, setResults] = useState<DealerDTO[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [state, setState] = useState<DealerLoadState>({ status: "loading" });
+  const [reloadToken, setReloadToken] = useState(0);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  const retry = useCallback(() => {
+    setReloadToken((token) => token + 1);
+  }, []);
 
   useEffect(() => {
     if (!open) {
@@ -76,20 +179,58 @@ export function DealerCombobox({
 
     const handle = window.setTimeout(() => {
       void (async () => {
-        setLoading(true);
-        const response = await listDealers({
-          page: 1,
-          pageSize: 20,
-          search: search.length > 0 ? search : undefined,
-          ...(activeOnly ? { isActive: true } : {}),
-          sortBy: "companyName",
-          sortOrder: "asc",
-        });
-        if (cancelled) {
-          return;
+        setState({ status: "loading" });
+        try {
+          const response = await listDealers({
+            page: 1,
+            pageSize: 20,
+            search: search.length > 0 ? search : undefined,
+            ...(activeOnly ? { isActive: true } : {}),
+            sortBy: "companyName",
+            sortOrder: "asc",
+          });
+          if (cancelled) {
+            return;
+          }
+
+          if (response.success) {
+            setState({ status: "ready", items: response.data.items });
+            return;
+          }
+
+          // Action ran but returned a typed failure — never swallow it as [].
+          const kind = classifyActionError(response.error);
+          logDealerDiagnostic("listDealers returned a failure envelope", {
+            kind,
+            code: response.error.code,
+            messageKey: response.error.messageKey,
+            activeOnly: Boolean(activeOnly),
+            search,
+          });
+          setState({
+            status: "error",
+            kind,
+            messageKey: DEALER_LOAD_ERROR_MESSAGE_KEY[kind],
+          });
+        } catch (error) {
+          if (cancelled) {
+            return;
+          }
+
+          // Transport / framework failure (network, redirect, stale action).
+          const kind = classifyThrownError(error);
+          logDealerDiagnostic("listDealers threw before returning", {
+            kind,
+            error,
+            activeOnly: Boolean(activeOnly),
+            search,
+          });
+          setState({
+            status: "error",
+            kind,
+            messageKey: DEALER_LOAD_ERROR_MESSAGE_KEY[kind],
+          });
         }
-        setResults(response.success ? response.data.items : []);
-        setLoading(false);
       })();
     }, 250);
 
@@ -97,7 +238,7 @@ export function DealerCombobox({
       cancelled = true;
       window.clearTimeout(handle);
     };
-  }, [open, search, activeOnly]);
+  }, [open, search, activeOnly, reloadToken]);
 
   const handleSelect = (dealer: DealerDTO) => {
     onChange(dealer);
@@ -187,17 +328,51 @@ export function DealerCombobox({
             />
           </div>
           <ul id={listboxId} role="listbox" className="max-h-64 overflow-auto py-1">
-            {loading ? (
+            {state.status === "loading" ? (
               <li className="flex items-center justify-center gap-2 px-3 py-6 text-sm text-slate-500 dark:text-slate-400">
                 <Loader2 aria-hidden="true" className="size-4 animate-spin" />
                 {t("order.form.dealer.loading")}
               </li>
-            ) : results.length === 0 ? (
+            ) : state.status === "error" ? (
+              <li className="px-3 py-6">
+                <div
+                  role="alert"
+                  className="flex flex-col items-center gap-2 text-center"
+                >
+                  <AlertTriangle
+                    aria-hidden="true"
+                    className="size-5 text-rose-500 dark:text-rose-400"
+                  />
+                  <span className="text-sm font-medium text-rose-600 dark:text-rose-400">
+                    {t(state.messageKey)}
+                  </span>
+                  {state.kind === "STALE_ACTION" ? (
+                    <button
+                      type="button"
+                      onClick={() => window.location.reload()}
+                      className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                    >
+                      <RefreshCw aria-hidden="true" className="size-3.5" />
+                      {t("order.form.dealer.error.refresh")}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={retry}
+                      className="inline-flex items-center gap-1.5 rounded-md border border-slate-300 px-2.5 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-600 dark:text-slate-200 dark:hover:bg-slate-800"
+                    >
+                      <RefreshCw aria-hidden="true" className="size-3.5" />
+                      {t("order.form.dealer.error.retry")}
+                    </button>
+                  )}
+                </div>
+              </li>
+            ) : state.items.length === 0 ? (
               <li className="px-3 py-6 text-center text-sm text-slate-500 dark:text-slate-400">
                 {t("order.form.dealer.empty")}
               </li>
             ) : (
-              results.map((dealer) => {
+              state.items.map((dealer) => {
                 const selected = dealer.dealerCode === value?.dealerCode;
                 return (
                   <li key={dealer.id} role="option" aria-selected={selected}>

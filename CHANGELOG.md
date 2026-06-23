@@ -4,6 +4,45 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_04C_ORDER_COMBOBOX_DIAGNOSTICS] — 2026-06-23
+
+### Fixed
+
+- **DealerCombobox dropdown invisible on Create Order** — `OrderFormSection` used `overflow-hidden`, which clipped the absolutely positioned dealer dropdown at the card border even when React state held dealers (`ready`, `items.length > 0`). Removed `overflow-hidden` from the section shell; the Dealer & Project section now passes `sectionClassName="relative z-20"` so the open list paints above the Order Items card below.
+- **DealerCombobox transport / error boundary** — `src/components/orders/dealer-combobox.tsx`: the dealer load previously swallowed failures into `[]` with no `try/catch`. The load is now an explicit state machine (`loading` / `ready` / `error`) that never coerces a failure into an empty list.
+
+### Changed
+
+- `src/components/orders/order-form-section.tsx` — removed `overflow-hidden`; added optional `sectionClassName` prop for stacking when a section hosts popovers.
+- `src/components/orders/order-form.tsx` — Dealer & Project section uses `sectionClassName="relative z-20"`.
+
+### Added
+
+- **Transport-aware error classification** — five distinct failure kinds: `ACTION_FAILURE` (typed `{ success: false }` envelope), `NETWORK` (thrown `TypeError`/`fetch`), `PERMISSION` and `SESSION` (`NEXT_REDIRECT`), and `STALE_ACTION` ("Failed to find Server Action … older/newer deployment"). Each maps to a localized message.
+- **Actionable error UI** — `role="alert"` state with a localized message and a **Retry** action (or **Refresh page** for a stale Server Action, the only correct recovery for a rotated action id).
+- **Dev-only diagnostics** — `logDealerDiagnostic()` logs the failure kind + context via `console.warn`, guarded by `process.env.NODE_ENV === "production"`; no production noise.
+- **Localization keys** — `order.form.dealer.error.failed` / `.network` / `.permission` / `.session` / `.stale` / `.retry` / `.refresh` in `public/locales/en/common.json` and `public/locales/bn/common.json`.
+- **ADR-010** — `docs/ADR/ADR-010-order-combobox-diagnostics.md`: root cause and the transport/error-boundary decision.
+
+### Root Cause
+
+Two distinct defects, both UI-only:
+
+1. **Visibility (primary on Create Order)** — `OrderFormSection` applied `overflow-hidden` to the card shell. The dealer dropdown is `position: absolute` and opens downward; the list `<ul>` rendered below the section clip edge and was not painted or clickable despite correct React state.
+2. **Transport (earlier)** — A stale Server Action reference could throw before returning; missing `try/catch` plus a silent `: []` fallback masked that failure as "No dealers found".
+
+### Verification
+
+- `npx tsc --noEmit` — 0 errors (strict)
+- `npx eslint` — 0 errors (3 pre-existing `useReactTable` warnings)
+- Dealer dropdown visible and selectable on `/orders/new` after section overflow fix
+
+### Scope
+
+UI-only, additive. No changes to `listDealers`, the Dealer module, the Orders backend, RBAC, or the schema. No Invoice / Collection / Ledger work.
+
+---
+
 ## [PHASE_04B_ORDER_UI] — 2026-06-23
 
 ### Added

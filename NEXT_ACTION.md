@@ -2,7 +2,16 @@
 
 ## Current State
 
-PHASE_04B_ORDER_UI is COMPLETE.
+PHASE_04C_ORDER_COMBOBOX_DIAGNOSTICS is COMPLETE.
+
+The `DealerCombobox` is fixed end-to-end on Create Order:
+
+1. **Visibility** — `OrderFormSection` no longer uses `overflow-hidden`, which was clipping the absolutely positioned dropdown at the card border even when state held dealers. The Dealer & Project section uses `relative z-20` so the open list paints above the Order Items card.
+2. **Transport** — Load path uses `try/catch` and typed `loading | ready | error` states; failures are never coerced to `[]`.
+
+Verified: `tsc --noEmit` 0 errors; `eslint` 0 errors (3 pre-existing `useReactTable` warnings). Product Form sections untouched. ADR-010 documents both defects. UI-only — no backend/schema changes.
+
+PHASE_04B_ORDER_UI (prior) delivered the Sales Order UI.
 
 The Sales Order **UI** is fully implemented on top of the existing backend:
 
