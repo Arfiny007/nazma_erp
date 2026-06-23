@@ -186,8 +186,8 @@ model SalesOrder {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  items   SalesOrderItem[]
-  invoice Invoice?
+  items    SalesOrderItem[]
+  invoices Invoice[]
 
   @@index([dealerCode])
   @@index([projectId])
@@ -229,7 +229,7 @@ model Invoice {
 
   dealer Dealer @relation(fields: [dealerCode], references: [dealerCode])
 
-  orderId String     @unique
+  orderId String
   order   SalesOrder @relation(fields: [orderId], references: [id])
 
   status InvoiceStatus @default(Draft)
@@ -256,6 +256,7 @@ model Invoice {
 
   collections Collection[]
 
+  @@index([orderId])
   @@index([dealerCode])
   @@index([status])
   @@index([dueDate])

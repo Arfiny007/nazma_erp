@@ -1,6 +1,6 @@
 # IMPLEMENTATION STATUS
 
-Last updated: 2026-06-20
+Last updated: 2026-06-23
 
 ---
 
@@ -19,6 +19,34 @@ Last updated: 2026-06-20
 | PHASE_00B_SCHEMA_HARDENING | Full Prisma schema with all domain models | ✅ COMPLETE |
 | PHASE_AUTH_01_FOUNDATION | Auth.js v5 Credentials, login page, middleware, seed | ✅ COMPLETE |
 | PHASE_AUTH_02_RBAC | Role-Based Access Control, permission matrix, guards, 403 page | ✅ COMPLETE |
+| PHASE_00C_INVOICE_RELATION_CORRECTION | Invoice ↔ SalesOrder corrected to one-to-many | ✅ COMPLETE |
+
+---
+
+## Invoice Relation Correction — Verification
+
+| Criterion | Status |
+|-----------|--------|
+| `@unique` removed from `Invoice.orderId` (column + relation preserved) | ✅ |
+| `@@index([orderId])` added to `Invoice` | ✅ |
+| `SalesOrder.invoices Invoice[]` one-to-many back-relation | ✅ |
+| `Collection` / `LedgerEntry` / `DueReport` / `Dealer` / `Product` / `Project` untouched | ✅ |
+| `npx prisma format` — relation valid | ✅ |
+| `npx prisma generate` — succeeds | ✅ |
+| Schema supports One Order → Many Invoices | ✅ |
+| ADR-007 created | ✅ |
+| No migration run, no Orders code built | ✅ |
+
+### Files Modified — PHASE_00C_INVOICE_RELATION_CORRECTION
+
+```
+prisma/schema.prisma
+docs/ADR/ADR-007-order-multi-invoice.md (new)
+CURRENT_PHASE.md
+CHANGELOG.md
+IMPLEMENTATION_STATUS.md
+NEXT_ACTION.md
+```
 
 ---
 

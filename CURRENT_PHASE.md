@@ -2,13 +2,68 @@
 
 Current Phase:
 
-PHASE_03C_PRODUCT_FORMS
+PHASE_00C_INVOICE_RELATION_CORRECTION
 
 Status:
 
 COMPLETE
 
 ---
+
+## Objectives
+
+Correct the `Invoice` ↔ `SalesOrder` relationship to support the business rule:
+**One SalesOrder may generate multiple Invoices.**
+
+* Remove `@unique` from `Invoice.orderId` (keep the column and the relation)
+* Add `@@index([orderId])` to `Invoice` (preserve FK lookup performance)
+* Change `SalesOrder.invoice Invoice?` → `invoices Invoice[]`
+* No other schema redesign — `Collection`, `LedgerEntry`, `DueReport`, `Dealer`, `Product`, `Project` untouched
+* ADR-007 documents the One Order → Many Invoices decision
+* Verified with `npx prisma format` + `npx prisma generate`
+* Migration intentionally deferred; Orders module not built in this phase
+
+---
+
+## Schema Changes
+
+| Model | Before | After |
+|-------|--------|-------|
+| Invoice | `orderId String @unique` | `orderId String` |
+| Invoice | (implicit unique index) | `@@index([orderId])` |
+| SalesOrder | `invoice Invoice?` | `invoices Invoice[]` |
+
+---
+
+## Completion Criteria
+
+* `@unique` removed from `Invoice.orderId`, relation preserved: ✓
+* `@@index([orderId])` added to `Invoice`: ✓
+* `SalesOrder.invoices Invoice[]` one-to-many back-relation: ✓
+* No other models modified: ✓
+* ADR-007 created: ✓
+* `npx prisma format` passes (relation valid): ✓
+* `npx prisma generate` succeeds: ✓
+* Schema supports One Order → Many Invoices: ✓
+* No migration run, no Orders code built: ✓
+
+---
+
+## Next Phase
+
+PHASE_04_SALES_ORDERS
+
+---
+
+---
+
+# Previous Phases
+
+---
+
+# PHASE_03C_PRODUCT_FORMS
+
+Status: COMPLETE
 
 ## Objectives
 
@@ -100,18 +155,6 @@ docs/ADR/ADR-004-product-forms.md (new) — Architecture decisions documented
 * ESLint — 0 errors: ✓
 * English + Bengali localization: ✓
 * ADR-004 created: ✓
-
----
-
-## Next Phase
-
-PHASE_04_SALES_ORDERS
-
----
-
----
-
-# Previous Phases
 
 ---
 

@@ -2,16 +2,25 @@
 
 ## Current State
 
-PHASE_03C_PRODUCT_FORMS is COMPLETE.
+PHASE_00C_INVOICE_RELATION_CORRECTION is COMPLETE.
 
-Product management module is fully functional:
-- Create Product at /products/new (enforces products:create)
-- Edit Product at /products/[id]/edit (enforces products:edit)
-- Deactivate Product via confirmation dialog (soft-delete, isActive = false)
-- Role-aware New Product button and Edit links
-- Three-layer RBAC: middleware → enforcePermission → requirePermission
-- Full EN + BN localization
-- All server actions protected with requirePermission guards
+The `Invoice` ↔ `SalesOrder` relationship is now one-to-many:
+- `Invoice.orderId` — `@unique` removed (column + relation preserved)
+- `Invoice` — `@@index([orderId])` added
+- `SalesOrder.invoices Invoice[]` — one-to-many back-relation
+- `Collection`, `LedgerEntry`, `DueReport`, `Dealer`, `Product`, `Project` untouched
+- ADR-007 documents the One Order → Many Invoices decision
+- Verified with `npx prisma format` + `npx prisma generate`
+- **Migration NOT yet run** — must be applied before Invoice engine work
+
+PHASE_03C_PRODUCT_FORMS (prior) is COMPLETE — product management module fully functional.
+
+---
+
+## Outstanding
+
+- A migration for the relation change has been intentionally deferred. Run
+  `npx prisma migrate dev` (with a descriptive name) before building the Invoice engine.
 
 ---
 

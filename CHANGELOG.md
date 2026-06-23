@@ -4,6 +4,28 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_00C_INVOICE_RELATION_CORRECTION] — 2026-06-23
+
+### Changed
+
+- **Invoice ↔ SalesOrder is now one-to-many** — corrected to support the business rule "One SalesOrder may generate multiple Invoices"
+- `prisma/schema.prisma` — `Invoice.orderId`: removed `@unique` (column and relation preserved)
+- `prisma/schema.prisma` — `Invoice`: added `@@index([orderId])` to preserve FK lookup performance after the implicit unique index was removed
+- `prisma/schema.prisma` — `SalesOrder`: changed back-relation `invoice Invoice?` → `invoices Invoice[]`
+
+### Added
+
+- **ADR-007** — `docs/ADR/ADR-007-order-multi-invoice.md`: documents the One Order → Many Invoices decision, scope boundaries, and consequences
+
+### Notes
+
+- `Collection`, `LedgerEntry`, `DueReport`, `Dealer`, `Product`, and `Project` were intentionally NOT modified
+- Verified with `npx prisma format` and `npx prisma generate`
+- Migration intentionally deferred; Orders module not built in this phase
+- Financial reconciliation across multiple invoices per order is application logic (deferred to PHASE_05)
+
+---
+
 ## [PHASE_03C_PRODUCT_FORMS] — 2026-06-20
 
 ### Added
