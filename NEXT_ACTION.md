@@ -2,57 +2,52 @@
 
 ## Current State
 
-PHASE_05A_DELIVERY_CHALLAN_BACKEND **foundation** is delivered:
+PHASE_05A1_DELIVERY_CHALLAN_SCHEMA is **complete**:
 
-- DTOs, error codes, and action result types (`src/types/delivery-challan.ts`)
-- Zod validation contracts (`src/lib/validators/delivery-challan.schema.ts`)
-- Workflow + quantity guards (`src/lib/delivery/workflow.ts`)
-- Schema design documented in ADR-012 (not migrated)
-- ADR-012 created
+- `DeliveryChallanStatus` enum, `DeliveryChallan`, `DeliveryChallanItem` models in Prisma
+- `SalesOrder.deliveryChallans` relation added
+- `Invoice.deliveryChallanId` nullable FK prepared (one challan → one invoice)
+- Deferred migrations applied: `OrderStatus.Cancelled`, `Invoice.orderId` index (non-unique)
+- Migration `20250625100000_add_delivery_challan` applied to Docker Postgres
+- `npx prisma format`, `npx prisma generate`, `npx tsc --noEmit` — all pass
 
-**Not yet built:** server actions, Prisma models, migrations, order-workflow
-integration in `updateOrder`, challan number generator, unit tests.
+PHASE_05A foundation (DTOs, validators, workflow guards, ADR-012) was delivered earlier.
 
-**ADR-012 amended (architecture review 2026-06-25):**
-- Split `remainingQty` (display, confirmed only) vs `allocatableQty` (validation, includes draft reservation)
-- Order immutability triggers on **Confirmed** challans only — Draft is abandonable
-- Fulfillment Progress DTO structure (§10) and Invoice eligibility workflow (§11) documented
-- `workflow.ts` / types must align to amended ADR at implementation time
+**Not yet built:** server actions, challan number generator, order-workflow integration,
+`workflow.ts` alignment to amended ADR, unit tests.
 
 ---
 
 ## Outstanding
 
-- **Migration NOT yet run.** Deferred schema changes (apply together when DB available):
-  1. `OrderStatus` enum gained `Cancelled` (PHASE_04A).
-  2. `Invoice.orderId` `@unique` removal + `@@index([orderId])` (PHASE_00C).
-  3. `DeliveryChallan` + `DeliveryChallanItem` + `DeliveryChallanStatus` (PHASE_05A — ADR-012).
-  4. `Invoice.deliveryChallanId` + `InvoiceItem` + logistics field relocation (PHASE_05C prep).
-
-  Run migrations once a database is available.
+- **Server actions** — `createChallan`, `confirmChallan`, `getChallan`, `listChallans`, `listChallansForOrder`
+- **Challan number generator** — `CHL-NNNNNN` (`src/lib/utils/challan-number.ts`)
+- **Order integration** — `assertOrderLinesMutable` in `updateOrder`; fulfillment progress in `getOrder`
+- **Workflow alignment** — split `remainingQty` vs `allocatableQty` per ADR-012 amendment
+- **InvoiceItem model** — PHASE_05C (not this phase)
+- **Logistics field removal from Invoice** — PHASE_05C data migration
 
 ---
 
-## Next Sub-Phase: PHASE_05A (continued) — Server Actions + Schema Migration
+## Next Sub-Phase: PHASE_05A2 — Server Actions + Order Integration
 
 ### Objective
 
-Complete PHASE_05A by applying the ADR-012 schema, wiring server actions, and
-integrating challan-aware guards into the order module.
+Complete the Delivery Challan backend by wiring server actions and integrating
+challan-aware guards into the order module.
 
 ### Implementation Goals
 
-1. **Schema migration** — apply ADR-012 models to `prisma/schema.prisma`; run migrate.
-2. **Challan number generator** — `CHL-NNNNNN` sequential codes (`src/lib/utils/challan-number.ts`).
-3. **Server actions** — `createChallan`, `confirmChallan`, `getChallan`, `listChallans`,
+1. **Challan number generator** — `CHL-NNNNNN` sequential codes (`src/lib/utils/challan-number.ts`).
+2. **Server actions** — `createChallan`, `confirmChallan`, `getChallan`, `listChallans`,
    `listChallansForOrder`; all RBAC-guarded, transaction-safe.
-4. **Order integration** — call `assertOrderLinesMutable(confirmedChallanCount)` in
+3. **Order integration** — call `assertOrderLinesMutable(confirmedChallanCount)` in
    `updateOrder`; extend `assertCanCancel` to block confirmed challans; populate
    `OrderFulfillmentProgressDTO` in `getOrder` per ADR-012 §10.
-5. **Align workflow** — split `computeRemainingQuantity` (display) from
+4. **Align workflow** — split `computeRemainingQuantity` (display) from
    `computeAllocatableQuantity` (validation); immutability keyed on confirmed count.
-6. **Audit** — challan CREATE / CONFIRM events in `AuditLog` inside transactions.
-7. **Unit tests** — workflow guards + over-delivery scenarios.
+5. **Audit** — challan CREATE / CONFIRM events in `AuditLog` inside transactions.
+6. **Unit tests** — workflow guards + over-delivery scenarios.
 
 ### Then: PHASE_05B_DELIVERY_CHALLAN_UI
 

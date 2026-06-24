@@ -2,11 +2,11 @@
 
 Current Phase:
 
-PHASE_05A_DELIVERY_CHALLAN_BACKEND
+PHASE_05A1_DELIVERY_CHALLAN_SCHEMA
 
 Status:
 
-IN PROGRESS (backend foundation delivered — ADR-012; server actions + migration deferred)
+COMPLETE
 
 ---
 
@@ -17,34 +17,68 @@ IN PROGRESS (backend foundation delivered — ADR-012; server actions + migratio
 | PHASE_04A_ORDER_BACKEND | Sales Order backend | ✅ COMPLETE |
 | PHASE_04B_ORDER_UI | Sales Order UI | ✅ COMPLETE |
 | PHASE_04C_ORDER_COMBOBOX_DIAGNOSTICS | DealerCombobox fix | ✅ COMPLETE |
-| **PHASE_05A_DELIVERY_CHALLAN_BACKEND** | Delivery Challan backend (validators, DTOs, workflow guards, schema design) | **IN PROGRESS** |
+| PHASE_05A_DELIVERY_CHALLAN_BACKEND | Delivery Challan backend (validators, DTOs, workflow guards) | ✅ COMPLETE (foundation) |
+| **PHASE_05A1_DELIVERY_CHALLAN_SCHEMA** | Delivery Challan Prisma schema + migration | **✅ COMPLETE** |
+| PHASE_05A2_DELIVERY_CHALLAN_ACTIONS | Server actions, challan number generator, order integration | PLANNED |
 | PHASE_05B_DELIVERY_CHALLAN_UI | Delivery Challan UI (create from order, list, detail, dispatch) | PLANNED |
 | PHASE_05C_INVOICE_ENGINE | Invoice generation from challan (+ required InvoiceItem) | PLANNED |
 | PHASE_05D_INVOICE_UI_PDF | Invoice UI, issue workflow, printable PDF | PLANNED |
 
 ---
 
+# PHASE_05A1_DELIVERY_CHALLAN_SCHEMA
+
+Status: COMPLETE
+
+## Objectives
+
+Apply the ADR-012 Delivery Challan schema to Prisma and migrate the database.
+**Database only** — no server actions, UI, or invoice logic.
+
+* `DeliveryChallanStatus` enum (Draft, Confirmed, Cancelled)
+* `DeliveryChallan` model with logistics fields, audit FKs, indexes
+* `DeliveryChallanItem` model with `Decimal(18,2)` quantity
+* `SalesOrder.deliveryChallans` one-to-many back-relation
+* `Invoice.deliveryChallanId` nullable one-to-one prep for PHASE_05C
+* Also applied deferred migrations: `OrderStatus.Cancelled`, `Invoice.orderId` non-unique + index
+
+### Out of Scope (this sub-phase)
+
+* Server actions, DTO changes, validators, UI
+* Invoice Engine, Collection, Ledger, Reporting
+* Logistics field removal from `Invoice` (PHASE_05C)
+
+### Completion Criteria
+
+* Prisma schema updated per ADR-012: ✓
+* `npx prisma format` + `npx prisma generate`: ✓
+* Migration `add_delivery_challan` applied (Docker Postgres): ✓
+* `npx tsc --noEmit` — 0 errors: ✓
+* Governance docs updated: ✓
+
+---
+
 # PHASE_05A_DELIVERY_CHALLAN_BACKEND
 
-Status: IN PROGRESS (foundation complete; server actions + migration deferred)
+Status: COMPLETE (foundation — validators, DTOs, workflow guards, ADR-012)
 
 ## Objectives
 
 Build the Delivery Challan **backend foundation** — the non-financial fulfillment
-layer between Sales Orders and Invoices. No UI, no Invoice engine, no migrations.
+layer between Sales Orders and Invoices. No UI, no Invoice engine.
 
-* Propose `DeliveryChallan` + `DeliveryChallanItem` schema (documented, not migrated)
+* Propose `DeliveryChallan` + `DeliveryChallanItem` schema (documented in ADR-012)
 * DTO layer — Challan Summary, Challan Detail, Challan Item, Order Fulfillment Progress
 * Zod validators — create / confirm / list / identify
 * Workflow guards — over-delivery prevention, order eligibility, completion detection
 * Quantity reconciliation strategy — derived `deliveredQuantity` / `remainingQuantity`
-* Order immutability guard — lines locked after first challan
+* Order immutability guard — lines locked after first confirmed challan
 * ADR-012 documents implementation decisions
 
-### Out of Scope (this sub-phase)
+### Out of Scope (foundation sub-phase)
 
 * Server actions (`createChallan`, `confirmChallan`, etc.)
-* Prisma schema changes / migrations
+* Prisma schema changes / migrations (deferred to PHASE_05A1)
 * Invoice Engine, UI, Collections, Ledger, Due Reports
 
 ### Completion Criteria (foundation)
@@ -55,7 +89,6 @@ layer between Sales Orders and Invoices. No UI, no Invoice engine, no migrations
 * `src/lib/delivery/workflow.ts` created: ✓
 * ADR-012 created: ✓
 * Governance docs updated: ✓
-* No Prisma models / migrations / UI / invoice code: ✓
 
 ---
 

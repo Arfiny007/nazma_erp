@@ -1,6 +1,6 @@
 # IMPLEMENTATION STATUS
 
-Last updated: 2026-06-25 (PHASE_05A — Delivery Challan backend foundation)
+Last updated: 2026-06-25 (PHASE_05A1 — Delivery Challan schema migration)
 
 ---
 
@@ -23,6 +23,57 @@ Last updated: 2026-06-25 (PHASE_05A — Delivery Challan backend foundation)
 | PHASE_04A_ORDER_BACKEND | Sales Order backend: validators, DTOs, actions, calc engine, workflow, audit | ✅ COMPLETE |
 | PHASE_04B_ORDER_UI | Sales Order UI: list, create/edit forms, detail, live summary, approval workflow | ✅ COMPLETE |
 | PHASE_04C_ORDER_COMBOBOX_DIAGNOSTICS | DealerCombobox: transport error boundary + OrderFormSection overflow/stacking visibility fix | ✅ COMPLETE |
+| PHASE_05A_DELIVERY_CHALLAN_BACKEND | Delivery Challan foundation: DTOs, validators, workflow guards, ADR-012 | ✅ COMPLETE |
+| **PHASE_05A1_DELIVERY_CHALLAN_SCHEMA** | Delivery Challan Prisma models + migration | **✅ COMPLETE** |
+
+---
+
+## Delivery Challan Schema — Verification (PHASE_05A1)
+
+| Criterion | Status |
+|-----------|--------|
+| `DeliveryChallanStatus` enum (Draft, Confirmed, Cancelled) | ✅ |
+| `DeliveryChallan` model with all required fields + relations | ✅ |
+| `DeliveryChallanItem` model with `Decimal(18,2)` quantity | ✅ |
+| `SalesOrder.deliveryChallans` one-to-many back-relation | ✅ |
+| `Invoice.deliveryChallanId` nullable one-to-one prep | ✅ |
+| Deferred `OrderStatus.Cancelled` enum value applied | ✅ |
+| Deferred `Invoice.orderId` non-unique + `@@index([orderId])` applied | ✅ |
+| Indexes on challan header + line items per ADR-012 | ✅ |
+| `npx prisma format` — succeeds | ✅ |
+| `npx prisma generate` — succeeds | ✅ |
+| Migration `20250625100000_add_delivery_challan` applied (Docker) | ✅ |
+| `prisma migrate status` — database schema up to date | ✅ |
+| `npx tsc --noEmit` — 0 errors | ✅ |
+| No server actions / UI / invoice logic added | ✅ |
+
+### Schema Changes — PHASE_05A1
+
+| Model / Enum | Change |
+|--------------|--------|
+| `DeliveryChallanStatus` (enum) | **New** — Draft, Confirmed, Cancelled |
+| `DeliveryChallan` | **New** — logistics document with `challanNo`, `orderId`, `dealerCode`, `status`, `deliveryMode`, `vehicleNo`, `driverName`, `remarks`, `dispatchedAt`, `createdById`, `confirmedById` |
+| `DeliveryChallanItem` | **New** — `challanId`, `orderItemId`, `productId`, `quantity Decimal(18,2)` |
+| `SalesOrder` | + `deliveryChallans DeliveryChallan[]` |
+| `Invoice` | + `deliveryChallanId String? @unique`, + `deliveryChallan` relation |
+| `OrderStatus` | + `Cancelled` (deferred from PHASE_04A) |
+| `Invoice.orderId` | `@unique` removed, `@@index([orderId])` added (deferred from PHASE_00C) |
+| `User` | + `challansCreated`, `challansConfirmed` relations |
+| `Dealer` | + `deliveryChallans` relation |
+| `SalesOrderItem` | + `deliveryChallanItems` relation |
+| `Product` | + `deliveryChallanItems` relation |
+
+### Files Modified — PHASE_05A1
+
+```
+prisma/schema.prisma
+prisma/migrations/20250625000000_init/migration.sql
+prisma/migrations/20250625100000_add_delivery_challan/migration.sql
+CURRENT_PHASE.md
+IMPLEMENTATION_STATUS.md
+NEXT_ACTION.md
+CHANGELOG.md
+```
 
 ---
 
@@ -366,7 +417,7 @@ package.json (next-auth, bcryptjs, @auth/prisma-adapter added)
 | Order immutability — Confirmed challans only (ADR-012 review) | ✅ |
 | ADR-012 created | ✅ |
 | Server actions deferred | ⏳ |
-| Prisma migration deferred | ⏳ |
+| Prisma migration applied (PHASE_05A1) | ✅ |
 | `workflow.ts` alignment to amended ADR (split qty + confirmed-only lock) | ⏳ |
 | No UI / Invoice / Collection / Ledger | ✅ |
 
@@ -412,7 +463,9 @@ CHANGELOG.md
 
 | Phase | Description | Status |
 |-------|-------------|--------|
-| PHASE_05A_DELIVERY_CHALLAN_BACKEND | Challan validators, DTOs, workflow guards, schema design | **IN PROGRESS** |
+| PHASE_05A_DELIVERY_CHALLAN_BACKEND | Challan validators, DTOs, workflow guards, schema design | **COMPLETE** |
+| PHASE_05A1_DELIVERY_CHALLAN_SCHEMA | Prisma models + migration | **COMPLETE** |
+| PHASE_05A2_DELIVERY_CHALLAN_ACTIONS | Server actions, challan number generator, order integration | PLANNED |
 | PHASE_05B_DELIVERY_CHALLAN_UI | Create challan from order, list, detail, dispatch workflow | PLANNED |
 | PHASE_05C_INVOICE_ENGINE | Invoice from challan + mandatory InvoiceItem | PLANNED |
 | PHASE_05D_INVOICE_UI_PDF | Invoice UI, issue workflow, PDF | PLANNED |
@@ -423,7 +476,7 @@ CHANGELOG.md
 
 | Phase | Description |
 |-------|-------------|
-| PHASE_05A_DELIVERY_CHALLAN_BACKEND | Delivery Challan backend (next) |
+| PHASE_05A2_DELIVERY_CHALLAN_ACTIONS | Server actions + order integration (next) |
 | PHASE_05B_DELIVERY_CHALLAN_UI | Delivery Challan UI |
 | PHASE_05C_INVOICE_ENGINE | Invoice generation from challan |
 | PHASE_05D_INVOICE_UI_PDF | Invoice UI + PDF |

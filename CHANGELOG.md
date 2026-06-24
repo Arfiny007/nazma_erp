@@ -4,6 +4,45 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_05A1_DELIVERY_CHALLAN_SCHEMA] — 2026-06-25
+
+### Added
+
+- **`DeliveryChallanStatus` enum** — `Draft`, `Confirmed`, `Cancelled`
+- **`DeliveryChallan` model** — `challanNo` (unique), `orderId`, `dealerCode`, `status`, `deliveryMode`, `vehicleNo`, `driverName`, `remarks`, `dispatchedAt`, `createdById`, `confirmedById`, timestamps; indexes on `orderId`, `dealerCode`, `status`, `createdById`, `confirmedById`, `createdAt`, `dispatchedAt`
+- **`DeliveryChallanItem` model** — `challanId`, `orderItemId`, `productId`, `quantity Decimal(18,2)`; indexes on `challanId`, `orderItemId`, `productId`; cascade delete from challan header
+
+### Changed
+
+- **`SalesOrder`** — added `deliveryChallans DeliveryChallan[]` one-to-many relation
+- **`Invoice`** — added nullable `deliveryChallanId @unique` + `deliveryChallan` relation (one challan → one invoice prep for PHASE_05C)
+- **`User`** — added `challansCreated` / `challansConfirmed` back-relations
+- **`Dealer`**, **`SalesOrderItem`**, **`Product`** — added delivery challan back-relations
+
+### Migrated (deferred changes bundled)
+
+- **`OrderStatus`** — added `Cancelled` enum value (deferred from PHASE_04A)
+- **`Invoice.orderId`** — removed `@unique`, added `@@index([orderId])` (deferred from PHASE_00C)
+
+### Migration
+
+- Baseline `20250625000000_init` marked applied (existing db push schema)
+- `20250625100000_add_delivery_challan` applied to Docker Postgres (`nazma-erp-db`)
+- `prisma migrate status` — database schema up to date
+
+### Verification
+
+- `npx prisma format` — OK
+- `npx prisma generate` — OK
+- `npx tsc --noEmit` — 0 errors
+- Docker: `DeliveryChallan` + `DeliveryChallanItem` tables confirmed in `nazma_erp`
+
+### Scope
+
+Database only. No server actions, UI, invoice engine, or backend logic changes.
+
+---
+
 ## [ADR-012_ARCHITECTURE_REVIEW] — 2026-06-25
 
 ### Changed (ADR-012 amended)

@@ -45,6 +45,12 @@ enum DeliveryMode {
   Company_Delivery
 }
 
+enum DeliveryChallanStatus {
+  Draft
+  Confirmed
+  Cancelled
+}
+
 model User {
   id       String   @id @default(uuid())
   name     String
@@ -57,9 +63,11 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  ordersCreated  SalesOrder[] @relation("OrderCreatedBy")
-  ordersApproved SalesOrder[] @relation("OrderApprovedBy")
-  auditLogs      AuditLog[]
+  ordersCreated     SalesOrder[]      @relation("OrderCreatedBy")
+  ordersApproved    SalesOrder[]      @relation("OrderApprovedBy")
+  challansCreated   DeliveryChallan[] @relation("ChallanCreatedBy")
+  challansConfirmed DeliveryChallan[] @relation("ChallanConfirmedBy")
+  auditLogs         AuditLog[]
 }
 
 model Dealer {
@@ -86,12 +94,13 @@ model Dealer {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  projects      Project[]
-  orders        SalesOrder[]
-  invoices      Invoice[]
-  collections   Collection[]
-  ledgerEntries LedgerEntry[]
-  dueReports    DueReport[]
+  projects         Project[]
+  orders           SalesOrder[]
+  deliveryChallans DeliveryChallan[]
+  invoices         Invoice[]
+  collections      Collection[]
+  ledgerEntries    LedgerEntry[]
+  dueReports       DueReport[]
 }
 
 model Project {
@@ -154,7 +163,8 @@ model Product {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  orderItems SalesOrderItem[]
+  orderItems           SalesOrderItem[]
+  deliveryChallanItems DeliveryChallanItem[]
 }
 
 model SalesOrder {
@@ -187,8 +197,9 @@ model SalesOrder {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  items    SalesOrderItem[]
-  invoices Invoice[]
+  items            SalesOrderItem[]
+  invoices         Invoice[]
+  deliveryChallans DeliveryChallan[]
 
   @@index([dealerCode])
   @@index([projectId])
@@ -217,7 +228,69 @@ model SalesOrderItem {
 
   total Decimal @db.Decimal(18, 2)
 
+  deliveryChallanItems DeliveryChallanItem[]
+
   @@index([orderId])
+  @@index([productId])
+}
+
+model DeliveryChallan {
+  id String @id @default(uuid())
+
+  challanNo String @unique
+
+  orderId String
+  order   SalesOrder @relation(fields: [orderId], references: [id])
+
+  dealerCode String
+  dealer     Dealer @relation(fields: [dealerCode], references: [dealerCode])
+
+  status DeliveryChallanStatus @default(Draft)
+
+  deliveryMode DeliveryMode
+  vehicleNo    String?
+  driverName   String?
+  remarks      String?
+
+  dispatchedAt DateTime?
+
+  createdById String?
+  createdBy   User?   @relation("ChallanCreatedBy", fields: [createdById], references: [id])
+
+  confirmedById String?
+  confirmedBy   User?   @relation("ChallanConfirmedBy", fields: [confirmedById], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items   DeliveryChallanItem[]
+  invoice Invoice?
+
+  @@index([orderId])
+  @@index([dealerCode])
+  @@index([status])
+  @@index([createdById])
+  @@index([confirmedById])
+  @@index([createdAt])
+  @@index([dispatchedAt])
+}
+
+model DeliveryChallanItem {
+  id String @id @default(uuid())
+
+  challanId String
+  challan   DeliveryChallan @relation(fields: [challanId], references: [id], onDelete: Cascade)
+
+  orderItemId String
+  orderItem   SalesOrderItem @relation(fields: [orderItemId], references: [id])
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  quantity Decimal @db.Decimal(18, 2)
+
+  @@index([challanId])
+  @@index([orderItemId])
   @@index([productId])
 }
 
@@ -232,6 +305,9 @@ model Invoice {
 
   orderId String
   order   SalesOrder @relation(fields: [orderId], references: [id])
+
+  deliveryChallanId String?          @unique
+  deliveryChallan   DeliveryChallan? @relation(fields: [deliveryChallanId], references: [id])
 
   status InvoiceStatus @default(Draft)
 
