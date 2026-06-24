@@ -1,6 +1,6 @@
 # IMPLEMENTATION STATUS
 
-Last updated: 2026-06-24 (PHASE_04C_ORDER_COMBOBOX_DIAGNOSTICS — visibility fix)
+Last updated: 2026-06-25 (PHASE_05A — Delivery Challan backend foundation)
 
 ---
 
@@ -354,12 +354,79 @@ package.json (next-auth, bcryptjs, @auth/prisma-adapter added)
 
 ---
 
+## Delivery Challan Backend — Foundation (PHASE_05A)
+
+| Criterion | Status |
+|-----------|--------|
+| Schema additions proposed (`DeliveryChallan`, `DeliveryChallanItem`, `DeliveryChallanStatus`) | ✅ |
+| DTOs + error codes + `ActionResult` envelope | ✅ |
+| Zod validators (create / confirm / list / identify / list-for-order) | ✅ |
+| Workflow guards (over-delivery, order eligibility, completion detection) | ✅ |
+| Quantity strategy — split `remainingQty` (display) vs `allocatableQty` (validation) | ✅ |
+| Order immutability — Confirmed challans only (ADR-012 review) | ✅ |
+| ADR-012 created | ✅ |
+| Server actions deferred | ⏳ |
+| Prisma migration deferred | ⏳ |
+| `workflow.ts` alignment to amended ADR (split qty + confirmed-only lock) | ⏳ |
+| No UI / Invoice / Collection / Ledger | ✅ |
+
+### Files Created — PHASE_05A_DELIVERY_CHALLAN_BACKEND
+
+```
+src/types/delivery-challan.ts
+src/lib/validators/delivery-challan.schema.ts
+src/lib/delivery/workflow.ts
+docs/ADR/ADR-012-delivery-challan-backend.md
+```
+
+### Files Modified — PHASE_05A_DELIVERY_CHALLAN_BACKEND
+
+```
+CURRENT_PHASE.md
+IMPLEMENTATION_STATUS.md
+NEXT_ACTION.md
+CHANGELOG.md
+```
+
+---
+
+## Fulfillment Layer — Architecture Approved (ADR-011)
+
+| Decision | Status |
+|----------|--------|
+| Workflow: Order → Delivery Challan → Invoice → Collection → Ledger → Due | ✅ Approved |
+| Delivery Challan is NON-FINANCIAL (no balance / ledger / due / collection impact) | ✅ Approved |
+| Invoice is FINANCIAL (credit exposure, ledger, balance, due) | ✅ Approved |
+| One Sales Order → many Delivery Challans (partial delivery) | ✅ Approved |
+| One Delivery Challan → exactly one Invoice | ✅ Approved |
+| Invoice quantities sourced from Delivery Challan (not order directly) | ✅ Approved |
+| InvoiceItem required on every invoice (no header-only invoices) | ✅ Approved |
+| Logistics fields (`vehicleNo`, `driverName`, `deliveryMode`) owned by Delivery Challan | ✅ Approved |
+| Credit limit checked at Invoice issue, not at challan dispatch | ✅ Approved |
+| Revenue recognized at Invoice issue, not at order approval or challan dispatch | ✅ Approved |
+| Order immutability after first confirmed challan | ✅ Approved |
+| Invoice Engine postponed until Delivery Challan layer exists | ✅ Approved |
+| ADR-011 created | ✅ |
+
+### Approved Phase Sequence
+
+| Phase | Description | Status |
+|-------|-------------|--------|
+| PHASE_05A_DELIVERY_CHALLAN_BACKEND | Challan validators, DTOs, workflow guards, schema design | **IN PROGRESS** |
+| PHASE_05B_DELIVERY_CHALLAN_UI | Create challan from order, list, detail, dispatch workflow | PLANNED |
+| PHASE_05C_INVOICE_ENGINE | Invoice from challan + mandatory InvoiceItem | PLANNED |
+| PHASE_05D_INVOICE_UI_PDF | Invoice UI, issue workflow, PDF | PLANNED |
+
+---
+
 ## Upcoming Phases
 
 | Phase | Description |
 |-------|-------------|
-| PHASE_04B_ORDER_UI | Sales order UI (list, create form, approval workflow UI) |
-| PHASE_05_INVOICE_ENGINE | Invoice generation |
+| PHASE_05A_DELIVERY_CHALLAN_BACKEND | Delivery Challan backend (next) |
+| PHASE_05B_DELIVERY_CHALLAN_UI | Delivery Challan UI |
+| PHASE_05C_INVOICE_ENGINE | Invoice generation from challan |
+| PHASE_05D_INVOICE_UI_PDF | Invoice UI + PDF |
 | PHASE_06_COLLECTIONS | Payment collections |
 | PHASE_07_LEDGER | Financial ledger |
 | PHASE_08_DUE_REPORTS | Overdue reporting |

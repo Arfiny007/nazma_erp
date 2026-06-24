@@ -2,11 +2,66 @@
 
 Current Phase:
 
-PHASE_04C_ORDER_COMBOBOX_DIAGNOSTICS
+PHASE_05A_DELIVERY_CHALLAN_BACKEND
 
 Status:
 
-COMPLETE
+IN PROGRESS (backend foundation delivered — ADR-012; server actions + migration deferred)
+
+---
+
+## Roadmap — Fulfillment & Invoicing
+
+| Phase | Description | Status |
+|-------|-------------|--------|
+| PHASE_04A_ORDER_BACKEND | Sales Order backend | ✅ COMPLETE |
+| PHASE_04B_ORDER_UI | Sales Order UI | ✅ COMPLETE |
+| PHASE_04C_ORDER_COMBOBOX_DIAGNOSTICS | DealerCombobox fix | ✅ COMPLETE |
+| **PHASE_05A_DELIVERY_CHALLAN_BACKEND** | Delivery Challan backend (validators, DTOs, workflow guards, schema design) | **IN PROGRESS** |
+| PHASE_05B_DELIVERY_CHALLAN_UI | Delivery Challan UI (create from order, list, detail, dispatch) | PLANNED |
+| PHASE_05C_INVOICE_ENGINE | Invoice generation from challan (+ required InvoiceItem) | PLANNED |
+| PHASE_05D_INVOICE_UI_PDF | Invoice UI, issue workflow, printable PDF | PLANNED |
+
+---
+
+# PHASE_05A_DELIVERY_CHALLAN_BACKEND
+
+Status: IN PROGRESS (foundation complete; server actions + migration deferred)
+
+## Objectives
+
+Build the Delivery Challan **backend foundation** — the non-financial fulfillment
+layer between Sales Orders and Invoices. No UI, no Invoice engine, no migrations.
+
+* Propose `DeliveryChallan` + `DeliveryChallanItem` schema (documented, not migrated)
+* DTO layer — Challan Summary, Challan Detail, Challan Item, Order Fulfillment Progress
+* Zod validators — create / confirm / list / identify
+* Workflow guards — over-delivery prevention, order eligibility, completion detection
+* Quantity reconciliation strategy — derived `deliveredQuantity` / `remainingQuantity`
+* Order immutability guard — lines locked after first challan
+* ADR-012 documents implementation decisions
+
+### Out of Scope (this sub-phase)
+
+* Server actions (`createChallan`, `confirmChallan`, etc.)
+* Prisma schema changes / migrations
+* Invoice Engine, UI, Collections, Ledger, Due Reports
+
+### Completion Criteria (foundation)
+
+* Schema additions proposed in ADR-012: ✓
+* `src/types/delivery-challan.ts` created: ✓
+* `src/lib/validators/delivery-challan.schema.ts` created: ✓
+* `src/lib/delivery/workflow.ts` created: ✓
+* ADR-012 created: ✓
+* Governance docs updated: ✓
+* No Prisma models / migrations / UI / invoice code: ✓
+
+---
+
+# PHASE_04C_ORDER_COMBOBOX_DIAGNOSTICS
+
+Status: COMPLETE
 
 ---
 
@@ -112,9 +167,10 @@ Middleware: `/orders/new → orders:create` added as a more-specific route.
 
 ---
 
-## Next Phase
+## Next Phase (superseded)
 
-PHASE_05_INVOICE_ENGINE
+~~PHASE_05_INVOICE_ENGINE~~ — postponed. Fulfillment layer (ADR-011) requires
+Delivery Challan backend + UI before Invoice Engine.
 
 ---
 

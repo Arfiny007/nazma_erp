@@ -4,6 +4,97 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [ADR-012_ARCHITECTURE_REVIEW] — 2026-06-25
+
+### Changed (ADR-012 amended)
+
+- **Quantity semantics split** — `remainingQty` (display) = `ordered − confirmed` only; `allocatableQty` (validation) = `ordered − confirmed − draft`. Draft does not count as delivered.
+- **Order immutability refined** — line/header edits blocked after first **Confirmed** challan, not Draft. Amends ADR-011 §10 interpretation.
+- **Fulfillment Progress DTO** — documented `OrderLineFulfillmentProgressDTO` and `OrderFulfillmentProgressDTO` with `deliveryPercent` (quantity-weighted at order level).
+- **Invoice eligibility** — Draft → no invoice; Confirmed → eligible once; Cancelled → never.
+
+### Scope
+
+Architecture review only. No code, schema, or migration changes.
+
+---
+
+## [PHASE_05A_DELIVERY_CHALLAN_BACKEND] — 2026-06-25
+
+### Added
+
+- **Delivery Challan domain types** — `src/types/delivery-challan.ts`: `DeliveryChallanSummaryDTO`, `DeliveryChallanDetailDTO`, `DeliveryChallanItemDTO`, `OrderFulfillmentProgressDTO`, `OrderLineFulfillmentDTO`, error codes, `ActionResult<T>` envelope
+- **Delivery Challan validators** — `src/lib/validators/delivery-challan.schema.ts`: `createDeliveryChallanSchema`, `confirmDeliveryChallanSchema`, `listDeliveryChallansSchema`, `deliveryChallanIdentifierSchema`, `listChallansForOrderSchema`
+- **Delivery workflow guards** — `src/lib/delivery/workflow.ts`: `assertCanCreateChallan`, `assertNotOverDelivery`, `assertCanConfirmChallan`, `assertOrderLinesMutable`, `computeRemainingQuantity`, `isOrderFullyDelivered`, `isOrderPartiallyDelivered`, `resolveOrderStatusAfterDelivery`
+- **ADR-012** — `docs/ADR/ADR-012-delivery-challan-backend.md`: proposed schema, quantity reconciliation strategy, over-delivery prevention, order completion detection, risks
+
+### Architecture Notes
+
+- **Derived quantities** — `orderedQuantity` from `SalesOrderItem`; `deliveredQuantity` summed from Confirmed challan lines; `remainingQuantity` computed at read time (never stored)
+- **Draft challans** lock order line edits; only Confirmed quantities count toward delivery progress
+- **Non-financial boundary** — delivery module has no ledger/balance/due/collection imports
+- **Schema proposed, not migrated** — `DeliveryChallan`, `DeliveryChallanItem`, `DeliveryChallanStatus` documented in ADR-012; Prisma unchanged in this sub-phase
+- **Server actions deferred** — `createChallan`, `confirmChallan`, etc. are the next sub-phase
+
+### Scope
+
+Backend foundation only. No UI, no Invoice engine, no migrations, no Prisma model changes.
+
+---
+
+## [ADR-011_FULFILLMENT_LAYER] — 2026-06-25
+
+### Architecture Milestone: Fulfillment Layer Introduced
+
+The commercial pipeline has been restructured. The direct **Order → Invoice**
+path is superseded by a three-layer model:
+
+```
+Sales Order  →  Delivery Challan  →  Invoice  →  Collection  →  Ledger  →  Due Report
+                 (NON-FINANCIAL)      (FINANCIAL)
+```
+
+### Key Decisions (ADR-011)
+
+- **Partial delivery** — one Sales Order may generate multiple Delivery Challans.
+- **One Challan → One Invoice** — each confirmed challan produces exactly one invoice.
+- **InvoiceItem required** — every invoice must have line items; header-only invoices forbidden.
+- **Quantity source** — invoice quantities come from Delivery Challan, not directly from the order.
+- **Non-financial boundary** — challans must never affect dealer balance, ledger, due, or collections.
+- **Financial boundary** — invoices affect credit exposure, ledger, dealer balance, and due.
+- **Logistics ownership** — `vehicleNo`, `driverName`, `deliveryMode` belong to Delivery Challan.
+- **Credit limit** — evaluated at invoice issue, not at challan dispatch.
+- **Revenue recognition** — at invoice issue, not at order approval or challan dispatch.
+- **Order immutability** — order lines become immutable after the first confirmed challan.
+
+### Changed Roadmap
+
+| Old next phase | New sequence |
+|----------------|--------------|
+| PHASE_05_INVOICE_ENGINE | PHASE_05A Delivery Challan Backend |
+| | PHASE_05B Delivery Challan UI |
+| | PHASE_05C Invoice Engine |
+| | PHASE_05D Invoice UI + PDF |
+
+Invoice Engine **postponed** until the Delivery Challan layer is built.
+
+### Added
+
+- **ADR-011** — `docs/ADR/ADR-011-delivery-challan-fulfillment.md`: fulfillment architecture, partial delivery rules, financial boundaries, credit/revenue policies, order immutability, delivery reporting roadmap.
+
+### Updated Governance Docs
+
+- `PROJECT_BRAIN.md` — Fulfillment Layer, Delivery Challan Module, InvoiceItem requirement, delivery reporting roadmap.
+- `CURRENT_PHASE.md` — next phase set to PHASE_05A; order phases marked complete; 05A–05D roadmap added.
+- `IMPLEMENTATION_STATUS.md` — architectural decisions table; approved phase sequence.
+- `NEXT_ACTION.md` — PHASE_05A implementation goals replace Invoice Engine.
+
+### Scope
+
+Documentation and architecture governance only. No schema changes, no migrations, no application code.
+
+---
+
 ## [PHASE_04C_ORDER_COMBOBOX_DIAGNOSTICS] — 2026-06-23
 
 ### Fixed

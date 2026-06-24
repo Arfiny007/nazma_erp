@@ -2,54 +2,67 @@
 
 ## Current State
 
-PHASE_04C_ORDER_COMBOBOX_DIAGNOSTICS is COMPLETE.
+PHASE_05A_DELIVERY_CHALLAN_BACKEND **foundation** is delivered:
 
-The `DealerCombobox` is fixed end-to-end on Create Order:
+- DTOs, error codes, and action result types (`src/types/delivery-challan.ts`)
+- Zod validation contracts (`src/lib/validators/delivery-challan.schema.ts`)
+- Workflow + quantity guards (`src/lib/delivery/workflow.ts`)
+- Schema design documented in ADR-012 (not migrated)
+- ADR-012 created
 
-1. **Visibility** — `OrderFormSection` no longer uses `overflow-hidden`, which was clipping the absolutely positioned dropdown at the card border even when state held dealers. The Dealer & Project section uses `relative z-20` so the open list paints above the Order Items card.
-2. **Transport** — Load path uses `try/catch` and typed `loading | ready | error` states; failures are never coerced to `[]`.
+**Not yet built:** server actions, Prisma models, migrations, order-workflow
+integration in `updateOrder`, challan number generator, unit tests.
 
-Verified: `tsc --noEmit` 0 errors; `eslint` 0 errors (3 pre-existing `useReactTable` warnings). Product Form sections untouched. ADR-010 documents both defects. UI-only — no backend/schema changes.
-
-PHASE_04B_ORDER_UI (prior) delivered the Sales Order UI.
-
-The Sales Order **UI** is fully implemented on top of the existing backend:
-
-- Order List `/orders` — search, status / dealer / date-range filters, sorting, pagination, status badges, "Created By" column
-- Create Order `/orders/new` — dealer selector, project (existing or inline), product line grid (add/remove rows, per-line price override)
-- Live Financial Summary — Subtotal / Discount % / Discount Amount / Grand Total via the server calculator (`previewOrderTotals`); no client-side money math
-- Order Detail `/orders/[id]` — order info, dealer, project, items, financial summary, approval status, audit timeline
-- Edit Order `/orders/[id]/edit` — status-aware submit, workflow-respecting; approved orders editable by Manager / Super_Admin
-- Approval UI — Approve / Reject / Cancel, shown only when state + role permit; reuses existing actions
-- UI-support actions — `preview-order-totals.ts`, `list-dealer-projects.ts` (RBAC-guarded, no duplicated logic)
-- Centralized RBAC (middleware + `enforcePermission` + `hasPermission`); EN + BN localization; loading / error / empty states; responsive
-- ADR-009 documents UI architecture, approval-workflow UX, pricing-override rationale
-- Verified: `tsc --noEmit` 0 errors; `eslint` 0 errors (3 pre-existing `useReactTable` warnings)
-
-PHASE_04A (prior) delivered the order backend; PHASE_00C corrected `Invoice` ↔ `SalesOrder` to one-to-many.
+**ADR-012 amended (architecture review 2026-06-25):**
+- Split `remainingQty` (display, confirmed only) vs `allocatableQty` (validation, includes draft reservation)
+- Order immutability triggers on **Confirmed** challans only — Draft is abandonable
+- Fulfillment Progress DTO structure (§10) and Invoice eligibility workflow (§11) documented
+- `workflow.ts` / types must align to amended ADR at implementation time
 
 ---
 
 ## Outstanding
 
-- **Migration NOT yet run.** Two deferred schema changes must be applied together
-  before the Invoice engine (PHASE_05):
+- **Migration NOT yet run.** Deferred schema changes (apply together when DB available):
   1. `OrderStatus` enum gained `Cancelled` (PHASE_04A).
-  2. The `Invoice.orderId` `@unique` removal + `@@index([orderId])` (PHASE_00C).
+  2. `Invoice.orderId` `@unique` removal + `@@index([orderId])` (PHASE_00C).
+  3. `DeliveryChallan` + `DeliveryChallanItem` + `DeliveryChallanStatus` (PHASE_05A — ADR-012).
+  4. `Invoice.deliveryChallanId` + `InvoiceItem` + logistics field relocation (PHASE_05C prep).
 
-  Run `npx prisma migrate dev --name order_backend_and_invoice_relation` (or a
-  descriptive name) once a database is available. The Order UI cannot be
-  exercised end-to-end against a live DB until this migration is applied.
+  Run migrations once a database is available.
 
 ---
 
-## Next Phase: PHASE_05_INVOICE_ENGINE
+## Next Sub-Phase: PHASE_05A (continued) — Server Actions + Schema Migration
 
 ### Objective
 
-Build the Invoice engine on top of the completed Order module (one Order →
-many Invoices), following the same backend-then-UI, Decimal-safe, RBAC-guarded
-patterns.
+Complete PHASE_05A by applying the ADR-012 schema, wiring server actions, and
+integrating challan-aware guards into the order module.
+
+### Implementation Goals
+
+1. **Schema migration** — apply ADR-012 models to `prisma/schema.prisma`; run migrate.
+2. **Challan number generator** — `CHL-NNNNNN` sequential codes (`src/lib/utils/challan-number.ts`).
+3. **Server actions** — `createChallan`, `confirmChallan`, `getChallan`, `listChallans`,
+   `listChallansForOrder`; all RBAC-guarded, transaction-safe.
+4. **Order integration** — call `assertOrderLinesMutable(confirmedChallanCount)` in
+   `updateOrder`; extend `assertCanCancel` to block confirmed challans; populate
+   `OrderFulfillmentProgressDTO` in `getOrder` per ADR-012 §10.
+5. **Align workflow** — split `computeRemainingQuantity` (display) from
+   `computeAllocatableQuantity` (validation); immutability keyed on confirmed count.
+6. **Audit** — challan CREATE / CONFIRM events in `AuditLog` inside transactions.
+7. **Unit tests** — workflow guards + over-delivery scenarios.
+
+### Then: PHASE_05B_DELIVERY_CHALLAN_UI
+
+Create challan from approved order, list, detail, dispatch workflow.
+
+### Out of Scope
+
+- Invoice creation (PHASE_05C)
+- Invoice UI / PDF (PHASE_05D)
+- Collections, Ledger, Due Reports
 
 ### Guard Usage Pattern
 
@@ -62,9 +75,12 @@ await enforcePermission("orders:view");
 import { requirePermission } from "@/lib/rbac/guards";
 const user = await requirePermission("orders:create");
 
-// In Client Components (conditional rendering)
-import { hasPermission } from "@/lib/permissions";
-const canApprove = hasPermission(userRole, "orders:approve");
+// Workflow guards (delivery module)
+import {
+  assertCanCreateChallan,
+  assertNotOverDelivery,
+  assertCanConfirmChallan,
+} from "@/lib/delivery/workflow";
 ```
 
 ---
@@ -79,10 +95,7 @@ const canApprove = hasPermission(userRole, "orders:approve");
 
 ## Notes
 
-- Do NOT begin Invoices, Collections, Ledger, or Due Reports
-- All new server actions MUST call `requirePermission()` at the top
-- All new protected pages MUST call `enforcePermission()` at the top
-- Never expose raw Prisma errors to the client (use the typed `ActionResult` envelope)
+- Delivery Challan is NON-FINANCIAL — no balance / ledger / due side effects
+- Never expose raw Prisma errors to the client (use typed `ActionResult` envelope)
 - Never use `any` type
-- Never hardcode role checks — use helpers from `src/lib/rbac/`
-- Money is always a fixed-precision decimal string at the boundary; never a float
+- Money/quantity at API boundary: fixed-precision decimal strings only
