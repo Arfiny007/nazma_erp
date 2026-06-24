@@ -4,6 +4,49 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_05A2_DELIVERY_CHALLAN_ACTIONS] — 2026-06-25
+
+### Added
+
+- **Server actions** — `createDeliveryChallan`, `updateDeliveryChallan`, `confirmDeliveryChallan`, `cancelDeliveryChallan`, `getDeliveryChallan`, `listDeliveryChallans` in `src/lib/actions/delivery-challans/`
+- **Challan number generator** — `src/lib/utils/challan-number.ts` (`CHL-000001` … sequential)
+- **Action helpers** — quantity snapshots, fulfillment progress, audit writer, DTO mappers
+- **Validators** — `updateDeliveryChallanSchema`, `cancelDeliveryChallanSchema`
+- **Workflow tests** — `src/lib/delivery/workflow.test.ts` (9 tests via vitest)
+- **`OrderStatus.Partially_Delivered`** — enum value + migration `20250625110000_add_partially_delivered_status`
+
+### Changed
+
+- **`src/lib/delivery/workflow.ts`** — split `computeRemainingQuantity` (display) from `computeAllocatableQuantity` (validation); immutability keyed on confirmed challan count; `assertCanUpdateChallan` / `assertCanCancelChallan`; order status resolves to `Partially_Delivered`
+- **`updateOrder`** — `assertOrderLinesMutable` / `assertOrderHeaderMutable` when confirmed challans exist
+- **`cancelOrder`** — blocks cancel when confirmed challans exist
+- **`getOrder`** — attaches `fulfillment: OrderFulfillmentProgressDTO`
+- **`OrderDetailDTO`** — optional `fulfillment` field
+- **Localization** — `order.status.Partially_Delivered` (EN + BN)
+
+### Audit Events
+
+| Action | AuditLog `action` |
+|--------|-------------------|
+| Create challan | `DELIVERY_CHALLAN_CREATED` |
+| Update challan | `DELIVERY_CHALLAN_UPDATED` |
+| Confirm challan | `DELIVERY_CHALLAN_CONFIRMED` |
+| Cancel challan | `DELIVERY_CHALLAN_CANCELLED` |
+
+### Verification
+
+- `npx prisma generate` — OK
+- `npx tsc --noEmit` — 0 errors
+- `npx eslint` — 0 errors
+- `npm test` — 9/9 pass
+- No Invoice / Ledger / Collection / balance mutations in challan actions
+
+### Scope
+
+Backend only. No UI, no Invoice engine.
+
+---
+
 ## [PHASE_05A1_DELIVERY_CHALLAN_SCHEMA] — 2026-06-25
 
 ### Added

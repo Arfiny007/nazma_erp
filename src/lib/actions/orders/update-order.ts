@@ -4,7 +4,13 @@ import { OrderStatus, Prisma } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
+import { countChallansForOrder } from "@/lib/actions/delivery-challans/helpers";
 import { requirePermission } from "@/lib/rbac/guards";
+import {
+  assertOrderHeaderMutable,
+  assertOrderLinesMutable,
+  DeliveryWorkflowError,
+} from "@/lib/delivery/workflow";
 import {
   assertCanChangeStatusOnUpdate,
   assertEditable,
@@ -68,12 +74,25 @@ export async function updateOrder(
 
       assertEditable(existing.status);
 
+      const confirmedChallanCount = (
+        await countChallansForOrder(tx, id)
+      ).confirmed;
+
+      const touchesLines = changes.items !== undefined;
+      if (touchesLines) {
+        assertOrderLinesMutable(confirmedChallanCount);
+      }
+
       const updateData: Prisma.SalesOrderUncheckedUpdateInput = {};
 
       const touchesDealerOrProject =
         changes.dealerCode !== undefined ||
         changes.projectId !== undefined ||
         changes.project !== undefined;
+
+      if (touchesDealerOrProject) {
+        assertOrderHeaderMutable(confirmedChallanCount);
+      }
 
       let dealerId: string | null = null;
       if (touchesDealerOrProject) {
@@ -185,6 +204,13 @@ export async function updateOrder(
     }
     if (error instanceof OrderWorkflowError) {
       return fail<OrderDetailDTO>(error.code, error.messageKey);
+    }
+    if (error instanceof DeliveryWorkflowError) {
+      const code =
+        error.code === "ORDER_LINES_LOCKED"
+          ? "ORDER_LINES_LOCKED"
+          : "ORDER_LOCKED";
+      return fail<OrderDetailDTO>(code, error.messageKey);
     }
     return fromPrismaError(error);
   }

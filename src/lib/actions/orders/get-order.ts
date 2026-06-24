@@ -10,6 +10,7 @@ import {
   fetchApprovalHistory,
   fromPrismaError,
   fromZodError,
+  loadOrderFulfillmentProgress,
   ok,
   orderDetailInclude,
   toOrderDetailDTO,
@@ -54,7 +55,8 @@ export async function getOrder(
     }
 
     const history = await fetchApprovalHistory(order.id);
-    return ok(toOrderDetailDTO(order, history));
+    const fulfillment = await loadOrderFulfillmentProgress(order.id);
+    return ok(toOrderDetailDTO(order, history, fulfillment));
   } catch (error) {
     return fromPrismaError(error);
   }

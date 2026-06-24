@@ -4,6 +4,7 @@ import { OrderStatus } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
+import { countChallansForOrder } from "@/lib/actions/delivery-challans/helpers";
 import { requirePermission } from "@/lib/rbac/guards";
 import { assertCanCancel, OrderWorkflowError } from "@/lib/orders/workflow";
 import { cancelOrderSchema } from "@/lib/validators/order.schema";
@@ -49,13 +50,26 @@ export async function cancelOrder(
     await prisma.$transaction(async (tx) => {
       const existing = await tx.salesOrder.findUnique({
         where: { id },
-        select: { id: true, status: true, _count: { select: { invoices: true } } },
+        select: {
+          id: true,
+          status: true,
+          _count: { select: { invoices: true } },
+        },
       });
       if (!existing) {
         throw new OrderActionError("ORDER_NOT_FOUND", "order.error.notFound");
       }
 
-      assertCanCancel(existing.status, existing._count.invoices);
+      const { confirmed: confirmedChallanCount } = await countChallansForOrder(
+        tx,
+        id,
+      );
+
+      assertCanCancel(
+        existing.status,
+        existing._count.invoices,
+        confirmedChallanCount,
+      );
 
       await tx.salesOrder.update({
         where: { id },

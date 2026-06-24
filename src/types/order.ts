@@ -1,5 +1,7 @@
 import type { OrderStatus } from "@prisma/client";
 
+import type { OrderFulfillmentProgressDTO } from "@/types/delivery-challan";
+
 /**
  * Domain types for the Sales Order module.
  *
@@ -100,6 +102,8 @@ export interface OrderDetailDTO extends OrderSummaryDTO {
   approvedBy: OrderActorDTO | null;
   items: OrderItemDTO[];
   approvalHistory: ApprovalHistoryDTO[];
+  /** Derived fulfillment progress from confirmed challan quantities. */
+  fulfillment?: OrderFulfillmentProgressDTO;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -146,6 +150,7 @@ export type OrderErrorCode =
   | "ORDER_ALREADY_APPROVED"
   | "CANNOT_REJECT_APPROVED"
   | "ORDER_INVOICED"
+  | "ORDER_LINES_LOCKED"
   | "ORDER_LOCKED"
   | "FORBIDDEN"
   | "INTERNAL_ERROR";

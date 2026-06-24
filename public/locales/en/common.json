@@ -353,6 +353,7 @@
   "order.status.Draft": "Draft",
   "order.status.Pending_Approval": "Pending Approval",
   "order.status.Approved": "Approved",
+  "order.status.Partially_Delivered": "Partially Delivered",
   "order.status.Rejected": "Rejected",
   "order.status.Cancelled": "Cancelled",
   "order.status.Delivered": "Delivered",

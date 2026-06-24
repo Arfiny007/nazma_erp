@@ -1,6 +1,6 @@
 # IMPLEMENTATION STATUS
 
-Last updated: 2026-06-25 (PHASE_05A1 — Delivery Challan schema migration)
+Last updated: 2026-06-25 (PHASE_05A2 — Delivery Challan server actions)
 
 ---
 
@@ -24,7 +24,39 @@ Last updated: 2026-06-25 (PHASE_05A1 — Delivery Challan schema migration)
 | PHASE_04B_ORDER_UI | Sales Order UI: list, create/edit forms, detail, live summary, approval workflow | ✅ COMPLETE |
 | PHASE_04C_ORDER_COMBOBOX_DIAGNOSTICS | DealerCombobox: transport error boundary + OrderFormSection overflow/stacking visibility fix | ✅ COMPLETE |
 | PHASE_05A_DELIVERY_CHALLAN_BACKEND | Delivery Challan foundation: DTOs, validators, workflow guards, ADR-012 | ✅ COMPLETE |
-| **PHASE_05A1_DELIVERY_CHALLAN_SCHEMA** | Delivery Challan Prisma models + migration | **✅ COMPLETE** |
+| PHASE_05A1_DELIVERY_CHALLAN_SCHEMA | Delivery Challan Prisma models + migration | ✅ COMPLETE |
+| **PHASE_05A2_DELIVERY_CHALLAN_ACTIONS** | Server actions, challan number generator, order integration, tests | **✅ COMPLETE** |
+
+---
+
+## Delivery Challan Actions — Verification (PHASE_05A2)
+
+| Criterion | Status |
+|-----------|--------|
+| Six server actions with RBAC + transactions | ✅ |
+| `CHL-NNNNNN` generator | ✅ |
+| Workflow guards + quantity reconciliation (ADR-012) | ✅ |
+| Order status sync (Partially_Delivered) | ✅ |
+| Order integration (get / update / cancel) | ✅ |
+| Audit events | ✅ |
+| Non-financial boundary | ✅ |
+| `npm test` — 9 pass | ✅ |
+
+### Files Created — PHASE_05A2
+
+```
+src/lib/utils/challan-number.ts
+src/lib/actions/delivery-challans/helpers.ts
+src/lib/actions/delivery-challans/create-delivery-challan.ts
+src/lib/actions/delivery-challans/update-delivery-challan.ts
+src/lib/actions/delivery-challans/confirm-delivery-challan.ts
+src/lib/actions/delivery-challans/cancel-delivery-challan.ts
+src/lib/actions/delivery-challans/get-delivery-challan.ts
+src/lib/actions/delivery-challans/list-delivery-challans.ts
+src/lib/delivery/workflow.test.ts
+vitest.config.ts
+prisma/migrations/20250625110000_add_partially_delivered_status/migration.sql
+```
 
 ---
 
@@ -465,7 +497,7 @@ CHANGELOG.md
 |-------|-------------|--------|
 | PHASE_05A_DELIVERY_CHALLAN_BACKEND | Challan validators, DTOs, workflow guards, schema design | **COMPLETE** |
 | PHASE_05A1_DELIVERY_CHALLAN_SCHEMA | Prisma models + migration | **COMPLETE** |
-| PHASE_05A2_DELIVERY_CHALLAN_ACTIONS | Server actions, challan number generator, order integration | PLANNED |
+| PHASE_05A2_DELIVERY_CHALLAN_ACTIONS | Server actions, challan number generator, order integration | **COMPLETE** |
 | PHASE_05B_DELIVERY_CHALLAN_UI | Create challan from order, list, detail, dispatch workflow | PLANNED |
 | PHASE_05C_INVOICE_ENGINE | Invoice from challan + mandatory InvoiceItem | PLANNED |
 | PHASE_05D_INVOICE_UI_PDF | Invoice UI, issue workflow, PDF | PLANNED |
@@ -476,8 +508,7 @@ CHANGELOG.md
 
 | Phase | Description |
 |-------|-------------|
-| PHASE_05A2_DELIVERY_CHALLAN_ACTIONS | Server actions + order integration (next) |
-| PHASE_05B_DELIVERY_CHALLAN_UI | Delivery Challan UI |
+| PHASE_05B_DELIVERY_CHALLAN_UI | Delivery Challan UI (next) |
 | PHASE_05C_INVOICE_ENGINE | Invoice generation from challan |
 | PHASE_05D_INVOICE_UI_PDF | Invoice UI + PDF |
 | PHASE_06_COLLECTIONS | Payment collections |

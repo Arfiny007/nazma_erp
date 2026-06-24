@@ -18,6 +18,7 @@ enum OrderStatus {
   Draft
   Pending_Approval
   Approved
+  Partially_Delivered
   Rejected
   Cancelled
   Delivered

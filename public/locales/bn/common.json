@@ -353,6 +353,7 @@
   "order.status.Draft": "খসড়া",
   "order.status.Pending_Approval": "অনুমোদনের অপেক্ষায়",
   "order.status.Approved": "অনুমোদিত",
+  "order.status.Partially_Delivered": "আংশিক সরবরাহ",
   "order.status.Rejected": "প্রত্যাখ্যাত",
   "order.status.Cancelled": "বাতিল",
   "order.status.Delivered": "সরবরাহকৃত",

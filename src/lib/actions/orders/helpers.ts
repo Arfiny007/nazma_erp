@@ -1,6 +1,11 @@
 import { OrderStatus, Prisma } from "@prisma/client";
 import type { ZodError } from "zod";
 
+import {
+  buildFulfillmentProgress,
+  countChallansForOrder,
+  loadOrderLineSnapshots,
+} from "@/lib/actions/delivery-challans/helpers";
 import { prisma } from "@/lib/prisma";
 import type { CalculatorLineInput } from "@/lib/utils/order-calculator";
 import { generateNextProjectCode } from "@/lib/utils/project-code";
@@ -14,6 +19,7 @@ import type {
   OrderItemDTO,
   OrderSummaryDTO,
 } from "@/types/order";
+import type { OrderFulfillmentProgressDTO } from "@/types/delivery-challan";
 
 /**
  * Internal (non-action) helpers shared by the order server actions: result
@@ -277,6 +283,7 @@ export function toOrderSummaryDTO(order: OrderSummaryRecord): OrderSummaryDTO {
 export function toOrderDetailDTO(
   order: OrderDetailRecord,
   approvalHistory: ApprovalHistoryDTO[],
+  fulfillment?: OrderFulfillmentProgressDTO,
 ): OrderDetailDTO {
   return {
     id: order.id,
@@ -317,7 +324,19 @@ export function toOrderDetailDTO(
       : null,
     items: order.items.map(toOrderItemDTO),
     approvalHistory,
+    fulfillment,
   };
+}
+
+/**
+ * Loads fulfillment progress for an order from challan line aggregates.
+ */
+export async function loadOrderFulfillmentProgress(
+  orderId: string,
+): Promise<OrderFulfillmentProgressDTO> {
+  const snapshots = await loadOrderLineSnapshots(prisma, orderId);
+  const counts = await countChallansForOrder(prisma, orderId);
+  return buildFulfillmentProgress(orderId, snapshots, counts);
 }
 
 /**
@@ -335,7 +354,8 @@ export async function loadOrderDetailDTO(
     return null;
   }
   const history = await fetchApprovalHistory(orderId);
-  return toOrderDetailDTO(order, history);
+  const fulfillment = await loadOrderFulfillmentProgress(orderId);
+  return toOrderDetailDTO(order, history, fulfillment);
 }
 
 /* -------------------------------------------------------------------------- */

@@ -2,81 +2,41 @@
 
 ## Current State
 
-PHASE_05A1_DELIVERY_CHALLAN_SCHEMA is **complete**:
+PHASE_05A2_DELIVERY_CHALLAN_ACTIONS is **complete**:
 
-- `DeliveryChallanStatus` enum, `DeliveryChallan`, `DeliveryChallanItem` models in Prisma
-- `SalesOrder.deliveryChallans` relation added
-- `Invoice.deliveryChallanId` nullable FK prepared (one challan → one invoice)
-- Deferred migrations applied: `OrderStatus.Cancelled`, `Invoice.orderId` index (non-unique)
-- Migration `20250625100000_add_delivery_challan` applied to Docker Postgres
-- `npx prisma format`, `npx prisma generate`, `npx tsc --noEmit` — all pass
+- Six server actions: create / update / confirm / cancel / get / list
+- `CHL-NNNNNN` challan number generator
+- Workflow aligned to ADR-012 (split `remainingQty` vs `allocatableQty`, confirmed-only order lock)
+- Order status sync: `Approved → Partially_Delivered → Delivered`
+- Order integration: fulfillment on `getOrder`, line lock on `updateOrder`, dispatch block on `cancelOrder`
+- Audit events in `AuditLog`
+- `OrderStatus.Partially_Delivered` enum + migration
+- `npm test` — 9 workflow tests pass
+- `npx tsc --noEmit` / `npx eslint` — pass
 
-PHASE_05A foundation (DTOs, validators, workflow guards, ADR-012) was delivered earlier.
-
-**Not yet built:** server actions, challan number generator, order-workflow integration,
-`workflow.ts` alignment to amended ADR, unit tests.
-
----
-
-## Outstanding
-
-- **Server actions** — `createChallan`, `confirmChallan`, `getChallan`, `listChallans`, `listChallansForOrder`
-- **Challan number generator** — `CHL-NNNNNN` (`src/lib/utils/challan-number.ts`)
-- **Order integration** — `assertOrderLinesMutable` in `updateOrder`; fulfillment progress in `getOrder`
-- **Workflow alignment** — split `remainingQty` vs `allocatableQty` per ADR-012 amendment
-- **InvoiceItem model** — PHASE_05C (not this phase)
-- **Logistics field removal from Invoice** — PHASE_05C data migration
+**Not yet built:** Delivery Challan UI, Invoice Engine, Collections, Ledger, Due.
 
 ---
 
-## Next Sub-Phase: PHASE_05A2 — Server Actions + Order Integration
+## Next Phase: PHASE_05B — Delivery Challan UI
 
 ### Objective
 
-Complete the Delivery Challan backend by wiring server actions and integrating
-challan-aware guards into the order module.
+Build the Delivery Challan UI on top of the existing backend.
 
 ### Implementation Goals
 
-1. **Challan number generator** — `CHL-NNNNNN` sequential codes (`src/lib/utils/challan-number.ts`).
-2. **Server actions** — `createChallan`, `confirmChallan`, `getChallan`, `listChallans`,
-   `listChallansForOrder`; all RBAC-guarded, transaction-safe.
-3. **Order integration** — call `assertOrderLinesMutable(confirmedChallanCount)` in
-   `updateOrder`; extend `assertCanCancel` to block confirmed challans; populate
-   `OrderFulfillmentProgressDTO` in `getOrder` per ADR-012 §10.
-4. **Align workflow** — split `computeRemainingQuantity` (display) from
-   `computeAllocatableQuantity` (validation); immutability keyed on confirmed count.
-5. **Audit** — challan CREATE / CONFIRM events in `AuditLog` inside transactions.
-6. **Unit tests** — workflow guards + over-delivery scenarios.
-
-### Then: PHASE_05B_DELIVERY_CHALLAN_UI
-
-Create challan from approved order, list, detail, dispatch workflow.
+1. Create challan from approved order (line picker with allocatable qty)
+2. Challan list with search / filters / pagination
+3. Challan detail + confirm / cancel actions
+4. Fulfillment progress on order detail
+5. EN + BN localization for all challan strings
 
 ### Out of Scope
 
 - Invoice creation (PHASE_05C)
 - Invoice UI / PDF (PHASE_05D)
 - Collections, Ledger, Due Reports
-
-### Guard Usage Pattern
-
-```typescript
-// In Server Component pages (page.tsx)
-import { enforcePermission } from "@/lib/rbac/guards";
-await enforcePermission("orders:view");
-
-// In Server Actions
-import { requirePermission } from "@/lib/rbac/guards";
-const user = await requirePermission("orders:create");
-
-// Workflow guards (delivery module)
-import {
-  assertCanCreateChallan,
-  assertNotOverDelivery,
-  assertCanConfirmChallan,
-} from "@/lib/delivery/workflow";
-```
 
 ---
 
@@ -91,6 +51,5 @@ import {
 ## Notes
 
 - Delivery Challan is NON-FINANCIAL — no balance / ledger / due side effects
+- Apply migration `20250625110000_add_partially_delivered_status` before using Partially_Delivered status
 - Never expose raw Prisma errors to the client (use typed `ActionResult` envelope)
-- Never use `any` type
-- Money/quantity at API boundary: fixed-precision decimal strings only

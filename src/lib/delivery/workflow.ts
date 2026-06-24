@@ -58,23 +58,34 @@ function quantity(value: Prisma.Decimal): Prisma.Decimal {
 }
 
 /**
- * Computes remaining undelivered quantity for a single order line.
- *
- * `remaining = ordered − confirmedDelivered − draftDelivered`, clamped at zero.
- * Draft quantities are included so concurrent draft challans cannot collectively
- * exceed the ordered quantity.
+ * Display remaining quantity: `ordered − confirmed`, clamped at zero.
+ * Draft challans do not reduce remaining qty (ADR-012 §3a).
  */
 export function computeRemainingQuantity(
   orderedQuantity: DecimalLike,
   confirmedDeliveredQuantity: DecimalLike,
-  draftDeliveredQuantity: DecimalLike = 0,
 ): Prisma.Decimal {
   const remaining = quantity(
+    toDecimal(orderedQuantity).minus(toDecimal(confirmedDeliveredQuantity)),
+  );
+  return remaining.lessThan(ZERO) ? ZERO : remaining;
+}
+
+/**
+ * Validation allocatable quantity: `ordered − confirmed − draft`, clamped at
+ * zero. Used by over-delivery guards on create / update / confirm.
+ */
+export function computeAllocatableQuantity(
+  orderedQuantity: DecimalLike,
+  confirmedDeliveredQuantity: DecimalLike,
+  draftDeliveredQuantity: DecimalLike = 0,
+): Prisma.Decimal {
+  const allocatable = quantity(
     toDecimal(orderedQuantity)
       .minus(toDecimal(confirmedDeliveredQuantity))
       .minus(toDecimal(draftDeliveredQuantity)),
   );
-  return remaining.lessThan(ZERO) ? ZERO : remaining;
+  return allocatable.lessThan(ZERO) ? ZERO : allocatable;
 }
 
 /**
@@ -89,11 +100,7 @@ export function toOrderLineFulfillment(
 ): OrderLineFulfillmentDTO {
   const ordered = quantity(toDecimal(snapshot.orderedQuantity));
   const delivered = quantity(toDecimal(snapshot.confirmedDeliveredQuantity));
-  const remaining = computeRemainingQuantity(
-    ordered,
-    delivered,
-    snapshot.draftDeliveredQuantity,
-  );
+  const remaining = computeRemainingQuantity(ordered, delivered);
 
   return {
     orderItemId: snapshot.orderItemId,
@@ -111,8 +118,14 @@ export function toOrderLineFulfillment(
 /*                          Order eligibility guards                          */
 /* -------------------------------------------------------------------------- */
 
+const CHALLAN_ELIGIBLE_STATUSES: readonly OrderStatus[] = [
+  OrderStatus.Approved,
+  OrderStatus.Partially_Delivered,
+];
+
 /**
- * Guards challan creation. Only `Approved` orders may receive delivery challans.
+ * Guards challan creation. Only approved (or partially delivered) orders may
+ * receive delivery challans.
  *
  * @throws ORDER_NOT_APPROVED — order is Draft or Pending_Approval.
  * @throws ORDER_CANCELLED — order is Cancelled.
@@ -131,7 +144,13 @@ export function assertCanCreateChallan(orderStatus: OrderStatus): void {
       "challan.error.orderRejected",
     );
   }
-  if (orderStatus !== OrderStatus.Approved) {
+  if (orderStatus === OrderStatus.Delivered) {
+    throw new DeliveryWorkflowError(
+      "ORDER_NOT_APPROVED",
+      "challan.error.orderFullyDelivered",
+    );
+  }
+  if (!CHALLAN_ELIGIBLE_STATUSES.includes(orderStatus)) {
     throw new DeliveryWorkflowError(
       "ORDER_NOT_APPROVED",
       "challan.error.orderNotApproved",
@@ -140,18 +159,25 @@ export function assertCanCreateChallan(orderStatus: OrderStatus): void {
 }
 
 /**
- * Guards order line edits. Once **any** challan exists (Draft or Confirmed),
- * order line quantities become immutable per ADR-011 §10.
+ * Guards order line edits. Blocked after the first **Confirmed** challan
+ * (ADR-012 §6 — Draft challans do not lock the commercial order).
  *
- * @throws ORDER_LINES_LOCKED when `challanCount > 0`.
+ * @throws ORDER_LINES_LOCKED when `confirmedChallanCount > 0`.
  */
-export function assertOrderLinesMutable(challanCount: number): void {
-  if (challanCount > 0) {
+export function assertOrderLinesMutable(confirmedChallanCount: number): void {
+  if (confirmedChallanCount > 0) {
     throw new DeliveryWorkflowError(
       "ORDER_LINES_LOCKED",
       "challan.error.orderLinesLocked",
     );
   }
+}
+
+/**
+ * Guards order header edits (dealer / project). Same trigger as line immutability.
+ */
+export function assertOrderHeaderMutable(confirmedChallanCount: number): void {
+  assertOrderLinesMutable(confirmedChallanCount);
 }
 
 /* -------------------------------------------------------------------------- */
@@ -164,14 +190,11 @@ export interface ChallanLineRequest {
 }
 
 /**
- * Validates that requested challan line quantities do not exceed remaining
- * undelivered quantities on the parent order.
- *
- * Aggregates duplicate `orderItemId` entries within the same request before
- * comparing against remaining capacity.
+ * Validates that requested challan line quantities do not exceed allocatable
+ * capacity on the parent order.
  *
  * @throws ORDER_ITEM_NOT_FOUND when a requested line is not on the order.
- * @throws OVER_DELIVERY when any line exceeds its remaining quantity.
+ * @throws OVER_DELIVERY when any line exceeds allocatable qty.
  */
 export function assertNotOverDelivery(
   orderLines: readonly OrderLineQuantitySnapshot[],
@@ -183,8 +206,7 @@ export function assertNotOverDelivery(
 
   const aggregatedRequest = new Map<string, Prisma.Decimal>();
   for (const request of requestedLines) {
-    const current =
-      aggregatedRequest.get(request.orderItemId) ?? ZERO;
+    const current = aggregatedRequest.get(request.orderItemId) ?? ZERO;
     aggregatedRequest.set(
       request.orderItemId,
       current.plus(toDecimal(request.quantity)),
@@ -201,13 +223,13 @@ export function assertNotOverDelivery(
       );
     }
 
-    const remaining = computeRemainingQuantity(
+    const allocatable = computeAllocatableQuantity(
       orderLine.orderedQuantity,
       orderLine.confirmedDeliveredQuantity,
       orderLine.draftDeliveredQuantity,
     );
 
-    if (quantity(requestedQty).greaterThan(remaining)) {
+    if (quantity(requestedQty).greaterThan(allocatable)) {
       throw new DeliveryWorkflowError(
         "OVER_DELIVERY",
         "challan.error.overDelivery",
@@ -250,13 +272,42 @@ export function assertCanConfirmChallan(status: DeliveryChallanStatus): void {
   }
 }
 
+/** Only Draft challans may be edited. */
+export function assertCanUpdateChallan(status: DeliveryChallanStatus): void {
+  if (status === "Confirmed") {
+    throw new DeliveryWorkflowError(
+      "CHALLAN_ALREADY_CONFIRMED",
+      "challan.error.alreadyConfirmed",
+    );
+  }
+  if (status === "Cancelled") {
+    throw new DeliveryWorkflowError(
+      "CHALLAN_CANCELLED",
+      "challan.error.cancelled",
+    );
+  }
+}
+
+/** Only Draft challans may be cancelled. */
+export function assertCanCancelChallan(status: DeliveryChallanStatus): void {
+  if (status === "Confirmed") {
+    throw new DeliveryWorkflowError(
+      "CHALLAN_ALREADY_CONFIRMED",
+      "challan.error.cannotCancelConfirmed",
+    );
+  }
+  if (status === "Cancelled") {
+    throw new DeliveryWorkflowError(
+      "CHALLAN_CANCELLED",
+      "challan.error.alreadyCancelled",
+    );
+  }
+}
+
 /** Rejects challan creation when the items array would be empty after validation. */
 export function assertChallanHasItems(itemCount: number): void {
   if (itemCount < 1) {
-    throw new DeliveryWorkflowError(
-      "CHALLAN_EMPTY",
-      "challan.error.empty",
-    );
+    throw new DeliveryWorkflowError("CHALLAN_EMPTY", "challan.error.empty");
   }
 }
 
@@ -292,16 +343,24 @@ export function isOrderPartiallyDelivered(
 
 /**
  * Determines the order status transition after a challan is confirmed.
- * Returns `Delivered` when fully delivered; otherwise preserves `Approved`.
+ * Approved → Partially_Delivered → Delivered based on confirmed quantities only.
  */
 export function resolveOrderStatusAfterDelivery(
   currentStatus: OrderStatus,
   fulfillmentLines: readonly OrderLineFulfillmentDTO[],
 ): OrderStatus {
-  if (currentStatus !== OrderStatus.Approved) {
+  const eligible: readonly OrderStatus[] = [
+    OrderStatus.Approved,
+    OrderStatus.Partially_Delivered,
+  ];
+  if (!eligible.includes(currentStatus)) {
     return currentStatus;
   }
-  return isOrderFullyDelivered(fulfillmentLines)
-    ? OrderStatus.Delivered
-    : OrderStatus.Approved;
+  if (isOrderFullyDelivered(fulfillmentLines)) {
+    return OrderStatus.Delivered;
+  }
+  if (isOrderPartiallyDelivered(fulfillmentLines)) {
+    return OrderStatus.Partially_Delivered;
+  }
+  return currentStatus;
 }

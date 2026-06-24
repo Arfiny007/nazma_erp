@@ -58,6 +58,7 @@ const ALLOWED_TRANSITIONS: Record<OrderStatus, readonly OrderStatus[]> = {
     OrderStatus.Cancelled,
   ],
   [OrderStatus.Approved]: [OrderStatus.Cancelled],
+  [OrderStatus.Partially_Delivered]: [OrderStatus.Cancelled],
   [OrderStatus.Rejected]: [
     OrderStatus.Draft,
     OrderStatus.Pending_Approval,
@@ -112,6 +113,9 @@ export function assertEditable(current: OrderStatus): void {
     );
   }
   if (current === OrderStatus.Delivered) {
+    throw new OrderWorkflowError("ORDER_LOCKED", "order.error.locked");
+  }
+  if (current === OrderStatus.Partially_Delivered) {
     throw new OrderWorkflowError("ORDER_LOCKED", "order.error.locked");
   }
 }
@@ -179,16 +183,17 @@ export function assertCanReject(current: OrderStatus): void {
 
 /**
  * Guards a cancellation. Cancellable from any non-terminal status provided the
- * order has not generated any invoices.
+ * order has not generated any invoices or confirmed delivery challans.
  *
- * @throws ORDER_INVOICED when the order already has invoices.
+ * @throws ORDER_INVOICED when the order already has invoices or dispatches.
  * @throws ORDER_CANCELLED when the order is already cancelled.
  */
 export function assertCanCancel(
   current: OrderStatus,
   invoiceCount: number,
+  confirmedChallanCount = 0,
 ): void {
-  if (invoiceCount > 0) {
+  if (invoiceCount > 0 || confirmedChallanCount > 0) {
     throw new OrderWorkflowError("ORDER_INVOICED", "order.error.invoiced");
   }
   if (current === OrderStatus.Cancelled) {

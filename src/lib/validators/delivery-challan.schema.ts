@@ -94,6 +94,37 @@ export const confirmDeliveryChallanSchema = z.object({
 });
 
 /* -------------------------------------------------------------------------- */
+/*                                   Update                                   */
+/* -------------------------------------------------------------------------- */
+
+export const updateDeliveryChallanSchema = z.object({
+  id: challanIdSchema,
+  items: z
+    .array(challanLineSchema)
+    .min(1, { error: "validation.challan.itemsRequired" }),
+  deliveryMode: z.nativeEnum(DeliveryMode, {
+    error: "validation.deliveryMode.invalid",
+  }),
+  vehicleNo: optionalTrimmed(
+    z.string().max(32, { error: "validation.vehicleNo.tooLong" }),
+  ),
+  driverName: optionalTrimmed(
+    z.string().max(120, { error: "validation.driverName.tooLong" }),
+  ),
+  remarks: optionalTrimmed(
+    z.string().max(500, { error: "validation.remarks.tooLong" }),
+  ),
+});
+
+/* -------------------------------------------------------------------------- */
+/*                                   Cancel                                   */
+/* -------------------------------------------------------------------------- */
+
+export const cancelDeliveryChallanSchema = z.object({
+  id: challanIdSchema,
+});
+
+/* -------------------------------------------------------------------------- */
 /*                                Identify / List                             */
 /* -------------------------------------------------------------------------- */
 
@@ -145,6 +176,15 @@ export type CreateDeliveryChallanData = z.output<
 >;
 export type ConfirmDeliveryChallanInput = z.input<
   typeof confirmDeliveryChallanSchema
+>;
+export type UpdateDeliveryChallanInput = z.input<
+  typeof updateDeliveryChallanSchema
+>;
+export type UpdateDeliveryChallanData = z.output<
+  typeof updateDeliveryChallanSchema
+>;
+export type CancelDeliveryChallanInput = z.input<
+  typeof cancelDeliveryChallanSchema
 >;
 export type DeliveryChallanIdentifierInput = z.input<
   typeof deliveryChallanIdentifierSchema

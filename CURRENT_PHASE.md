@@ -2,7 +2,7 @@
 
 Current Phase:
 
-PHASE_05A1_DELIVERY_CHALLAN_SCHEMA
+PHASE_05A2_DELIVERY_CHALLAN_BACKEND
 
 Status:
 
@@ -18,11 +18,53 @@ COMPLETE
 | PHASE_04B_ORDER_UI | Sales Order UI | ✅ COMPLETE |
 | PHASE_04C_ORDER_COMBOBOX_DIAGNOSTICS | DealerCombobox fix | ✅ COMPLETE |
 | PHASE_05A_DELIVERY_CHALLAN_BACKEND | Delivery Challan backend (validators, DTOs, workflow guards) | ✅ COMPLETE (foundation) |
-| **PHASE_05A1_DELIVERY_CHALLAN_SCHEMA** | Delivery Challan Prisma schema + migration | **✅ COMPLETE** |
-| PHASE_05A2_DELIVERY_CHALLAN_ACTIONS | Server actions, challan number generator, order integration | PLANNED |
+| PHASE_05A1_DELIVERY_CHALLAN_SCHEMA | Delivery Challan Prisma schema + migration | ✅ COMPLETE |
+| **PHASE_05A2_DELIVERY_CHALLAN_ACTIONS** | Server actions, challan number generator, order integration | **✅ COMPLETE** |
 | PHASE_05B_DELIVERY_CHALLAN_UI | Delivery Challan UI (create from order, list, detail, dispatch) | PLANNED |
 | PHASE_05C_INVOICE_ENGINE | Invoice generation from challan (+ required InvoiceItem) | PLANNED |
 | PHASE_05D_INVOICE_UI_PDF | Invoice UI, issue workflow, printable PDF | PLANNED |
+
+---
+
+# PHASE_05A2_DELIVERY_CHALLAN_ACTIONS
+
+Status: COMPLETE
+
+## Objectives
+
+Wire Delivery Challan **server actions** and order integration. No UI, no Invoice engine.
+
+* Server actions — `createDeliveryChallan`, `updateDeliveryChallan`, `confirmDeliveryChallan`, `cancelDeliveryChallan`, `getDeliveryChallan`, `listDeliveryChallans`
+* Challan number generator — `CHL-NNNNNN` sequential (`src/lib/utils/challan-number.ts`)
+* Workflow guards — over-delivery, order eligibility, duplicate confirm, cancelled challan blocks
+* Quantity reconciliation — split `remainingQty` (display) vs `allocatableQty` (validation)
+* Order status sync — `Approved → Partially_Delivered → Delivered` on confirmed qty only
+* Order integration — `assertOrderLinesMutable` in `updateOrder`; confirmed-challan block in `cancelOrder`; fulfillment in `getOrder`
+* Audit — `DELIVERY_CHALLAN_CREATED` / `_UPDATED` / `_CONFIRMED` / `_CANCELLED`
+* Unit tests — workflow + quantity reconciliation (`vitest`)
+
+### Schema Changes
+
+| Model / Enum | Change |
+|--------------|--------|
+| `OrderStatus` | + `Partially_Delivered` (between Approved and terminal Delivered) |
+
+### Out of Scope
+
+* UI, Invoice Engine, Collections, Ledger, Due, PDF
+
+### Completion Criteria
+
+* All six server actions implemented with RBAC + transactions: ✓
+* `CHL-NNNNNN` generator: ✓
+* Workflow guards aligned to ADR-012 (confirmed-only lock, split qty): ✓
+* Order status synchronization: ✓
+* Audit events in `AuditLog`: ✓
+* Non-financial boundary verified: ✓
+* `npx tsc --noEmit` — 0 errors: ✓
+* `npx eslint` — 0 errors: ✓
+* `npm test` — 9 workflow tests pass: ✓
+* Governance docs updated: ✓
 
 ---
 

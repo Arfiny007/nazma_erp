@@ -30,6 +30,11 @@ const STATUS_STYLES: Record<OrderStatus, { badge: string; dot: string }> = {
       "bg-emerald-50 text-emerald-700 ring-emerald-600/20 dark:bg-emerald-950/50 dark:text-emerald-400 dark:ring-emerald-500/30",
     dot: "bg-emerald-500 dark:bg-emerald-400",
   },
+  Partially_Delivered: {
+    badge:
+      "bg-sky-50 text-sky-700 ring-sky-600/20 dark:bg-sky-950/50 dark:text-sky-400 dark:ring-sky-500/30",
+    dot: "bg-sky-500 dark:bg-sky-400",
+  },
   Rejected: {
     badge:
       "bg-rose-50 text-rose-700 ring-rose-600/20 dark:bg-rose-950/50 dark:text-rose-400 dark:ring-rose-500/30",
