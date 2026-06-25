@@ -4,6 +4,142 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_05D1_ENTERPRISE_INVOICE_UI] — 2026-06-25
+
+### Added
+
+- **Invoice List** — `/invoices` with `InvoiceTable`: search, status/dealer/date filters, sorting, pagination, status badges
+- **Invoice Detail** — `/invoices/[id]`: header, metadata, dealer, order/challan links, immutable line items, sticky financial summary, audit timeline, PDF placeholder
+- **Issue Invoice** — `/invoices/issue`: eligible challan combobox, server financial preview, issue + navigate to detail
+- **Challan integration** — `InvoiceActions` + `IssueInvoiceDialog` on confirmed challan detail (`hasInvoice: false`)
+- **UI-support actions** — `previewInvoiceFromChallan`, `listInvoiceEligibleChallans`; `getInvoice` attaches `auditHistory`
+- **Components** — full `src/components/invoices/*` suite per ADR-016
+- **ADR-016** — Enterprise Invoice UI architecture
+
+### Changed
+
+- `InvoiceDetailDTO` — + `auditHistory[]`, preview/eligible challan DTOs
+- `middleware.ts` — `/invoices/issue → invoices:create`
+- `issueInvoice` — revalidates `/invoices` paths
+- `public/locales/en/common.json` & `bn/common.json` — full `invoice.*` keys
+
+### Verification
+
+- `npx prisma generate` — OK
+- `npx tsc --noEmit` — 0 errors
+- `npx eslint` — 0 errors (1 pre-existing `useReactTable` warning)
+
+### Scope
+
+UI only. No PDF, Collections, Ledger, or Due Reports.
+
+---
+
+## [PHASE_05C2A_FINANCIAL_CONCURRENCY_HOTFIX] — 2026-06-25
+
+### Fixed
+
+- **Dealer balance lost-update** — pessimistic row lock (`SELECT … FOR UPDATE`) at
+  start of `executeIssueInvoiceTransaction()` serializes same-dealer financial mutations
+- **Stale `previousDue` / credit TOCTOU** — balance snapshot and credit check occur only
+  after dealer lock; post-lock invoice existence re-check for concurrent challan issue
+- **Non-atomic balance write** — `postReceivableIncrease()` uses Prisma `{ increment: amount }`
+  with `previousBalance` from locked snapshot
+
+### Added
+
+- **`lockDealerForFinancialUpdate()`** — `src/lib/finance/dealer-lock.ts`
+- **`executeIssueInvoiceTransaction()`** — extracted single-transaction core in
+  `src/lib/invoices/issue-invoice-transaction.ts`
+- **Idempotent invoice issue** — existing challan invoice returned on retry; `P2002` on
+  `deliveryChallanId` resolves to existing invoice
+- **Concurrency integration tests** — `src/lib/invoices/issue-invoice-concurrency.test.ts`
+  (parallel same-dealer, credit limit, duplicate challan, sequential retry)
+
+### Verification
+
+- `npx prisma generate` — OK
+- `npx tsc --noEmit` — 0 errors
+- `npx eslint` — 0 errors
+- `npm test` — pass (integration tests require `DATABASE_URL`)
+
+### Scope
+
+Backend hotfix only. No UI, PDF, Collections, Ledger, or workflow changes.
+
+---
+
+## [PHASE_05C2_FINANCIAL_INTEGRITY_AUDIT] — 2026-06-25
+
+### Added
+
+- **ADR-015** — Pre-production financial integrity audit: 13-section review, production readiness score (7.5/10), mandatory dealer-balance concurrency remediation
+
+### Audit Verdict
+
+- Invoice Engine **architecturally approved** for PHASE_05D and PHASE_06
+- **Critical:** concurrent `issueInvoice()` for same dealer can lost-update `Dealer.currentBalance`, corrupt `previousDue`, and bypass credit limit under `READ COMMITTED`
+- **Remediation required:** pessimistic dealer row lock or atomic increment (see ADR-015) before high-concurrency production
+
+### Section Summary
+
+| Result | Sections |
+|--------|----------|
+| PASS | Snapshot integrity, balance write path, current due strategy, transaction boundary, challan→invoice, ledger readiness, audit trail, performance |
+| WARNING | Previous due concurrency, credit limit TOCTOU, reporting denormalization, DB locking |
+| FAIL | None (one critical defect documented under WARNING with mandatory fix) |
+
+### Scope
+
+Audit and governance only. No application code, UI, or schema changes.
+
+---
+
+## [PHASE_05C1_INVOICE_ENGINE_BACKEND] — 2026-06-25
+
+### Added
+
+- **InvoiceItem model** — immutable line snapshots (`productCode`, `productName`, `unit`, `quantity`, `unitPrice`, `discount`, `lineTotal`); migration `20250625120000_add_invoice_item`
+- **Financial Posting Service** — `src/lib/finance/posting-service.ts`: `postReceivableIncrease()` updates `Dealer.currentBalance` + `DEALER_BALANCE_UPDATED` audit (Ledger deferred)
+- **Invoice server actions** — `issueInvoice`, `getInvoice`, `listInvoices` in `src/lib/actions/invoices/`
+- **Invoice calculator** — `buildInvoiceFromChallanLines()` reuses order Decimal engine; proportional discount from order lines
+- **Invoice workflow guards** — `src/lib/invoices/workflow.ts`: Confirmed-only, no duplicate, non-empty challan
+- **Invoice number generator** — `INV-000001` sequential (`src/lib/utils/invoice-number.ts`)
+- **Domain types** — `src/types/invoice.ts`
+- **Validators** — `src/lib/validators/invoice.schema.ts`
+- **Tests** — `src/lib/invoices/workflow.test.ts` (workflow, calculator, credit limit)
+- **ADR-014** — Invoice Engine backend architecture
+
+### Business Rules
+
+- One Confirmed Delivery Challan → exactly one Invoice (`Invoice.deliveryChallanId` unique)
+- Quantities from `DeliveryChallanItem` only; prices from `SalesOrderItem` at issue
+- `previousDue` = `Dealer.currentBalance` snapshot before issue
+- `currentDue` = `previousDue + grandTotal` (Collections not implemented)
+- Credit limit validated only at `issueInvoice()` — rejects with `CREDIT_LIMIT_EXCEEDED`
+- `issueInvoice()` creates status `Issued`; VAT = 0
+
+### Audit Events
+
+| Action | AuditLog `action` |
+|--------|-------------------|
+| Issue invoice | `INVOICE_CREATED` |
+| Balance update | `DEALER_BALANCE_UPDATED` |
+
+### Verification
+
+- `npx prisma generate` — OK
+- `npx prisma migrate deploy` — OK (when DB available)
+- `npx tsc --noEmit` — 0 errors
+- `npx eslint` — 0 errors
+- `npm test` — pass
+
+### Scope
+
+Backend only. No Invoice UI, PDF, Collections, or LedgerEntry.
+
+---
+
 ## [HOTFIX_ORDERSTATUS_ENUM] — 2026-06-25
 
 ### Fixed

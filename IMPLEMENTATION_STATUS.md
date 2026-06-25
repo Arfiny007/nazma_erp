@@ -1,6 +1,204 @@
 # IMPLEMENTATION STATUS
 
-Last updated: 2026-06-25 (HOTFIX — OrderStatus enum migration)
+Last updated: 2026-06-25 (PHASE_05D1 — Enterprise Invoice UI)
+
+---
+
+## Enterprise Invoice UI — Verification (PHASE_05D1)
+
+| Criterion | Status |
+|-----------|--------|
+| List: search / status / dealer / date filters | ✅ |
+| List: sorting + pagination + status badges | ✅ |
+| Detail: header / metadata / dealer / items / financial summary | ✅ |
+| Detail: audit timeline + commercial pipeline visualization | ✅ |
+| Detail: PDF placeholder (no implementation) | ✅ |
+| Issue: `/invoices/issue` — eligible challan picker + server preview | ✅ |
+| Issue: challan detail dialog + navigate to detail on success | ✅ |
+| No client-side money calculation | ✅ |
+| RBAC: middleware + page guard + conditional render | ✅ |
+| EN + BN localization (`invoice.*`) | ✅ |
+| ADR-016 created | ✅ |
+| `npx prisma generate` — OK | ✅ |
+| `npx tsc --noEmit` — 0 errors | ✅ |
+| `npx eslint` — 0 errors | ✅ |
+
+### Files Created — PHASE_05D1
+
+```
+src/lib/actions/invoices/preview-invoice-from-challan.ts
+src/lib/actions/invoices/list-invoice-eligible-challans.ts
+src/components/invoices/invoice-table.tsx
+src/components/invoices/invoice-status-badge.tsx
+src/components/invoices/invoice-empty-state.tsx
+src/components/invoices/invoice-skeleton.tsx
+src/components/invoices/invoice-search.tsx
+src/components/invoices/invoice-filters.tsx
+src/components/invoices/invoice-detail-view.tsx
+src/components/invoices/invoice-header-card.tsx
+src/components/invoices/invoice-metadata-card.tsx
+src/components/invoices/invoice-dealer-card.tsx
+src/components/invoices/invoice-items-table.tsx
+src/components/invoices/invoice-totals-card.tsx
+src/components/invoices/invoice-financial-summary.tsx
+src/components/invoices/invoice-history-timeline.tsx
+src/components/invoices/invoice-timeline.tsx
+src/components/invoices/invoice-actions.tsx
+src/components/invoices/issue-invoice-dialog.tsx
+src/components/invoices/eligible-challan-combobox.tsx
+src/app/(dashboard)/invoices/page.tsx
+src/app/(dashboard)/invoices/[id]/page.tsx
+src/app/(dashboard)/invoices/[id]/page-client.tsx
+src/app/(dashboard)/invoices/issue/page.tsx
+src/app/(dashboard)/invoices/issue/page-client.tsx
+docs/ADR/ADR-016-enterprise-invoice-ui.md
+```
+
+### Files Modified — PHASE_05D1
+
+```
+src/types/invoice.ts
+src/lib/validators/invoice.schema.ts
+src/lib/actions/invoices/helpers.ts
+src/lib/actions/invoices/issue-invoice.ts
+src/components/delivery-challans/challan-detail-view.tsx
+middleware.ts
+public/locales/en/common.json
+public/locales/bn/common.json
+CURRENT_PHASE.md
+IMPLEMENTATION_STATUS.md
+NEXT_ACTION.md
+CHANGELOG.md
+```
+
+---
+
+## Financial Concurrency Hotfix — Verification (PHASE_05C2A)
+
+| Criterion | Status |
+|-----------|--------|
+| Dealer row lock (`FOR UPDATE`) before balance read | ✅ |
+| Atomic `currentBalance` increment in posting service | ✅ |
+| `previousDue` from locked snapshot only | ✅ |
+| Credit limit after dealer lock | ✅ |
+| Single `prisma.$transaction` boundary preserved | ✅ |
+| Idempotent challan re-issue (no duplicate invoices) | ✅ |
+| `P2002` on `deliveryChallanId` resolves existing invoice | ✅ |
+| Concurrency integration tests | ✅ (requires `DATABASE_URL`) |
+| `npx prisma generate` — OK | ✅ |
+| `npx tsc --noEmit` — 0 errors | ✅ |
+| `npx eslint` — 0 errors | ✅ |
+| `npm test` — pass | ✅ |
+
+### Files Created — PHASE_05C2A
+
+```
+src/lib/finance/dealer-lock.ts
+src/lib/invoices/issue-invoice-transaction.ts
+src/lib/invoices/issue-invoice-concurrency.test.ts
+```
+
+### Files Modified — PHASE_05C2A
+
+```
+src/lib/finance/posting-service.ts
+src/lib/finance/types.ts
+src/lib/actions/invoices/issue-invoice.ts
+CURRENT_PHASE.md
+IMPLEMENTATION_STATUS.md
+NEXT_ACTION.md
+CHANGELOG.md
+docs/ADR/ADR-015-financial-integrity-audit.md
+```
+
+---
+
+## Financial Integrity Audit — Verification (PHASE_05C2)
+
+| Criterion | Status |
+|-----------|--------|
+| 13-point pipeline review completed | ✅ |
+| InvoiceItem snapshot immutability verified | ✅ PASS |
+| Single `currentBalance` write path (`posting-service.ts`) | ✅ PASS |
+| `previousDue` / `currentDue` strategy validated | ✅ PASS |
+| Credit limit at invoice issue only | ✅ PASS |
+| `issueInvoice()` single transaction boundary | ✅ PASS |
+| One challan → one invoice enforcement | ✅ PASS |
+| Delivery challan non-financial boundary | ✅ PASS |
+| Ledger / Collections extension points | ✅ PASS |
+| Audit trail (`INVOICE_CREATED`, `DEALER_BALANCE_UPDATED`) | ✅ PASS |
+| **Dealer balance concurrency (lost update)** | ✅ **REMEDIATED (PHASE_05C2A)** |
+| ADR-015 created | ✅ |
+| Production readiness score | **7.5 / 10** → concurrency fix applied |
+
+### Files Created — PHASE_05C2
+
+```
+docs/ADR/ADR-015-financial-integrity-audit.md
+```
+
+### Files Modified — PHASE_05C2
+
+```
+CURRENT_PHASE.md
+IMPLEMENTATION_STATUS.md
+NEXT_ACTION.md
+CHANGELOG.md
+```
+
+---
+
+## Invoice Engine Backend — Verification (PHASE_05C1)
+
+| Criterion | Status |
+|-----------|--------|
+| `InvoiceItem` model + migration | ✅ |
+| `issueInvoice` — Confirmed challan only | ✅ |
+| Draft / Cancelled challan blocked | ✅ |
+| Duplicate invoice blocked (`deliveryChallanId` unique) | ✅ |
+| Quantities from DeliveryChallanItem only | ✅ |
+| Immutable InvoiceItem snapshots | ✅ |
+| `previousDue` snapshot from `Dealer.currentBalance` | ✅ |
+| `currentDue` = `previousDue + grandTotal` persisted | ✅ |
+| Financial Posting Service — sole balance mutation | ✅ |
+| Credit limit at invoice issue only | ✅ |
+| `INVOICE_CREATED` + `DEALER_BALANCE_UPDATED` audit | ✅ |
+| `getInvoice` / `listInvoices` | ✅ |
+| No LedgerEntry / Collections / UI | ✅ |
+| ADR-014 created | ✅ |
+| `npx prisma generate` — OK | ✅ |
+| `npx tsc --noEmit` — 0 errors | ✅ |
+| `npx eslint` — 0 errors | ✅ |
+| `npm test` — pass | ✅ |
+
+### Files Created — PHASE_05C1
+
+```
+prisma/migrations/20250625120000_add_invoice_item/migration.sql
+src/types/invoice.ts
+src/lib/validators/invoice.schema.ts
+src/lib/utils/invoice-number.ts
+src/lib/utils/invoice-calculator.ts
+src/lib/invoices/workflow.ts
+src/lib/invoices/workflow.test.ts
+src/lib/finance/types.ts
+src/lib/finance/posting-service.ts
+src/lib/actions/invoices/helpers.ts
+src/lib/actions/invoices/issue-invoice.ts
+src/lib/actions/invoices/get-invoice.ts
+src/lib/actions/invoices/list-invoices.ts
+docs/ADR/ADR-014-invoice-engine.md
+```
+
+### Files Modified — PHASE_05C1
+
+```
+prisma/schema.prisma
+CURRENT_PHASE.md
+IMPLEMENTATION_STATUS.md
+NEXT_ACTION.md
+CHANGELOG.md
+```
 
 ---
 
@@ -55,6 +253,9 @@ CHANGELOG.md
 | PHASE_05A1_DELIVERY_CHALLAN_SCHEMA | Delivery Challan Prisma models + migration | ✅ COMPLETE |
 | PHASE_05A2_DELIVERY_CHALLAN_ACTIONS | Server actions, challan number generator, order integration, tests | ✅ COMPLETE |
 | **PHASE_05B_DELIVERY_CHALLAN_UI** | Delivery Challan UI: list, create/edit, detail, fulfillment viz, workflow | **✅ COMPLETE** |
+| **PHASE_05C1_INVOICE_ENGINE_BACKEND** | Invoice backend from challan + mandatory InvoiceItem + financial posting | **✅ COMPLETE** |
+| **PHASE_05C2_FINANCIAL_INTEGRITY_AUDIT** | Pre-production accounting review; ADR-015 | **✅ COMPLETE** |
+| **PHASE_05C2A_FINANCIAL_CONCURRENCY_HOTFIX** | Dealer lock, atomic balance, idempotency, concurrency tests | **✅ COMPLETE** |
 
 ---
 
@@ -599,7 +800,8 @@ CHANGELOG.md
 | PHASE_05A1_DELIVERY_CHALLAN_SCHEMA | Prisma models + migration | **COMPLETE** |
 | PHASE_05A2_DELIVERY_CHALLAN_ACTIONS | Server actions, challan number generator, order integration | **COMPLETE** |
 | PHASE_05B_DELIVERY_CHALLAN_UI | Create challan from order, list, detail, dispatch workflow | **COMPLETE** |
-| PHASE_05C_INVOICE_ENGINE | Invoice from challan + mandatory InvoiceItem | PLANNED |
+| PHASE_05C1_INVOICE_ENGINE_BACKEND | Invoice from challan + mandatory InvoiceItem + financial posting | **COMPLETE** |
+| PHASE_05C_INVOICE_ENGINE | Invoice generation from challan (+ required InvoiceItem) | ✅ COMPLETE (PHASE_05C1) |
 | PHASE_05D_INVOICE_UI_PDF | Invoice UI, issue workflow, PDF | PLANNED |
 
 ---
@@ -608,7 +810,6 @@ CHANGELOG.md
 
 | Phase | Description |
 |-------|-------------|
-| PHASE_05C_INVOICE_ENGINE | Invoice generation from challan |
 | PHASE_05D_INVOICE_UI_PDF | Invoice UI + PDF |
 | PHASE_06_COLLECTIONS | Payment collections |
 | PHASE_07_LEDGER | Financial ledger |

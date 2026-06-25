@@ -2,42 +2,30 @@
 
 ## Current State
 
-PHASE_05B_DELIVERY_CHALLAN_UI is **complete**:
+PHASE_05D1_ENTERPRISE_INVOICE_UI is **complete**:
 
-- Routes: `/delivery-challans`, `/new`, `/[id]`, `/[id]/edit`
-- List with search / filters / pagination / sorting
-- Create from Approved / Partially_Delivered orders with allocatable qty caps
-- Detail with fulfillment visualization, audit timeline, confirm/cancel
-- Edit Draft-only; Confirmed read-only
-- RBAC reuses `orders:view` / `orders:create` / `orders:edit`
-- EN + BN `challan.*` localization
-- ADR-013 created
+- Invoice list (`/invoices`) with search, filters, pagination, sorting
+- Invoice detail (`/invoices/[id]`) — immutable lines, financial summary, audit timeline
+- Issue workflow (`/invoices/issue`) + challan detail dialog
+- Server financial preview — no client-side money math
+- EN + BN localization (`invoice.*`)
+- ADR-016
 
-**Not yet built:** Invoice Engine, Invoice UI, Collections, Ledger, Due.
-
-### Hotfix applied (2026-06-25)
-
-Migration `20250625110000_add_partially_delivered_status` deployed to Docker PostgreSQL. `OrderStatus.Partially_Delivered` now exists in DB; Delivery Challan eligible-order queries work. Sidebar links `/reports` and `/ledger` 404 because those modules are not implemented yet (PHASE_07 / PHASE_08) — not Delivery Challan defects.
+**Not yet built:** Invoice PDF, Collections, Ledger, Due Reports.
 
 ---
 
-## Next Phase: PHASE_05C — Invoice Engine
-
-### Objective
-
-Generate invoices from **Confirmed** delivery challans with mandatory `InvoiceItem` rows.
+## Next Phase: PHASE_05D2 — Invoice PDF
 
 ### Implementation Goals
 
-1. `createInvoice` from confirmed challan (one challan → one invoice)
-2. InvoiceItem lines sourced from challan quantities; unit prices from order lines
-3. Credit-limit check at invoice issue
-4. Ledger / balance / due side effects (financial boundary per ADR-011)
+1. Printable invoice PDF layout on detail page
+2. Print stylesheet / server PDF generation
+3. EN + BN PDF labels
 
 ### Out of Scope
 
-- Invoice UI / PDF (PHASE_05D)
-- Collections, Due Reports
+- Collections, Ledger posting, payment allocation
 
 ---
 
@@ -46,11 +34,13 @@ Generate invoices from **Confirmed** delivery challans with mandatory `InvoiceIt
 | Role | Email | Password |
 |------|-------|----------|
 | Super_Admin | admin@nazma.local | Admin123! |
+| Accounts | (seed if needed) | — |
 
 ---
 
 ## Notes
 
-- Delivery Challan is NON-FINANCIAL — no balance / ledger / due side effects
-- Confirmed challans with `hasInvoice: false` are invoice-eligible (PHASE_05C)
-- Never expose raw Prisma errors to the client (use typed `ActionResult` envelope)
+- Delivery Challan remains NON-FINANCIAL
+- Invoice issue requires `invoices:create` (Accounts, Super_Admin)
+- Never update `Dealer.currentBalance` outside `postReceivableIncrease()`
+- Invoice UI displays backend totals only — never recomputes on client

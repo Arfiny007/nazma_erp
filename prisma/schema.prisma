@@ -166,6 +166,7 @@ model Product {
 
   orderItems           SalesOrderItem[]
   deliveryChallanItems DeliveryChallanItem[]
+  invoiceItems         InvoiceItem[]
 }
 
 model SalesOrder {
@@ -290,6 +291,8 @@ model DeliveryChallanItem {
 
   quantity Decimal @db.Decimal(18, 2)
 
+  invoiceItem InvoiceItem?
+
   @@index([challanId])
   @@index([orderItemId])
   @@index([productId])
@@ -332,6 +335,7 @@ model Invoice {
 
   createdAt DateTime @default(now())
 
+  items       InvoiceItem[]
   collections Collection[]
 
   @@index([orderId])
@@ -339,6 +343,35 @@ model Invoice {
   @@index([status])
   @@index([dueDate])
   @@index([createdAt])
+  @@index([deliveryChallanId])
+}
+
+model InvoiceItem {
+  id String @id @default(uuid())
+
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  challanItemId String?            @unique
+  challanItem   DeliveryChallanItem? @relation(fields: [challanItemId], references: [id])
+
+  orderItemId String?
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id])
+
+  productCode String
+  productName String
+  unit        String
+
+  quantity  Decimal @db.Decimal(18, 2)
+  unitPrice Decimal @db.Decimal(18, 2)
+  discount  Decimal @db.Decimal(18, 2)
+  lineTotal Decimal @db.Decimal(18, 2)
+
+  @@index([invoiceId])
+  @@index([productId])
+  @@index([orderItemId])
 }
 
 model Collection {

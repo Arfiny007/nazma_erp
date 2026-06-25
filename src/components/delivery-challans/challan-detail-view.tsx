@@ -9,6 +9,7 @@ import { ChallanHistoryTimeline } from "@/components/delivery-challans/challan-h
 import { ChallanStatusBadge } from "@/components/delivery-challans/challan-status-badge";
 import { ChallanWorkflowActions } from "@/components/delivery-challans/challan-workflow-actions";
 import { FulfillmentProgressBar } from "@/components/delivery-challans/fulfillment-progress-bar";
+import { InvoiceActions } from "@/components/invoices/invoice-actions";
 import { OrderStatusBadge } from "@/components/orders/order-status-badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { computeOrderDeliveryPercentClient } from "@/lib/delivery/quantity-client";
@@ -246,6 +247,10 @@ export function ChallanDetailView({
 
         <div className="print:hidden">
           <ChallanWorkflowActions challan={challan} userRole={userRole} />
+        </div>
+
+        <div className="print:hidden">
+          <InvoiceActions challan={challan} userRole={userRole} />
         </div>
 
         <Card title={t("challan.history.title")} className="print:break-inside-avoid">
