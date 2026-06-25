@@ -7,6 +7,7 @@ import {
   Settings,
   Shield,
   Store,
+  Truck,
   Users,
   Wallet,
 } from "lucide-react";
@@ -43,6 +44,13 @@ export const NAV_SECTIONS: NavSection[] = [
         labelKey: "nav.orders",
         href: "/orders",
         icon: FileText,
+        permission: "orders:view",
+      },
+      {
+        id: "delivery-challans",
+        labelKey: "nav.deliveryChallans",
+        href: "/delivery-challans",
+        icon: Truck,
         permission: "orders:view",
       },
       {

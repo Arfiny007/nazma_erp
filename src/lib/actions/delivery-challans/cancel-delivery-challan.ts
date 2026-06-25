@@ -84,6 +84,8 @@ export async function cancelDeliveryChallan(
 
     revalidatePath("/orders");
     revalidatePath(`/orders/${detail.orderId}`);
+    revalidatePath("/delivery-challans");
+    revalidatePath(`/delivery-challans/${detail.id}`);
 
     return ok(detail);
   } catch (error) {

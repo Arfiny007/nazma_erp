@@ -13,6 +13,7 @@ import {
 } from "@/lib/delivery/workflow";
 import type {
   ActionResult,
+  ChallanHistoryDTO,
   DeliveryChallanDetailDTO,
   DeliveryChallanError,
   DeliveryChallanErrorCode,
@@ -113,6 +114,7 @@ export const challanDetailInclude = {
   order: { select: { id: true, orderNo: true } },
   dealer: { select: { dealerCode: true, companyName: true } },
   createdBy: { select: { id: true, name: true } },
+  confirmedBy: { select: { id: true, name: true } },
   items: {
     include: {
       product: {
@@ -368,12 +370,64 @@ export function toChallanSummaryDTO(
   };
 }
 
+function readChallanStatus(
+  value: Prisma.JsonValue | null,
+): DeliveryChallanStatus | null {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const status = (value as Record<string, unknown>).status;
+    if (typeof status === "string") {
+      return status as DeliveryChallanStatus;
+    }
+  }
+  return null;
+}
+
+/**
+ * Loads the ordered lifecycle history for a delivery challan from the audit
+ * log. Returns an empty array when no events are recorded.
+ */
+export async function fetchChallanHistory(
+  challanId: string,
+): Promise<ChallanHistoryDTO[]> {
+  const logs = await prisma.auditLog.findMany({
+    where: { entityType: CHALLAN_ENTITY_TYPE, entityId: challanId },
+    include: { user: { select: { id: true, name: true } } },
+    orderBy: { createdAt: "asc" },
+  });
+
+  return logs.map((log) => ({
+    id: log.id,
+    action: log.action,
+    actorId: log.user.id,
+    actorName: log.user.name,
+    fromStatus: readChallanStatus(log.oldValue),
+    toStatus: readChallanStatus(log.newValue),
+    remarks: readRemarks(log.newValue),
+    timestamp: log.createdAt.toISOString(),
+  }));
+}
+
+function readRemarks(value: Prisma.JsonValue | null): string | null {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    const remarks = (value as Record<string, unknown>).remarks;
+    if (typeof remarks === "string") {
+      return remarks;
+    }
+  }
+  return null;
+}
+
 export function toChallanDetailDTO(
   challan: ChallanDetailRecord,
+  auditHistory: ChallanHistoryDTO[] = [],
 ): DeliveryChallanDetailDTO {
   return {
     ...toChallanSummaryDTO(challan),
     items: challan.items.map(toChallanItemDTO),
+    remarks: challan.remarks,
+    confirmedById: challan.confirmedById,
+    confirmedByName: challan.confirmedBy?.name ?? null,
+    auditHistory,
   };
 }
 
@@ -387,7 +441,8 @@ export async function loadChallanDetailDTO(
   if (!challan) {
     return null;
   }
-  return toChallanDetailDTO(challan);
+  const auditHistory = await fetchChallanHistory(challanId);
+  return toChallanDetailDTO(challan, auditHistory);
 }
 
 /* -------------------------------------------------------------------------- */

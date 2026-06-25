@@ -136,6 +136,8 @@ export async function updateDeliveryChallan(
 
     revalidatePath("/orders");
     revalidatePath(`/orders/${detail.orderId}`);
+    revalidatePath("/delivery-challans");
+    revalidatePath(`/delivery-challans/${detail.id}`);
 
     return ok(detail);
   } catch (error) {

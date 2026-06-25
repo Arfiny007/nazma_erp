@@ -1,6 +1,34 @@
 # IMPLEMENTATION STATUS
 
-Last updated: 2026-06-25 (PHASE_05A2 — Delivery Challan server actions)
+Last updated: 2026-06-25 (HOTFIX — OrderStatus enum migration)
+
+---
+
+## Hotfix — OrderStatus Enum Migration (2026-06-25)
+
+| Criterion | Status |
+|-----------|--------|
+| Root cause identified — migration file present, DB not applied | ✅ |
+| Migration `20250625110000_add_partially_delivered_status` applied (Docker) | ✅ |
+| `prisma migrate status` — 3/3 migrations, schema up to date | ✅ |
+| `prisma generate` — Prisma Client regenerated | ✅ |
+| PostgreSQL `OrderStatus` includes `Partially_Delivered` | ✅ |
+| Eligible-order query (`Approved` + `Partially_Delivered`) succeeds | ✅ |
+| `/reports`, `/ledger` 404 — nav placeholders for unbuilt modules | ✅ (not a challan bug) |
+| No new features; no Invoice Engine | ✅ |
+
+### Cause
+
+PHASE_05A2 added `Partially_Delivered` to `schema.prisma` and committed migration SQL, but `prisma migrate deploy` was not run against the Docker database after `20250625100000_add_delivery_challan`. Queries filtering by `Partially_Delivered` failed at the PostgreSQL enum layer.
+
+### Files Modified — HOTFIX
+
+```
+CURRENT_PHASE.md
+IMPLEMENTATION_STATUS.md
+NEXT_ACTION.md
+CHANGELOG.md
+```
 
 ---
 
@@ -25,7 +53,79 @@ Last updated: 2026-06-25 (PHASE_05A2 — Delivery Challan server actions)
 | PHASE_04C_ORDER_COMBOBOX_DIAGNOSTICS | DealerCombobox: transport error boundary + OrderFormSection overflow/stacking visibility fix | ✅ COMPLETE |
 | PHASE_05A_DELIVERY_CHALLAN_BACKEND | Delivery Challan foundation: DTOs, validators, workflow guards, ADR-012 | ✅ COMPLETE |
 | PHASE_05A1_DELIVERY_CHALLAN_SCHEMA | Delivery Challan Prisma models + migration | ✅ COMPLETE |
-| **PHASE_05A2_DELIVERY_CHALLAN_ACTIONS** | Server actions, challan number generator, order integration, tests | **✅ COMPLETE** |
+| PHASE_05A2_DELIVERY_CHALLAN_ACTIONS | Server actions, challan number generator, order integration, tests | ✅ COMPLETE |
+| **PHASE_05B_DELIVERY_CHALLAN_UI** | Delivery Challan UI: list, create/edit, detail, fulfillment viz, workflow | **✅ COMPLETE** |
+
+---
+
+## Delivery Challan UI — Verification (PHASE_05B)
+
+| Criterion | Status |
+|-----------|--------|
+| List: search / status / dealer / date filters | ✅ |
+| List: sorting + pagination + status badges + Created By | ✅ |
+| Create: eligible order picker (Approved / Partially_Delivered) | ✅ |
+| Create: line grid with ordered / delivered / remaining / allocatable cap | ✅ |
+| Create: live fulfillment summary sidebar | ✅ |
+| Create: Save Draft + Confirm Dispatch | ✅ |
+| Detail: header / dealer / order / logistics / items / audit | ✅ |
+| Detail: per-line + order fulfillment progress bars | ✅ |
+| Detail: Confirm / Cancel workflow (Draft only) | ✅ |
+| Edit: Draft only; Confirmed redirects to detail | ✅ |
+| Print support on detail page | ✅ |
+| RBAC: middleware + page guard + conditional render (`orders:*`) | ✅ |
+| EN + BN localization (`challan.*`) | ✅ |
+| No Prisma schema change | ✅ |
+| `npx tsc --noEmit` — 0 errors | ✅ |
+| `npx eslint` — 0 errors (1 pre-existing useReactTable warning) | ✅ |
+| ADR-013 created | ✅ |
+
+### Files Created — PHASE_05B
+
+```
+src/lib/delivery/quantity-client.ts
+src/lib/actions/delivery-challans/get-order-challan-context.ts
+src/lib/actions/delivery-challans/get-challan-detail-lines.ts
+src/components/delivery-challans/challan-table.tsx
+src/components/delivery-challans/challan-form.tsx
+src/components/delivery-challans/challan-detail-view.tsx
+src/components/delivery-challans/challan-status-badge.tsx
+src/components/delivery-challans/challan-empty-state.tsx
+src/components/delivery-challans/challan-line-editor.tsx
+src/components/delivery-challans/challan-fulfillment-summary.tsx
+src/components/delivery-challans/fulfillment-progress-bar.tsx
+src/components/delivery-challans/challan-workflow-actions.tsx
+src/components/delivery-challans/challan-history-timeline.tsx
+src/components/delivery-challans/eligible-order-combobox.tsx
+src/app/(dashboard)/delivery-challans/page.tsx
+src/app/(dashboard)/delivery-challans/new/page.tsx
+src/app/(dashboard)/delivery-challans/new/page-client.tsx
+src/app/(dashboard)/delivery-challans/[id]/page.tsx
+src/app/(dashboard)/delivery-challans/[id]/page-client.tsx
+src/app/(dashboard)/delivery-challans/[id]/edit/page.tsx
+src/app/(dashboard)/delivery-challans/[id]/edit/page-client.tsx
+docs/ADR/ADR-013-delivery-challan-ui.md
+```
+
+### Files Modified — PHASE_05B
+
+```
+src/types/delivery-challan.ts
+src/lib/actions/delivery-challans/helpers.ts
+src/lib/actions/delivery-challans/get-delivery-challan.ts
+src/lib/actions/delivery-challans/create-delivery-challan.ts
+src/lib/actions/delivery-challans/update-delivery-challan.ts
+src/lib/actions/delivery-challans/confirm-delivery-challan.ts
+src/lib/actions/delivery-challans/cancel-delivery-challan.ts
+middleware.ts
+src/lib/navigation.ts
+public/locales/en/common.json
+public/locales/bn/common.json
+CURRENT_PHASE.md
+IMPLEMENTATION_STATUS.md
+NEXT_ACTION.md
+CHANGELOG.md
+```
 
 ---
 
@@ -498,7 +598,7 @@ CHANGELOG.md
 | PHASE_05A_DELIVERY_CHALLAN_BACKEND | Challan validators, DTOs, workflow guards, schema design | **COMPLETE** |
 | PHASE_05A1_DELIVERY_CHALLAN_SCHEMA | Prisma models + migration | **COMPLETE** |
 | PHASE_05A2_DELIVERY_CHALLAN_ACTIONS | Server actions, challan number generator, order integration | **COMPLETE** |
-| PHASE_05B_DELIVERY_CHALLAN_UI | Create challan from order, list, detail, dispatch workflow | PLANNED |
+| PHASE_05B_DELIVERY_CHALLAN_UI | Create challan from order, list, detail, dispatch workflow | **COMPLETE** |
 | PHASE_05C_INVOICE_ENGINE | Invoice from challan + mandatory InvoiceItem | PLANNED |
 | PHASE_05D_INVOICE_UI_PDF | Invoice UI, issue workflow, PDF | PLANNED |
 
@@ -508,7 +608,6 @@ CHANGELOG.md
 
 | Phase | Description |
 |-------|-------------|
-| PHASE_05B_DELIVERY_CHALLAN_UI | Delivery Challan UI (next) |
 | PHASE_05C_INVOICE_ENGINE | Invoice generation from challan |
 | PHASE_05D_INVOICE_UI_PDF | Invoice UI + PDF |
 | PHASE_06_COLLECTIONS | Payment collections |

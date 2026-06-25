@@ -2,41 +2,42 @@
 
 ## Current State
 
-PHASE_05A2_DELIVERY_CHALLAN_ACTIONS is **complete**:
+PHASE_05B_DELIVERY_CHALLAN_UI is **complete**:
 
-- Six server actions: create / update / confirm / cancel / get / list
-- `CHL-NNNNNN` challan number generator
-- Workflow aligned to ADR-012 (split `remainingQty` vs `allocatableQty`, confirmed-only order lock)
-- Order status sync: `Approved → Partially_Delivered → Delivered`
-- Order integration: fulfillment on `getOrder`, line lock on `updateOrder`, dispatch block on `cancelOrder`
-- Audit events in `AuditLog`
-- `OrderStatus.Partially_Delivered` enum + migration
-- `npm test` — 9 workflow tests pass
-- `npx tsc --noEmit` / `npx eslint` — pass
+- Routes: `/delivery-challans`, `/new`, `/[id]`, `/[id]/edit`
+- List with search / filters / pagination / sorting
+- Create from Approved / Partially_Delivered orders with allocatable qty caps
+- Detail with fulfillment visualization, audit timeline, confirm/cancel
+- Edit Draft-only; Confirmed read-only
+- RBAC reuses `orders:view` / `orders:create` / `orders:edit`
+- EN + BN `challan.*` localization
+- ADR-013 created
 
-**Not yet built:** Delivery Challan UI, Invoice Engine, Collections, Ledger, Due.
+**Not yet built:** Invoice Engine, Invoice UI, Collections, Ledger, Due.
+
+### Hotfix applied (2026-06-25)
+
+Migration `20250625110000_add_partially_delivered_status` deployed to Docker PostgreSQL. `OrderStatus.Partially_Delivered` now exists in DB; Delivery Challan eligible-order queries work. Sidebar links `/reports` and `/ledger` 404 because those modules are not implemented yet (PHASE_07 / PHASE_08) — not Delivery Challan defects.
 
 ---
 
-## Next Phase: PHASE_05B — Delivery Challan UI
+## Next Phase: PHASE_05C — Invoice Engine
 
 ### Objective
 
-Build the Delivery Challan UI on top of the existing backend.
+Generate invoices from **Confirmed** delivery challans with mandatory `InvoiceItem` rows.
 
 ### Implementation Goals
 
-1. Create challan from approved order (line picker with allocatable qty)
-2. Challan list with search / filters / pagination
-3. Challan detail + confirm / cancel actions
-4. Fulfillment progress on order detail
-5. EN + BN localization for all challan strings
+1. `createInvoice` from confirmed challan (one challan → one invoice)
+2. InvoiceItem lines sourced from challan quantities; unit prices from order lines
+3. Credit-limit check at invoice issue
+4. Ledger / balance / due side effects (financial boundary per ADR-011)
 
 ### Out of Scope
 
-- Invoice creation (PHASE_05C)
 - Invoice UI / PDF (PHASE_05D)
-- Collections, Ledger, Due Reports
+- Collections, Due Reports
 
 ---
 
@@ -51,5 +52,5 @@ Build the Delivery Challan UI on top of the existing backend.
 ## Notes
 
 - Delivery Challan is NON-FINANCIAL — no balance / ledger / due side effects
-- Apply migration `20250625110000_add_partially_delivered_status` before using Partially_Delivered status
+- Confirmed challans with `hasInvoice: false` are invoice-eligible (PHASE_05C)
 - Never expose raw Prisma errors to the client (use typed `ActionResult` envelope)

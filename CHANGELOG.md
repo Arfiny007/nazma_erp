@@ -4,6 +4,63 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [HOTFIX_ORDERSTATUS_ENUM] — 2026-06-25
+
+### Fixed
+
+- **Production runtime error** — `invalid input value for enum "OrderStatus": "Partially_Delivered"` blocked Delivery Challan create page eligible-order queries.
+- **Root cause** — Migration `20250625110000_add_partially_delivered_status` existed in repo and Prisma schema but was never applied to the Docker PostgreSQL database (only `init` + `add_delivery_challan` were recorded in `_prisma_migrations`).
+
+### Applied
+
+- `npx prisma migrate deploy` (Docker app container) — applied `20250625110000_add_partially_delivered_status`
+- `npx prisma generate` — Prisma Client regenerated
+- `prisma migrate status` — database schema up to date (3/3 migrations)
+
+### Verified
+
+- `SELECT unnest(enum_range(NULL::"OrderStatus"))` — includes `Partially_Delivered`
+- Eligible-order query (`Approved` + `Partially_Delivered`) — succeeds (3 Approved orders)
+- `/reports` and `/ledger` 404 — navigation placeholders only; modules not yet implemented (PHASE_07 / PHASE_08)
+
+### Scope
+
+Database hotfix only. No new features. No Invoice Engine.
+
+---
+
+## [PHASE_05B_DELIVERY_CHALLAN_UI] — 2026-06-25
+
+### Added
+
+- **Delivery Challan List** — `/delivery-challans` with `ChallanTable`: search, status/dealer/date filters, sorting, pagination, status badges
+- **Create Challan** — `/delivery-challans/new`: eligible order combobox, line qty editor with allocatable caps, live fulfillment summary, Save Draft + Confirm Dispatch
+- **Challan Detail** — `/delivery-challans/[id]`: header, dealer, order, logistics, enriched product table, audit timeline, confirm/cancel workflow, print
+- **Edit Challan** — `/delivery-challans/[id]/edit`: Draft-only; server redirect for Confirmed/Cancelled
+- **Components** — `challan-table`, `challan-form`, `challan-detail-view`, `challan-line-editor`, `challan-fulfillment-summary`, `fulfillment-progress-bar`, `challan-workflow-actions`, `challan-history-timeline`, `challan-status-badge`, `eligible-order-combobox`
+- **UI-support actions** — `getOrderChallanContext`, `getChallanDetailLines`; `fetchChallanHistory` on detail DTO
+- **Client quantity helpers** — `src/lib/delivery/quantity-client.ts` (display-only; server authoritative)
+- **Navigation** — Delivery Challans nav item (`orders:view`)
+- **ADR-013** — Delivery Challan UI architecture
+
+### Changed
+
+- `DeliveryChallanDetailDTO` — + `remarks`, `confirmedById`, `confirmedByName`, `auditHistory`
+- `getDeliveryChallan` — attaches audit history
+- Challan mutating actions — revalidate `/delivery-challans` paths
+- `middleware.ts` — `/delivery-challans` + `/delivery-challans/new` route permissions
+- `public/locales/en/common.json` & `bn/common.json` — full `challan.*` keys
+
+### Verification
+
+- `npx prisma generate` — OK
+- `npx tsc --noEmit` — 0 errors
+- `npx eslint` — 0 errors (1 pre-existing useReactTable warning)
+- `npm test` — 9/9 pass
+- No Prisma schema changes; no Invoice engine
+
+---
+
 ## [PHASE_05A2_DELIVERY_CHALLAN_ACTIONS] — 2026-06-25
 
 ### Added

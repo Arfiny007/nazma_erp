@@ -134,6 +134,8 @@ export async function createDeliveryChallan(
 
       revalidatePath("/orders");
       revalidatePath(`/orders/${data.orderId}`);
+      revalidatePath("/delivery-challans");
+      revalidatePath(`/delivery-challans/${challanId}`);
 
       const detail = await loadChallanDetailDTO(challanId);
       if (!detail) {

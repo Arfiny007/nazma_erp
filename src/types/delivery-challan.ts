@@ -75,6 +75,76 @@ export interface DeliveryChallanSummaryDTO {
 /** Full challan projection including line items. */
 export interface DeliveryChallanDetailDTO extends DeliveryChallanSummaryDTO {
   items: DeliveryChallanItemDTO[];
+  remarks: string | null;
+  confirmedById: string | null;
+  confirmedByName: string | null;
+  /** Audit-derived lifecycle history for the challan detail page. */
+  auditHistory: ChallanHistoryDTO[];
+}
+
+/**
+ * One entry in a challan's audit trail, derived from persisted {@link AuditLog}
+ * records for the delivery challan entity.
+ */
+export interface ChallanHistoryDTO {
+  id: string;
+  action: string;
+  actorId: string;
+  actorName: string;
+  fromStatus: DeliveryChallanStatus | null;
+  toStatus: DeliveryChallanStatus | null;
+  remarks: string | null;
+  timestamp: string;
+}
+
+/**
+ * Per-line context for create / edit challan forms. Quantities are derived
+ * server-side; the UI must not recompute allocatable capacity.
+ */
+export interface OrderChallanLineContextDTO {
+  orderItemId: string;
+  productId: string;
+  productName: string;
+  productSku: string;
+  productModelNumber: string;
+  unit: string;
+  orderedQuantity: string;
+  /** Sum of quantities on Confirmed challans for this line. */
+  deliveredQuantity: string;
+  /** Sum of quantities on other Draft challans (excludes current challan when editing). */
+  draftQuantity: string;
+  /** Display remaining: `ordered − confirmed`, clamped ≥ 0. */
+  remainingQuantity: string;
+  /** Validation cap: `ordered − confirmed − draft`, clamped ≥ 0. */
+  allocatableQuantity: string;
+  /** `(delivered ÷ ordered) × 100`, 2 dp. */
+  deliveryPercent: string;
+}
+
+/** Order header + line context for challan create / edit forms. */
+export interface OrderChallanContextDTO {
+  orderId: string;
+  orderNo: string;
+  dealerCode: string;
+  dealerName: string;
+  status: string;
+  lines: OrderChallanLineContextDTO[];
+  fulfillment: OrderFulfillmentProgressDTO;
+}
+
+/** Enriched line for the challan detail product table. */
+export interface ChallanDetailLineDTO {
+  orderItemId: string;
+  productId: string;
+  productName: string;
+  productSku: string;
+  productModelNumber: string;
+  unit: string;
+  orderedQuantity: string;
+  deliveredPreviously: string;
+  currentDelivery: string;
+  remainingQuantity: string;
+  deliveryPercent: string;
 }
 
 /**

@@ -8,6 +8,7 @@ import type { ActionResult, DeliveryChallanDetailDTO } from "@/types/delivery-ch
 import {
   challanDetailInclude,
   fail,
+  fetchChallanHistory,
   fromPrismaError,
   fromZodError,
   ok,
@@ -51,7 +52,8 @@ export async function getDeliveryChallan(
       );
     }
 
-    return ok(toChallanDetailDTO(challan));
+    const auditHistory = await fetchChallanHistory(challan.id);
+    return ok(toChallanDetailDTO(challan, auditHistory));
   } catch (error) {
     return fromPrismaError(error);
   }
