@@ -25,15 +25,19 @@ export function InvoiceTimeline({ orderNo, challanNo, invoiceNo }: InvoiceTimeli
     order: orderNo,
     challan: challanNo ?? "—",
     invoice: invoiceNo,
-    pdf: t("invoice.timeline.pdfFuture"),
+    pdf: t("invoice.timeline.pdfReady"),
   };
 
   return (
-    <ol className="flex flex-col gap-0 sm:flex-row sm:items-stretch">
+    <ol
+      className="flex flex-col gap-0 sm:flex-row sm:items-stretch"
+      aria-label={t("invoice.timeline.title")}
+    >
       {STEPS.map((step, index) => {
         const Icon = step.icon;
-        const isActive = step.key === "invoice";
-        const isFuture = step.key === "pdf";
+        const isComplete =
+          step.key === "order" || step.key === "challan" || step.key === "invoice";
+        const isCurrent = step.key === "pdf";
         const isLast = index === STEPS.length - 1;
 
         return (
@@ -43,18 +47,19 @@ export function InvoiceTimeline({ orderNo, challanNo, invoiceNo }: InvoiceTimeli
               "relative flex flex-1 flex-col items-center px-2 py-3 text-center",
               !isLast && "sm:after:absolute sm:after:right-0 sm:after:top-1/2 sm:after:h-px sm:after:w-1/2 sm:after:-translate-y-1/2 sm:after:bg-slate-200 sm:after:content-[''] dark:sm:after:bg-slate-700",
             )}
+            aria-current={isCurrent ? "step" : undefined}
           >
             <span
               className={cn(
                 "mb-2 flex size-9 items-center justify-center rounded-full",
-                isActive
+                isCurrent
                   ? "bg-blue-100 text-blue-700 dark:bg-blue-950/50 dark:text-blue-400"
-                  : isFuture
-                    ? "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500"
-                    : "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400",
+                  : isComplete
+                    ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-950/50 dark:text-emerald-400"
+                    : "bg-slate-100 text-slate-400 dark:bg-slate-800 dark:text-slate-500",
               )}
             >
-              {isActive ? (
+              {isComplete ? (
                 <CheckCircle2 aria-hidden="true" className="size-4" />
               ) : (
                 <Icon aria-hidden="true" className="size-4" />
@@ -65,10 +70,7 @@ export function InvoiceTimeline({ orderNo, challanNo, invoiceNo }: InvoiceTimeli
             </p>
             <p
               className={cn(
-                "mt-0.5 font-mono text-xs",
-                isFuture
-                  ? "italic text-slate-400 dark:text-slate-500"
-                  : "text-slate-900 dark:text-slate-100",
+                "mt-0.5 font-mono text-xs text-slate-900 dark:text-slate-100",
               )}
             >
               {labels[step.key]}

@@ -12,6 +12,7 @@ import { InvoiceMetadataCard } from "@/components/invoices/invoice-metadata-card
 import { InvoiceTimeline } from "@/components/invoices/invoice-timeline";
 import { InvoiceTotalsCard } from "@/components/invoices/invoice-totals-card";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useFormatMoney } from "@/lib/utils/use-format-money";
 import type { InvoiceDetailDTO } from "@/types/invoice";
 
 interface InvoiceDetailViewProps {
@@ -21,18 +22,8 @@ interface InvoiceDetailViewProps {
 
 export function InvoiceDetailView({ invoice, userRole }: InvoiceDetailViewProps) {
   const { t, locale } = useLanguage();
+  const formatMoney = useFormatMoney(locale);
 
-  const currencyFormatter = useMemo(
-    () =>
-      new Intl.NumberFormat(locale === "bn" ? "bn-BD" : "en-US", {
-        style: "currency",
-        currency: "BDT",
-        currencyDisplay: "narrowSymbol",
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }),
-    [locale],
-  );
   const dateFormatter = useMemo(
     () =>
       new Intl.DateTimeFormat(locale === "bn" ? "bn-BD" : "en-US", {
@@ -41,10 +32,6 @@ export function InvoiceDetailView({ invoice, userRole }: InvoiceDetailViewProps)
     [locale],
   );
 
-  const formatMoney = useCallback(
-    (value: string) => currencyFormatter.format(Number(value)),
-    [currencyFormatter],
-  );
   const formatDate = useCallback(
     (value: string) => dateFormatter.format(new Date(value)),
     [dateFormatter],
@@ -99,6 +86,8 @@ export function InvoiceDetailView({ invoice, userRole }: InvoiceDetailViewProps)
           grandTotal={invoice.grandTotal}
           previousDue={invoice.previousDue}
           currentDue={invoice.currentDue}
+          collectionReceived={invoice.collectionReceived}
+          outstanding={invoice.outstanding}
           formatMoney={formatMoney}
         />
         <InvoiceActions invoice={invoice} userRole={userRole} />

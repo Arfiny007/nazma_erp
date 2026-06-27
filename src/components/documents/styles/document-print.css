@@ -1,0 +1,207 @@
+/* Enterprise Document Engine — production print styles (ADR-017) */
+
+:root {
+  --doc-enterprise-blue: #1a5dad;
+  --doc-enterprise-blue-dark: #164a8f;
+  --doc-border: #d1d5db;
+  --doc-text: #111827;
+  --doc-muted: #4b5563;
+  --doc-a4-width: 210mm;
+  --doc-a4-height: 297mm;
+  --doc-page-padding: 8mm;
+  --doc-table-rows: 20;
+}
+
+@page {
+  size: A4 portrait;
+  margin: 0;
+}
+
+@media print {
+  .doc-preview-scale {
+    transform: none !important;
+  }
+
+  html,
+  body {
+    width: var(--doc-a4-width);
+    height: var(--doc-a4-height);
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    color: var(--doc-text) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .document-print-root,
+  .document-print-root * {
+    visibility: visible;
+  }
+
+  .document-print-root {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: var(--doc-a4-width) !important;
+  }
+
+  .no-print,
+  .print\:hidden {
+    display: none !important;
+    visibility: hidden !important;
+  }
+
+  .document-print-root {
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+    width: var(--doc-a4-width) !important;
+    min-height: var(--doc-a4-height) !important;
+    max-height: var(--doc-a4-height) !important;
+    overflow: hidden !important;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  .document-avoid-break {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  .doc-blue-bar,
+  .doc-grand-total-row {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+    background-color: var(--doc-enterprise-blue) !important;
+    color: #fff !important;
+  }
+}
+
+.document-print-root {
+  width: var(--doc-a4-width);
+  min-height: var(--doc-a4-height);
+  max-width: 100%;
+  margin: 0 auto;
+  padding: var(--doc-page-padding);
+  background: #fff;
+  color: var(--doc-text);
+  font-family: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  font-size: 9pt;
+  line-height: 1.35;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.document-print-root * {
+  box-sizing: border-box;
+}
+
+.doc-blue {
+  color: var(--doc-enterprise-blue);
+}
+
+.doc-blue-bar {
+  background-color: var(--doc-enterprise-blue);
+  color: #fff;
+}
+
+.doc-hr {
+  border: none;
+  border-top: 1px solid var(--doc-enterprise-blue);
+  margin: 0;
+}
+
+.doc-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.doc-table th,
+.doc-table td {
+  border: 0.5px solid var(--doc-border);
+  padding: 1.5px 3px;
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.doc-table th {
+  font-weight: 700;
+  text-align: left;
+}
+
+.doc-table .text-right {
+  text-align: right;
+}
+
+.doc-table .text-center {
+  text-align: center;
+}
+
+.doc-product-table tbody tr {
+  height: 4.6mm;
+  max-height: 4.6mm;
+}
+
+.doc-product-table tbody td {
+  font-size: 7.5pt;
+  line-height: 1.2;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.doc-product-table .col-sl {
+  width: 4%;
+}
+
+.doc-product-table .col-code {
+  width: 10%;
+}
+
+.doc-product-table .col-name {
+  width: 28%;
+}
+
+.doc-product-table .col-unit {
+  width: 7%;
+}
+
+.doc-product-table .col-qty {
+  width: 8%;
+}
+
+.doc-product-table .col-price {
+  width: 12%;
+}
+
+.doc-product-table .col-discount {
+  width: 11%;
+}
+
+.doc-product-table .col-amount {
+  width: 12%;
+}
+
+.doc-preview-scale {
+  transform-origin: top center;
+}
+
+@media screen and (max-width: 1024px) {
+  .doc-preview-scale {
+    transform: scale(0.72);
+  }
+}
+
+@media screen and (max-width: 640px) {
+  .doc-preview-scale {
+    transform: scale(0.48);
+  }
+}

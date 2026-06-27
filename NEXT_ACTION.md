@@ -2,30 +2,32 @@
 
 ## Current State
 
-PHASE_05D1_ENTERPRISE_INVOICE_UI is **complete**:
+PHASE_05D3_ENTERPRISE_INVOICE_QA is **complete**:
 
-- Invoice list (`/invoices`) with search, filters, pagination, sorting
-- Invoice detail (`/invoices/[id]`) — immutable lines, financial summary, audit timeline
-- Issue workflow (`/invoices/issue`) + challan detail dialog
-- Server financial preview — no client-side money math
-- EN + BN localization (`invoice.*`)
-- ADR-016
+- Full pipeline certified (Order → Challan → Issue → Preview → Print → PDF)
+- Financial values consistent across all surfaces
+- Production readiness score: **9.0 / 10**
+- ADR-018 — Invoice Production Certification
+- Invoice module **certified for Collections**
 
-**Not yet built:** Invoice PDF, Collections, Ledger, Due Reports.
+**Not yet built:** Collections, Ledger, Due Reports.
 
 ---
 
-## Next Phase: PHASE_05D2 — Invoice PDF
+## Next Phase: PHASE_06 — Collections
 
 ### Implementation Goals
 
-1. Printable invoice PDF layout on detail page
-2. Print stylesheet / server PDF generation
-3. EN + BN PDF labels
+1. Collection recording against invoices
+2. `postReceivableDecrease()` in Financial Posting Service
+3. Update `currentDue` and `collectionReceived` on payment
+4. Invoice status transitions (Partial / Paid)
 
 ### Out of Scope
 
-- Collections, Ledger posting, payment allocation
+- Ledger posting (PHASE_07)
+- Due reports (PHASE_08)
+- Multi-page invoice (>20 lines)
 
 ---
 
@@ -42,5 +44,6 @@ PHASE_05D1_ENTERPRISE_INVOICE_UI is **complete**:
 
 - Delivery Challan remains NON-FINANCIAL
 - Invoice issue requires `invoices:create` (Accounts, Super_Admin)
-- Never update `Dealer.currentBalance` outside `postReceivableIncrease()`
-- Invoice UI displays backend totals only — never recomputes on client
+- Never update `Dealer.currentBalance` outside `postReceivableIncrease()` / `postReceivableDecrease()`
+- Document PDF uses browser Save-as-PDF — no html2canvas / rasterization
+- Printable invoice limited to 20 line items per A4 page (see ADR-018)

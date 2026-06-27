@@ -3,7 +3,7 @@
 import { AlertCircle, ArrowLeft, Loader2, Receipt } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { EligibleChallanCombobox } from "@/components/invoices/eligible-challan-combobox";
 import { InvoiceFinancialSummary } from "@/components/invoices/invoice-financial-summary";
@@ -12,12 +12,14 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { issueInvoice } from "@/lib/actions/invoices/issue-invoice";
 import { listInvoiceEligibleChallans } from "@/lib/actions/invoices/list-invoice-eligible-challans";
 import { previewInvoiceFromChallan } from "@/lib/actions/invoices/preview-invoice-from-challan";
+import { useFormatMoney } from "@/lib/utils/use-format-money";
 import type { InvoiceEligibleChallanDTO, InvoicePreviewDTO } from "@/types/invoice";
 
 export function IssueInvoicePageClient() {
   const { t, locale } = useLanguage();
   const router = useRouter();
   const searchParams = useSearchParams();
+  const formatMoney = useFormatMoney(locale);
 
   const [selectedChallan, setSelectedChallan] = useState<InvoiceEligibleChallanDTO | null>(
     null,
@@ -26,23 +28,6 @@ export function IssueInvoicePageClient() {
   const [previewLoading, setPreviewLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  const currencyFormatter = useMemo(
-    () =>
-      new Intl.NumberFormat(locale === "bn" ? "bn-BD" : "en-US", {
-        style: "currency",
-        currency: "BDT",
-        currencyDisplay: "narrowSymbol",
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }),
-    [locale],
-  );
-
-  const formatMoney = useCallback(
-    (value: string) => currencyFormatter.format(Number(value)),
-    [currencyFormatter],
-  );
 
   useEffect(() => {
     const challanId = searchParams.get("challanId");

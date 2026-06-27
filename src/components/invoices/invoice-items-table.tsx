@@ -1,6 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import { hasMoneyValue } from "@/lib/utils/format-money";
 import type { InvoiceDetailDTO } from "@/types/invoice";
 
 interface InvoiceItemsTableProps {
@@ -83,7 +84,7 @@ export function InvoiceItemsTable({
                   {formatMoney(item.unitPrice)}
                 </td>
                 <td className="px-3 py-3 text-right tabular-nums text-rose-600 dark:text-rose-400">
-                  {Number(item.discount) > 0 ? "− " : ""}
+                  {hasMoneyValue(item.discount) ? "− " : ""}
                   {formatMoney(item.discount)}
                 </td>
                 <td className="px-5 py-3 text-right tabular-nums font-medium text-slate-900 dark:text-slate-100">

@@ -49,6 +49,8 @@ export interface InvoiceSummaryDTO {
   previousDue: string;
   currentDue: string;
   collectionReceived: string;
+  /** Outstanding balance on this invoice (currentDue − collectionReceived). */
+  outstanding: string;
   issueDate: string;
   dueDate: string;
   createdAt: string;
@@ -60,6 +62,12 @@ export interface InvoiceDetailDTO extends InvoiceSummaryDTO {
   deliveryMode: string;
   vehicleNo: string | null;
   driverName: string | null;
+  /** Dealer contact snapshot for printable documents. */
+  dealerAddress: string;
+  dealerMobile: string;
+  dealerEmail: string | null;
+  /** Optional sales representative label for document metadata. */
+  salesPerson: string | null;
   /** Audit-derived lifecycle history for the invoice detail page. */
   auditHistory: InvoiceHistoryDTO[];
 }

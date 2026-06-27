@@ -28,6 +28,7 @@ import { InvoiceStatusBadge } from "@/components/invoices/invoice-status-badge";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { listInvoices } from "@/lib/actions/invoices/list-invoices";
 import { cn } from "@/lib/utils";
+import { useFormatMoney } from "@/lib/utils/use-format-money";
 import type { DealerDTO } from "@/types/dealer";
 import {
   INVOICE_SORT_FIELDS,
@@ -49,6 +50,7 @@ const columnHelper = createColumnHelper<InvoiceSummaryDTO>();
 
 export function InvoiceTable() {
   const { t, locale } = useLanguage();
+  const formatMoney = useFormatMoney(locale);
 
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<InvoiceStatus | "">("");
@@ -63,17 +65,6 @@ export function InvoiceTable() {
   const [status, setStatus] = useState<FetchStatus>("loading");
   const [reloadToken, setReloadToken] = useState(0);
 
-  const currencyFormatter = useMemo(
-    () =>
-      new Intl.NumberFormat(locale === "bn" ? "bn-BD" : "en-US", {
-        style: "currency",
-        currency: "BDT",
-        currencyDisplay: "narrowSymbol",
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }),
-    [locale],
-  );
   const dateFormatter = useMemo(
     () =>
       new Intl.DateTimeFormat(locale === "bn" ? "bn-BD" : "en-US", {
@@ -84,10 +75,6 @@ export function InvoiceTable() {
     [locale],
   );
 
-  const formatMoney = useCallback(
-    (value: string) => currencyFormatter.format(Number(value)),
-    [currencyFormatter],
-  );
   const formatDate = useCallback(
     (value: string) => dateFormatter.format(new Date(value)),
     [dateFormatter],

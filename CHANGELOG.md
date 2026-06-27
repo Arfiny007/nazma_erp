@@ -4,6 +4,79 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_05D3_ENTERPRISE_INVOICE_QA] — 2026-06-27
+
+### Added
+
+- **ADR-018** — Invoice Production Certification (9.0/10 readiness score)
+- **`useFormatMoney` hook** — centralized invoice UI money formatting
+- **`hasMoneyValue()`** — string-based non-zero money check (no float comparison)
+- **Line truncation warning** — screen-only banner when invoice exceeds 20 printable rows
+- **Detail financial fields** — `collectionReceived` + `outstanding` on `InvoiceTotalsCard`
+- **Issue preview VAT row** — consistent with detail and document surfaces
+
+### Changed
+
+- Payment terms text aligned with `INVOICE_DEFAULT_DUE_DAYS` (30 days)
+- Invoice UI components consolidated on `format-money.ts` (removed 4× inline formatters)
+- Print CSS resets preview scale transform on print
+- Product table — `scope="col"`, `aria-label` for accessibility
+- Preview modal — initial focus on close button
+- Pipeline timeline — `aria-label`, `aria-current` on PDF step
+- BN locale — Bill To / Ship To translated; obsolete PDF placeholder keys removed
+
+### Removed
+
+- Dead `DocumentRenderContext` interface
+- Unused `currencyPrefix` label
+- Unused `printRootRef` from `useDocumentPrint`
+- Obsolete locale keys (`invoice.timeline.pdfFuture`, `invoice.pdf.placeholder*`)
+
+### Verification
+
+- `npx prisma generate` — OK
+- `npx tsc --noEmit` — 0 errors
+- `npx eslint` — 0 errors
+
+### Scope
+
+Production QA only. No new business features. Invoice certified for PHASE_06 Collections.
+
+---
+
+## [PHASE_05D2_ENTERPRISE_DOCUMENT_ENGINE] — 2026-06-27
+
+### Added
+
+- **Document Engine** — reusable `DocumentLayout` + section components under `src/components/documents/`
+- **InvoicePrintable** — single component for preview, browser print, and Save-as-PDF
+- **Invoice preview** — modal on invoice detail via `InvoiceDocumentPreview`
+- **Print route** — `/invoices/[id]/print` with print / download toolbar
+- **Print CSS** — A4 portrait, fixed 20-row product table, `print-color-adjust: exact`
+- **Company branding** — `getCompanyBranding()` in `src/lib/documents/company-branding.ts`
+- **Money formatter** — centralized `src/lib/utils/format-money.ts`
+- **Logo asset** — `public/branding/nazma-logo.png`
+- **ADR-017** — Enterprise Document Engine architecture
+
+### Changed
+
+- `InvoiceDetailDTO` — + dealer address/mobile/email, `outstanding`, `salesPerson`
+- `InvoiceActions` — preview, print, and PDF actions (replaces placeholder)
+- `InvoiceTimeline` — PDF step marked ready
+- `public/locales/en/common.json` & `bn/common.json` — `document.*` keys
+
+### Verification
+
+- `npx prisma generate` — OK
+- `npx tsc --noEmit` — 0 errors
+- `npx eslint` — 0 errors
+
+### Scope
+
+Document engine + invoice PDF only. No Collections, Ledger, or Due Reports.
+
+---
+
 ## [PHASE_05D1_ENTERPRISE_INVOICE_UI] — 2026-06-25
 
 ### Added

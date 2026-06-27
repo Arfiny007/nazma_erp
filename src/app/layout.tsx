@@ -6,6 +6,7 @@ import { SessionProvider } from "@/components/providers/session-provider";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 
 import "./globals.css";
+import "@/components/documents/styles/document-print.css";
 
 const inter = Inter({
   subsets: ["latin"],

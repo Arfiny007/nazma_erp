@@ -1,6 +1,7 @@
 "use client";
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import { hasMoneyValue } from "@/lib/utils/format-money";
 
 interface InvoiceTotalsCardProps {
   subtotal: string;
@@ -9,6 +10,8 @@ interface InvoiceTotalsCardProps {
   grandTotal: string;
   previousDue: string;
   currentDue: string;
+  collectionReceived: string;
+  outstanding: string;
   formatMoney: (value: string) => string;
 }
 
@@ -61,6 +64,8 @@ export function InvoiceTotalsCard({
   grandTotal,
   previousDue,
   currentDue,
+  collectionReceived,
+  outstanding,
   formatMoney,
 }: InvoiceTotalsCardProps) {
   const { t } = useLanguage();
@@ -77,7 +82,7 @@ export function InvoiceTotalsCard({
         <SummaryRow
           label={t("invoice.summary.discount")}
           value={formatMoney(discount)}
-          negative={Number(discount) > 0}
+          negative={hasMoneyValue(discount)}
         />
         <SummaryRow label={t("invoice.summary.vat")} value={formatMoney(vat)} />
         <SummaryRow
@@ -92,6 +97,14 @@ export function InvoiceTotalsCard({
         <SummaryRow
           label={t("invoice.summary.currentDue")}
           value={formatMoney(currentDue)}
+        />
+        <SummaryRow
+          label={t("invoice.summary.collectionReceived")}
+          value={formatMoney(collectionReceived)}
+        />
+        <SummaryRow
+          label={t("invoice.summary.outstanding")}
+          value={formatMoney(outstanding)}
           emphasis
         />
       </dl>

@@ -2,12 +2,13 @@
 
 import { AlertCircle, CheckCircle2, Loader2, Receipt } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 
 import { InvoiceFinancialSummary } from "@/components/invoices/invoice-financial-summary";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { issueInvoice } from "@/lib/actions/invoices/issue-invoice";
 import { previewInvoiceFromChallan } from "@/lib/actions/invoices/preview-invoice-from-challan";
+import { useFormatMoney } from "@/lib/utils/use-format-money";
 import type { InvoicePreviewDTO } from "@/types/invoice";
 
 interface IssueInvoiceDialogProps {
@@ -25,29 +26,13 @@ export function IssueInvoiceDialog({
 }: IssueInvoiceDialogProps) {
   const { t, locale } = useLanguage();
   const router = useRouter();
+  const formatMoney = useFormatMoney(locale);
 
   const [preview, setPreview] = useState<InvoicePreviewDTO | null>(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
-
-  const currencyFormatter = useMemo(
-    () =>
-      new Intl.NumberFormat(locale === "bn" ? "bn-BD" : "en-US", {
-        style: "currency",
-        currency: "BDT",
-        currencyDisplay: "narrowSymbol",
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }),
-    [locale],
-  );
-
-  const formatMoney = useCallback(
-    (value: string) => currencyFormatter.format(Number(value)),
-    [currencyFormatter],
-  );
 
   const closeDialog = () => {
     if (processing) return;

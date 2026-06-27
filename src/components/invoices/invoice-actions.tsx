@@ -1,10 +1,11 @@
 "use client";
 
-import { Receipt } from "lucide-react";
+import { Download, Eye, Printer, Receipt } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import type { UserRole } from "@prisma/client";
 
+import { InvoiceDocumentPreview } from "@/components/documents/invoice/invoice-document-preview";
 import { IssueInvoiceDialog } from "@/components/invoices/issue-invoice-dialog";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { hasPermission } from "@/lib/permissions";
@@ -20,6 +21,7 @@ interface InvoiceActionsProps {
 export function InvoiceActions({ challan, invoice, userRole }: InvoiceActionsProps) {
   const { t } = useLanguage();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   const canIssue = hasPermission(userRole, "invoices:create");
 
@@ -67,16 +69,44 @@ export function InvoiceActions({ challan, invoice, userRole }: InvoiceActionsPro
 
   if (invoice) {
     return (
-      <section className="overflow-hidden rounded-xl border border-dashed border-slate-200/80 bg-slate-50/50 shadow-sm dark:border-slate-700 dark:bg-slate-900/30">
-        <header className="border-b border-slate-100 px-5 py-4 dark:border-slate-800/80">
-          <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
-            {t("invoice.pdf.placeholderTitle")}
-          </h2>
-        </header>
-        <p className="px-5 py-6 text-sm text-slate-500 dark:text-slate-400">
-          {t("invoice.pdf.placeholderDescription")}
-        </p>
-      </section>
+      <>
+        <section className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
+          <header className="border-b border-slate-100 px-5 py-4 dark:border-slate-800/80">
+            <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+              {t("document.invoice.actionsTitle")}
+            </h2>
+          </header>
+          <div className="space-y-2 p-5">
+            <button
+              type="button"
+              onClick={() => setPreviewOpen(true)}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+            >
+              <Eye aria-hidden="true" className="size-4" />
+              {t("document.actions.preview")}
+            </button>
+            <Link
+              href={`/invoices/${invoice.id}/print`}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+            >
+              <Printer aria-hidden="true" className="size-4" />
+              {t("document.actions.print")}
+            </Link>
+            <Link
+              href={`/invoices/${invoice.id}/print?download=1`}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-slate-700 dark:bg-white dark:text-slate-900 dark:hover:bg-slate-200"
+            >
+              <Download aria-hidden="true" className="size-4" />
+              {t("document.actions.downloadPdf")}
+            </Link>
+          </div>
+        </section>
+        <InvoiceDocumentPreview
+          invoice={invoice}
+          open={previewOpen}
+          onClose={() => setPreviewOpen(false)}
+        />
+      </>
     );
   }
 

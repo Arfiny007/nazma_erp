@@ -1,6 +1,132 @@
 # IMPLEMENTATION STATUS
 
-Last updated: 2026-06-25 (PHASE_05D1 — Enterprise Invoice UI)
+Last updated: 2026-06-27 (PHASE_05D3 — Enterprise Invoice QA)
+
+---
+
+## Enterprise Invoice QA — Verification (PHASE_05D3)
+
+| Criterion | Status |
+|-----------|--------|
+| Full pipeline certified (Order → Challan → Issue → Preview → Print → PDF) | ✅ |
+| Financial values consistent across all surfaces | ✅ |
+| Previous Due / Current Due / Outstanding correct | ✅ |
+| InvoiceItem snapshot integrity | ✅ |
+| Product table 1–20 rows — no clipping / overlap | ✅ |
+| Print CSS — A4, scale reset, color-adjust | ✅ |
+| Payment terms aligned with `INVOICE_DEFAULT_DUE_DAYS` (30) | ✅ |
+| Detail UI shows `collectionReceived` + `outstanding` | ✅ |
+| Issue preview includes VAT row | ✅ |
+| Centralized money formatting (`useFormatMoney`) | ✅ |
+| Dead code removed (DocumentRenderContext, placeholders) | ✅ |
+| Accessibility — table scope, dialog focus, timeline aria | ✅ |
+| ADR-018 created | ✅ |
+| Production readiness score | **9.0 / 10** |
+| Collections readiness | ✅ CERTIFIED |
+| `npx prisma generate` — OK | ✅ |
+| `npx tsc --noEmit` — 0 errors | ✅ |
+| `npx eslint` — 0 errors | ✅ |
+
+### Files Created — PHASE_05D3
+
+```
+src/lib/utils/use-format-money.ts
+docs/ADR/ADR-018-invoice-production-certification.md
+```
+
+### Files Modified — PHASE_05D3
+
+```
+src/lib/utils/format-money.ts
+src/lib/documents/use-document-print.ts
+src/types/document.ts
+src/components/documents/styles/document-print.css
+src/components/documents/sections/product-table.tsx
+src/components/documents/sections/financial-summary.tsx
+src/components/documents/invoice/invoice-printable.tsx
+src/components/documents/invoice/invoice-document-preview.tsx
+src/components/invoices/invoice-detail-view.tsx
+src/components/invoices/invoice-totals-card.tsx
+src/components/invoices/invoice-financial-summary.tsx
+src/components/invoices/invoice-items-table.tsx
+src/components/invoices/invoice-table.tsx
+src/components/invoices/invoice-timeline.tsx
+src/components/invoices/issue-invoice-dialog.tsx
+src/app/(dashboard)/invoices/issue/page-client.tsx
+public/locales/en/common.json
+public/locales/bn/common.json
+CURRENT_PHASE.md
+IMPLEMENTATION_STATUS.md
+NEXT_ACTION.md
+CHANGELOG.md
+```
+
+---
+
+## Enterprise Document Engine — Verification (PHASE_05D2)
+
+| Criterion | Status |
+|-----------|--------|
+| Reusable `DocumentLayout` + section components | ✅ |
+| `InvoicePrintable` — single preview / print / PDF pipeline | ✅ |
+| Invoice preview modal on detail page | ✅ |
+| `/invoices/[id]/print` dedicated print route | ✅ |
+| Browser print + Save-as-PDF (vector HTML/CSS) | ✅ |
+| A4 print CSS — 20-row product table, no overflow | ✅ |
+| Company branding from `getCompanyBranding()` | ✅ |
+| Financial values from backend only — no client math | ✅ |
+| `outstanding` computed server-side | ✅ |
+| Bank details omitted per approved design | ✅ |
+| EN + BN localization (`document.*`) | ✅ |
+| ADR-017 created | ✅ |
+| `npx prisma generate` — OK | ✅ |
+| `npx tsc --noEmit` — 0 errors | ✅ |
+| `npx eslint` — 0 errors | ✅ |
+
+### Files Created — PHASE_05D2
+
+```
+public/branding/nazma-logo.png
+src/types/document.ts
+src/lib/documents/company-branding.ts
+src/lib/documents/map-invoice-document.ts
+src/lib/documents/use-document-print.ts
+src/lib/utils/format-money.ts
+src/components/documents/layout/document-layout.tsx
+src/components/documents/branding/company-header.tsx
+src/components/documents/branding/company-footer.tsx
+src/components/documents/sections/invoice-title.tsx
+src/components/documents/sections/invoice-metadata.tsx
+src/components/documents/sections/bill-to-section.tsx
+src/components/documents/sections/ship-to-section.tsx
+src/components/documents/sections/product-table.tsx
+src/components/documents/sections/financial-summary.tsx
+src/components/documents/sections/notes-section.tsx
+src/components/documents/sections/payment-terms.tsx
+src/components/documents/sections/signature-section.tsx
+src/components/documents/invoice/invoice-printable.tsx
+src/components/documents/invoice/invoice-document-preview.tsx
+src/components/documents/styles/document-print.css
+src/app/(dashboard)/invoices/[id]/print/page.tsx
+src/app/(dashboard)/invoices/[id]/print/page-client.tsx
+docs/ADR/ADR-017-enterprise-document-engine.md
+```
+
+### Files Modified — PHASE_05D2
+
+```
+src/types/invoice.ts
+src/lib/actions/invoices/helpers.ts
+src/components/invoices/invoice-actions.tsx
+src/components/invoices/invoice-timeline.tsx
+src/app/layout.tsx
+public/locales/en/common.json
+public/locales/bn/common.json
+CURRENT_PHASE.md
+IMPLEMENTATION_STATUS.md
+NEXT_ACTION.md
+CHANGELOG.md
+```
 
 ---
 

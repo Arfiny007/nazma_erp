@@ -82,13 +82,31 @@ function normalizeUniqueTarget(target: unknown): string[] {
 }
 
 export const invoiceSummaryInclude = {
-  dealer: { select: { dealerCode: true, companyName: true } },
+  dealer: {
+    select: {
+      dealerCode: true,
+      companyName: true,
+      address: true,
+      mobile: true,
+      email: true,
+      territory: true,
+    },
+  },
   order: { select: { id: true, orderNo: true } },
   deliveryChallan: { select: { id: true, challanNo: true } },
 } satisfies Prisma.InvoiceInclude;
 
 export const invoiceDetailInclude = {
-  dealer: { select: { dealerCode: true, companyName: true } },
+  dealer: {
+    select: {
+      dealerCode: true,
+      companyName: true,
+      address: true,
+      mobile: true,
+      email: true,
+      territory: true,
+    },
+  },
   order: { select: { id: true, orderNo: true } },
   deliveryChallan: { select: { id: true, challanNo: true } },
   items: { orderBy: { id: "asc" } },
@@ -163,6 +181,9 @@ export function toInvoiceSummaryDTO(
     previousDue: invoice.previousDue.toFixed(2),
     currentDue: invoice.currentDue.toFixed(2),
     collectionReceived: invoice.collectionReceived.toFixed(2),
+    outstanding: invoice.currentDue
+      .sub(invoice.collectionReceived)
+      .toFixed(2),
     issueDate: invoice.issueDate.toISOString(),
     dueDate: invoice.dueDate.toISOString(),
     createdAt: invoice.createdAt.toISOString(),
@@ -179,6 +200,10 @@ export function toInvoiceDetailDTO(
     deliveryMode: invoice.deliveryMode,
     vehicleNo: invoice.vehicleNo,
     driverName: invoice.driverName,
+    dealerAddress: invoice.dealer.address,
+    dealerMobile: invoice.dealer.mobile,
+    dealerEmail: invoice.dealer.email,
+    salesPerson: invoice.dealer.territory,
     auditHistory,
   };
 }

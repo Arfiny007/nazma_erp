@@ -3,6 +3,7 @@
 import { Loader2 } from "lucide-react";
 
 import { useLanguage } from "@/contexts/LanguageContext";
+import { hasMoneyValue } from "@/lib/utils/format-money";
 import type { InvoicePreviewDTO } from "@/types/invoice";
 
 interface InvoiceFinancialSummaryProps {
@@ -20,6 +21,7 @@ export function InvoiceFinancialSummary({
 
   const subtotal = preview?.subtotal ?? "0.00";
   const discount = preview?.discount ?? "0.00";
+  const vat = preview?.vat ?? "0.00";
   const grandTotal = preview?.grandTotal ?? "0.00";
   const previousDue = preview?.previousDue ?? "0.00";
   const currentDue = preview?.currentDue ?? "0.00";
@@ -60,8 +62,16 @@ export function InvoiceFinancialSummary({
               {t("invoice.summary.discount")}
             </dt>
             <dd className="tabular-nums text-sm font-medium text-rose-600 dark:text-rose-400">
-              {Number(discount) > 0 ? "− " : ""}
+              {hasMoneyValue(discount) ? "− " : ""}
               {formatMoney(discount)}
+            </dd>
+          </div>
+          <div className="flex items-center justify-between px-5 py-3">
+            <dt className="text-sm text-slate-600 dark:text-slate-400">
+              {t("invoice.summary.vat")}
+            </dt>
+            <dd className="tabular-nums text-sm font-medium text-slate-900 dark:text-slate-100">
+              {formatMoney(vat)}
             </dd>
           </div>
           <div className="flex items-center justify-between px-5 py-3">
