@@ -1,6 +1,218 @@
 # IMPLEMENTATION STATUS
 
-Last updated: 2026-06-27 (PHASE_05D3 — Enterprise Invoice QA)
+Last updated: 2026-06-30 (PHASE_06B — Enterprise Collections UI)
+
+---
+
+## Enterprise Collections UI — Verification (PHASE_06B)
+
+| Criterion | Status |
+|-----------|--------|
+| Collection list with enterprise data table | ✅ |
+| Search, pagination, sorting, filters | ✅ |
+| Create / edit Draft workspace | ✅ |
+| Confirm collection workflow | ✅ |
+| Allocation workspace + server preview | ✅ |
+| Advance payment visualization | ✅ |
+| Detail view + audit timeline | ✅ |
+| Reversal UX with required reason | ✅ |
+| RBAC via existing permissions | ✅ |
+| Bilingual localization | ✅ |
+| ADR-022 created | ✅ |
+| `npx prisma generate` | ✅ |
+| `npx tsc --noEmit` — 0 errors | ✅ |
+| `npx eslint` — 0 errors | ✅ |
+
+### Routes — PHASE_06B
+
+| Route | Status |
+|-------|--------|
+| `/collections` | ✅ |
+| `/collections/new` | ✅ |
+| `/collections/[id]` | ✅ |
+| `/collections/[id]/edit` | ✅ |
+| `/collections/[id]/allocate` | ✅ |
+
+### Files Created — PHASE_06B
+
+**Pages:** `src/app/(dashboard)/collections/**` (list, new, detail, edit, allocate)
+
+**Components:** `src/components/collections/*` (table, workspace, detail, allocation, advance, reverse, history, filters, skeleton)
+
+**Server actions:** `src/lib/actions/collections/get-dealer-collection-context.ts`
+
+**Documentation:** `docs/ADR/ADR-022-enterprise-collections-ui.md`
+
+### Files Modified — PHASE_06B
+
+- `src/types/collection.ts`
+- `src/lib/actions/collections/helpers.ts`
+- `public/locales/en/common.json`, `public/locales/bn/common.json`
+- Governance docs
+
+---
+
+## Collection Financial Certification — Verification (PHASE_06A3)
+
+| Criterion | Status |
+|-----------|--------|
+| Full audit: create / confirm / allocate / deallocate / reverse | ✅ |
+| 10 accounting rules verified with evidence | ✅ |
+| Allocation engine + posting service + schema reviewed | ✅ |
+| Statement reconstruction analysis | ✅ |
+| Ledger readiness (PHASE_07) | ✅ — no refactor required |
+| Reporting readiness (Due, Cash Book, Area/Territory) | ✅ |
+| Concurrency re-check (dealer lock, idempotency) | ✅ |
+| Allocation cap defect remediated | ✅ |
+| ADR-021 created | ✅ |
+| Production readiness score | **9.2 / 10** |
+| Collections UI readiness | ✅ **CERTIFIED** |
+| `npm test` — pass | ✅ |
+
+### Remediated Defect — PHASE_06A3
+
+| Issue | Fix |
+|-------|-----|
+| `computeInvoiceOutstanding` used `currentDue − collectionReceived`, double-counting allocations | Cap on `grandTotal − collectionReceived`; guard in `applyInvoiceAllocation()` |
+
+### Files Created — PHASE_06A3
+
+```
+docs/ADR/ADR-021-collection-financial-certification.md
+```
+
+### Files Modified — PHASE_06A3
+
+```
+src/lib/collections/workflow.ts
+src/lib/collections/reference-resolver.ts
+src/lib/collections/workflow.test.ts
+CURRENT_PHASE.md
+IMPLEMENTATION_STATUS.md
+NEXT_ACTION.md
+CHANGELOG.md
+```
+
+---
+
+## Collection Engine — Verification (PHASE_06A2)
+
+| Criterion | Status |
+|-----------|--------|
+| `createCollection` / `updateCollection` / `confirmCollection` | ✅ |
+| `cancelDraftCollection` / `reverseCollection` | ✅ |
+| `getCollection` / `listCollections` | ✅ |
+| `previewCollectionAllocation` / `allocateCollection` / `deallocateCollection` | ✅ |
+| Generic allocation engine (`FinancialReferenceType` — Invoice) | ✅ |
+| `postReceivableDecrease()` + `postReceivableDecreaseReversal()` | ✅ |
+| Amount invariant `receivedAmount = allocatedAmount + unallocatedAmount` | ✅ |
+| Advance payment / negative dealer AR balance | ✅ |
+| Partial + multiple invoice allocation | ✅ |
+| Duplicate allocation blocked | ✅ |
+| Reversal restores invoice dues + dealer balance | ✅ |
+| Collection immutable after confirmation | ✅ |
+| Dealer row lock on financial mutations | ✅ |
+| Idempotent confirmation | ✅ |
+| Audit events (COLLECTION_*, DEALER_BALANCE_DECREASED) | ✅ |
+| ADR-020 created | ✅ |
+| No UI / receipt PDF / ledger / reports | ✅ |
+| `npx prisma generate` — OK | ✅ |
+| `npx tsc --noEmit` — 0 errors | ✅ |
+| `npx eslint` — 0 errors | ✅ |
+| `npm test` — pass | ✅ |
+
+### Files Created — PHASE_06A2
+
+```
+src/lib/utils/collection-number.ts
+src/lib/collections/workflow.ts
+src/lib/collections/workflow.test.ts
+src/lib/collections/reference-resolver.ts
+src/lib/collections/allocation-engine.ts
+src/lib/actions/collections/helpers.ts
+src/lib/actions/collections/create-collection.ts
+src/lib/actions/collections/update-collection.ts
+src/lib/actions/collections/confirm-collection.ts
+src/lib/actions/collections/cancel-draft-collection.ts
+src/lib/actions/collections/reverse-collection.ts
+src/lib/actions/collections/get-collection.ts
+src/lib/actions/collections/list-collections.ts
+src/lib/actions/collections/preview-collection-allocation.ts
+src/lib/actions/collections/allocate-collection.ts
+src/lib/actions/collections/deallocate-collection.ts
+docs/ADR/ADR-020-collection-engine.md
+```
+
+### Files Modified — PHASE_06A2
+
+```
+src/lib/finance/types.ts
+src/lib/finance/posting-service.ts
+src/types/collection.ts
+src/lib/validators/collection.schema.ts
+CURRENT_PHASE.md
+IMPLEMENTATION_STATUS.md
+NEXT_ACTION.md
+CHANGELOG.md
+```
+
+---
+
+## Collections Schema Foundation — Verification (PHASE_06A1)
+
+| Criterion | Status |
+|-----------|--------|
+| `Collection` model — enterprise cash-receipt design | ✅ |
+| `CollectionAllocation` — generic polymorphic allocation | ✅ |
+| `CollectionStatus` enum (Draft → Confirmed → PartiallyAllocated → Allocated → Reversed) | ✅ |
+| `CollectionPaymentMethod` enum | ✅ |
+| `FinancialReferenceType` enum (Invoice + future document types) | ✅ |
+| Legacy `Collection` model replaced (no direct `invoiceId`) | ✅ |
+| `Invoice.collections` direct relation removed | ✅ |
+| Dealer foundation fields (`monthlyTarget`, `yearlyTarget`, `totalSales`, `lastCollectionDate`, `lastInvoiceDate`) | ✅ |
+| AR Balance semantics documented (`Dealer.currentBalance`) | ✅ |
+| DTO layer — `CollectionDTO`, `CollectionDetailDTO`, `CollectionAllocationDTO`, `DealerFinancialSummaryDTO`, `AdvancePaymentSummaryDTO`, `CollectionListItemDTO` | ✅ |
+| Validator schemas — create, update, list, identifier, allocation preview, reversal | ✅ |
+| ADR-019 created | ✅ |
+| No server actions / allocation engine / posting / UI | ✅ |
+| `npx prisma format` — OK | ✅ |
+| `npx prisma generate` — OK | ✅ |
+| `npx prisma migrate dev` — OK | ✅ |
+| `npx tsc --noEmit` — 0 errors | ✅ |
+| `npx eslint` — 0 errors | ✅ |
+
+### Schema Changes — PHASE_06A1
+
+| Model / Enum | Change |
+|--------------|--------|
+| `CollectionStatus` (enum) | **New** — Draft, Confirmed, PartiallyAllocated, Allocated, Reversed |
+| `CollectionPaymentMethod` (enum) | **New** — Cash, Bank, Cheque, MobileBanking, OnlineTransfer, Other |
+| `FinancialReferenceType` (enum) | **New** — Invoice, OpeningBalance, CreditNote, DebitNote, ManualAdjustment, JournalEntry |
+| `Collection` | **Replaced** — `collectionNo`, amount pool fields, confirmation/reversal metadata, no `invoiceId` |
+| `CollectionAllocation` | **New** — polymorphic `(referenceType, referenceId)` allocation rows |
+| `Dealer` | + `monthlyTarget`, `yearlyTarget`, `totalSales`, `lastCollectionDate`, `lastInvoiceDate`; AR comment on `currentBalance` |
+| `Invoice` | − `collections` direct relation |
+| `User` | + `collectionsCreated`, `collectionsConfirmed` relations |
+
+### Files Created — PHASE_06A1
+
+```
+src/types/collection.ts
+src/lib/validators/collection.schema.ts
+docs/ADR/ADR-019-collections-foundation.md
+prisma/migrations/20250628120000_collections_schema_foundation/migration.sql
+```
+
+### Files Modified — PHASE_06A1
+
+```
+prisma/schema.prisma
+src/lib/finance/types.ts
+CURRENT_PHASE.md
+IMPLEMENTATION_STATUS.md
+NEXT_ACTION.md
+CHANGELOG.md
+```
 
 ---
 

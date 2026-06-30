@@ -6,7 +6,7 @@ Current Phase:
 
 
 
-PHASE_05D3_ENTERPRISE_INVOICE_QA
+PHASE_06B_ENTERPRISE_COLLECTIONS_UI
 
 
 
@@ -22,7 +22,7 @@ COMPLETE
 
 
 
-## Roadmap — Fulfillment & Invoicing
+## Roadmap — Fulfillment, Invoicing & Collections
 
 
 
@@ -54,7 +54,15 @@ COMPLETE
 
 | PHASE_05D2_ENTERPRISE_DOCUMENT_ENGINE | Printable invoice document engine (preview, print, PDF) | ✅ COMPLETE |
 
-| **PHASE_05D3_ENTERPRISE_INVOICE_QA** | Production QA certification before Collections | **✅ COMPLETE** |
+| PHASE_05D3_ENTERPRISE_INVOICE_QA | Production QA certification before Collections | ✅ COMPLETE |
+
+| PHASE_06A1_COLLECTIONS_SCHEMA_FOUNDATION | Collections schema, DTOs, validators, ADR-019 | ✅ COMPLETE |
+
+| PHASE_06A2_COLLECTION_ENGINE_AND_ALLOCATION | Collection server actions, allocation engine, posting, reversal | ✅ COMPLETE |
+
+| PHASE_06A3_FINANCIAL_CONSISTENCY_AUDIT | Pre-UI financial certification; ADR-021 | ✅ COMPLETE |
+
+| **PHASE_06B_ENTERPRISE_COLLECTIONS_UI** | Collection list, workspace, allocation UI, reversal UX | **✅ COMPLETE** |
 
 
 
@@ -62,7 +70,7 @@ COMPLETE
 
 
 
-# PHASE_05D3_ENTERPRISE_INVOICE_QA
+# PHASE_06B_ENTERPRISE_COLLECTIONS_UI
 
 
 
@@ -74,18 +82,25 @@ Status: COMPLETE
 
 
 
-Production QA — correctness, consistency, print quality, maintainability,
-accessibility, responsiveness, and ERP-grade polish. No new business features.
-No invoice redesign.
+Enterprise accountant-grade Collections UI using certified PHASE_06A backend.
 
 
 
-* Full pipeline verification (Order → Challan → Issue → Preview → Print → PDF)
-* Financial consistency across all surfaces
-* Product table QA (1–20 rows, long names/codes, large values)
-* Print / responsive / accessibility QA
-* Code quality cleanup (dead code, duplicated formatters)
-* ADR-018 production certification
+* Collection list with search, filters, pagination, sorting
+
+* Unified Collection Workspace (create / draft edit / allocate)
+
+* Dealer financial summary + outstanding invoices
+
+* Live allocation summary with server preview
+
+* Advance payment visualization
+
+* Detail view with allocation history and audit timeline
+
+* Reversal dialog with required reason
+
+* ADR-022 — Enterprise Collections UI
 
 
 
@@ -93,13 +108,25 @@ No invoice redesign.
 
 
 
-* Preview / print / PDF financial values identical: ✓
-* Previous Due / Current Due / Outstanding correct: ✓
-* 20-row A4 table — no clipping / overlap: ✓
-* Payment terms aligned with `INVOICE_DEFAULT_DUE_DAYS`: ✓
-* Centralized money formatting in invoice UI: ✓
-* ADR-018 created: ✓
-* `npx prisma generate` / `tsc` / `eslint`: ✓
+* Routes: `/collections`, `/new`, `/[id]`, `/[id]/edit`, `/[id]/allocate`: ✓
+
+* Hybrid Server/Client architecture: ✓
+
+* RBAC via existing permissions: ✓
+
+* Bilingual localization: ✓
+
+* `npx prisma generate`, `tsc`, `eslint`: ✓
+
+* Governance docs updated: ✓
+
+
+
+### Explicitly NOT Built
+
+
+
+* Money receipt PDF, ledger entries, due reports, dashboards
 
 
 
@@ -111,4 +138,4 @@ No invoice redesign.
 
 
 
-**PHASE_06_COLLECTIONS** — Payment collections module.
+**PHASE_07_LEDGER** — Ledger entry posting via posting service extension.

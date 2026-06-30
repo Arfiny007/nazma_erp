@@ -2,32 +2,33 @@
 
 ## Current State
 
-PHASE_05D3_ENTERPRISE_INVOICE_QA is **complete**:
+PHASE_06B_ENTERPRISE_COLLECTIONS_UI is **complete**:
 
-- Full pipeline certified (Order → Challan → Issue → Preview → Print → PDF)
-- Financial values consistent across all surfaces
-- Production readiness score: **9.0 / 10**
-- ADR-018 — Invoice Production Certification
-- Invoice module **certified for Collections**
+- Enterprise Collections list with filters (dealer, status, payment method, date, advance)
+- Unified Collection Workspace (create, draft edit, allocate)
+- Dealer financial summary + outstanding invoice allocation table
+- Live allocation preview via `previewCollectionAllocation()`
+- Advance payment banner and advance credit indicator
+- Collection detail with allocation history, audit timeline, reversal dialog
+- ADR-022 — Enterprise Collections UI
 
-**Not yet built:** Collections, Ledger, Due Reports.
+**Not yet built:** Money receipt PDF, ledger entries, due reports.
 
 ---
 
-## Next Phase: PHASE_06 — Collections
+## Next Phase: PHASE_07 — Ledger
 
 ### Implementation Goals
 
-1. Collection recording against invoices
-2. `postReceivableDecrease()` in Financial Posting Service
-3. Update `currentDue` and `collectionReceived` on payment
-4. Invoice status transitions (Partial / Paid)
+1. `LedgerEntry` creation inside `posting-service.ts` callbacks
+2. Ledger list / detail UI
+3. Dealer statement reconstruction from ledger + audit
 
-### Out of Scope
+### Out of Scope (for now)
 
-- Ledger posting (PHASE_07)
+- Money receipt PDF (future)
 - Due reports (PHASE_08)
-- Multi-page invoice (>20 lines)
+- Collection analytics dashboard
 
 ---
 
@@ -42,8 +43,8 @@ PHASE_05D3_ENTERPRISE_INVOICE_QA is **complete**:
 
 ## Notes
 
+- `Dealer.currentBalance` = AR Balance (positive: dealer owes; negative: advance/credit)
+- Cash posting occurs on **confirmation**; allocation applies pool to invoices without second balance mutation
+- Collections immutable after confirmation — corrections via `reverseCollection()` only
+- Allocation UI uses `grandTotal − collectionReceived` cap from server (not `currentDue − collectionReceived`)
 - Delivery Challan remains NON-FINANCIAL
-- Invoice issue requires `invoices:create` (Accounts, Super_Admin)
-- Never update `Dealer.currentBalance` outside `postReceivableIncrease()` / `postReceivableDecrease()`
-- Document PDF uses browser Save-as-PDF — no html2canvas / rasterization
-- Printable invoice limited to 20 line items per A4 page (see ADR-018)

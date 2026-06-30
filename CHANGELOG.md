@@ -4,6 +4,140 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_06B_ENTERPRISE_COLLECTIONS_UI] — 2026-06-30
+
+### Added
+
+- **Enterprise Collections UI** — list, create/confirm workspace, allocation, detail, reversal
+- **Routes** — `/collections`, `/collections/new`, `/collections/[id]`, `/collections/[id]/edit`, `/collections/[id]/allocate`
+- **`getDealerCollectionContext()`** — read-only dealer financial summary + allocatable invoices
+- **`fetchCollectionHistory()`** — audit timeline on collection detail
+- **ADR-022** — Enterprise Collections UI architecture
+- **Bilingual localization** — English and Bengali collection strings
+
+### UI Features
+
+- Collection list: search, pagination, sorting, status/payment/dealer/date/advance filters
+- Unified Collection Workspace with dealer summary, collection form, allocation table, live summary
+- Advance payment info banner and blue advance credit indicator
+- Reversal dialog with required reason
+- Print placeholder (receipt PDF deferred)
+
+### Verification
+
+- `npx prisma generate` — OK
+- `npx tsc --noEmit` — 0 errors
+- `npx eslint` — 0 errors
+
+### Scope
+
+- No backend business logic changes
+- No money receipt PDF, ledger, or reports
+
+---
+
+## [PHASE_06A3_FINANCIAL_CONSISTENCY_AUDIT] — 2026-06-30
+
+### Added
+
+- **ADR-021** — Collection Engine financial certification (9.2/10 readiness score)
+- **Allocation overpayment guard** — `applyInvoiceAllocation()` rejects when `collectionReceived` would exceed `grandTotal`
+
+### Fixed
+
+- **Invoice allocation cap** — `computeInvoiceOutstanding()` now uses `grandTotal − collectionReceived` instead of `currentDue − collectionReceived`, which double-counted payments and blocked full settlement or allowed overpayment when `previousDue > 0`
+
+### Audit Verdict
+
+- Collection Engine **certified production-ready** for PHASE_06B Collections UI
+- All 10 accounting rules verified with evidence
+- Statement reconstruction, Ledger readiness, and reporting readiness documented
+- Remaining risks: non-blocking (allocation soft-delete, collection concurrency tests)
+
+### Verification
+
+- `npm test` — pass (29 tests)
+
+### Scope
+
+Audit, certification, and one financial hotfix only. No UI, receipt PDF, ledger, or reports.
+
+---
+
+## [PHASE_06A2_COLLECTION_ENGINE_AND_ALLOCATION] — 2026-06-28
+
+### Added
+
+- **Collection server actions** — `createCollection`, `updateCollection`, `confirmCollection`, `cancelDraftCollection`, `reverseCollection`, `getCollection`, `listCollections`, `previewCollectionAllocation`, `allocateCollection`, `deallocateCollection`
+- **Generic allocation engine** — `src/lib/collections/allocation-engine.ts` with polymorphic `FinancialReferenceType` (Invoice supported today)
+- **Reference resolver** — `src/lib/collections/reference-resolver.ts` for document validation and invoice allocation/reversal
+- **Collection workflow guards** — `src/lib/collections/workflow.ts` (Draft → Confirmed → PartiallyAllocated / Allocated → Reversed)
+- **Collection number generator** — `COL-000001` sequential (`src/lib/utils/collection-number.ts`)
+- **Financial Posting Service** — `postReceivableDecrease()` (cash confirm) and `postReceivableDecreaseReversal()` (collection reversal)
+- **Audit events** — `COLLECTION_CREATED`, `COLLECTION_CONFIRMED`, `COLLECTION_ALLOCATED`, `COLLECTION_DEALLOCATED`, `COLLECTION_REVERSED`, `COLLECTION_REVERSED_MISALLOCATION`, `DEALER_BALANCE_DECREASED`
+- **ADR-020** — Collection Engine & Allocation architecture
+- **Tests** — `src/lib/collections/workflow.test.ts`
+
+### Business Rules
+
+- Cash receipt posted on confirmation; allocation applies pool to invoices without second balance mutation
+- `receivedAmount = allocatedAmount + unallocatedAmount` enforced in transactions
+- Advance payment supported — negative `Dealer.currentBalance` never rejected
+- Collections immutable after confirmation; corrections via reversal only
+- Duplicate allocation blocked per `(collectionId, referenceType, referenceId)`
+
+### Verification
+
+- `npx prisma generate` — OK
+- `npx tsc --noEmit` — 0 errors
+- `npx eslint` — 0 errors
+- `npm test` — pass
+
+### Scope
+
+Backend only. No UI, receipt PDF, reports, dashboards, or LedgerEntry.
+
+---
+
+## [PHASE_06A1_COLLECTIONS_SCHEMA_FOUNDATION] — 2026-06-28
+
+### Added
+
+- **`Collection` model (replaced)** — enterprise cash-receipt design: `collectionNo`, `receivedAmount`, `allocatedAmount`, `unallocatedAmount`, confirmation/reversal metadata
+- **`CollectionAllocation` model** — generic polymorphic allocation via `FinancialReferenceType` + `referenceId`
+- **Enums** — `CollectionStatus`, `CollectionPaymentMethod`, `FinancialReferenceType`
+- **Dealer foundation fields** — `monthlyTarget`, `yearlyTarget`, `totalSales`, `lastCollectionDate`, `lastInvoiceDate`
+- **DTO layer** — `src/types/collection.ts` (CollectionDTO, CollectionDetailDTO, CollectionAllocationDTO, DealerFinancialSummaryDTO, AdvancePaymentSummaryDTO, CollectionListItemDTO)
+- **Validators** — `src/lib/validators/collection.schema.ts` (create, update, list, identifier, allocation preview, reversal)
+- **ADR-019** — Collections Foundation: AR balance semantics, cash pool architecture, generic allocation, advance payment model
+
+### Changed
+
+- **`Dealer.currentBalance`** — formally documented as Accounts Receivable balance (positive: dealer owes; negative: advance/credit)
+- **`Invoice`** — removed direct `collections` relation; payments link via `CollectionAllocation`
+- **`src/lib/finance/types.ts`** — `FinancialReferenceType` aligned with Prisma enum
+
+### Architecture Notes
+
+- Collection records cash received; allocation is a separate concern (PHASE_06A2)
+- `receivedAmount = allocatedAmount + unallocatedAmount` (enforced in future allocation engine)
+- Collections immutable after confirmation; corrections via Reversal only
+- No server actions, posting, allocation engine, UI, or ledger in this phase
+
+### Verification
+
+- `npx prisma format` — OK
+- `npx prisma generate` — OK
+- `npx prisma migrate dev` — OK
+- `npx tsc --noEmit` — 0 errors
+- `npx eslint` — 0 errors
+
+### Scope
+
+Schema and architecture foundation only. No business logic.
+
+---
+
 ## [PHASE_05D3_ENTERPRISE_INVOICE_QA] — 2026-06-27
 
 ### Added
