@@ -1,4 +1,5 @@
 import type { InvoiceStatus } from "@prisma/client";
+import type { CollectionPaymentMethod, CollectionStatus, FinancialReferenceType } from "@prisma/client";
 
 import type { InvoiceItemDTO } from "@/types/invoice";
 
@@ -81,4 +82,55 @@ export interface DocumentLabels {
   footerThanks: string;
   lineTruncationWarning: string;
   productTableCaption: string;
+}
+
+/** Allocation row on a money receipt — server-sourced only. */
+export interface MoneyReceiptAllocationRowDTO {
+  referenceType: FinancialReferenceType;
+  referenceLabel: string | null;
+  allocatedAmount: string;
+}
+
+/** Full money receipt payload for the shared document engine. */
+export interface MoneyReceiptDocumentDTO {
+  receiptNo: string;
+  collectionNo: string;
+  receiptDate: string;
+  dealer: DocumentPartyDTO;
+  paymentMethod: CollectionPaymentMethod;
+  referenceNumber: string | null;
+  receivedAmount: string;
+  allocatedAmount: string;
+  /** Unallocated pool — advance retained for future allocation. */
+  unallocatedAmount: string;
+  status: CollectionStatus;
+  remarks: string | null;
+  allocations: MoneyReceiptAllocationRowDTO[];
+}
+
+export interface MoneyReceiptLabels {
+  title: string;
+  receivedFrom: string;
+  receiptNo: string;
+  collectionNo: string;
+  receiptDate: string;
+  paymentMethod: string;
+  referenceNumber: string;
+  receivedAmount: string;
+  allocatedAmount: string;
+  advanceAmount: string;
+  remainingUnallocated: string;
+  collectionStatus: string;
+  remarks: string;
+  authorizedSignature: string;
+  companySeal: string;
+  footerThanks: string;
+  allocationSummary: string;
+  columnReferenceType: string;
+  columnReferenceNumber: string;
+  columnAllocatedAmount: string;
+  advanceRetainedMessage: string;
+  allocationTableCaption: string;
+  previewTitle: string;
+  actionsTitle: string;
 }

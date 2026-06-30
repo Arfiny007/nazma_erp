@@ -6,13 +6,13 @@ import type { InvoiceStatus } from "@prisma/client";
 import { CompanyFooter } from "@/components/documents/branding/company-footer";
 import { CompanyHeader } from "@/components/documents/branding/company-header";
 import { DocumentLayout } from "@/components/documents/layout/document-layout";
+import { DocumentNotes } from "@/components/documents/sections/document-notes";
+import { DocumentSignature } from "@/components/documents/sections/document-signature";
+import { DocumentTitle } from "@/components/documents/sections/document-title";
 import { FinancialSummary } from "@/components/documents/sections/financial-summary";
 import { InvoiceMetadata } from "@/components/documents/sections/invoice-metadata";
-import { InvoiceTitle } from "@/components/documents/sections/invoice-title";
-import { NotesSection } from "@/components/documents/sections/notes-section";
 import { PaymentTerms } from "@/components/documents/sections/payment-terms";
 import { ProductTable } from "@/components/documents/sections/product-table";
-import { SignatureSection } from "@/components/documents/sections/signature-section";
 import "@/components/documents/styles/document-print.css";
 import { getCompanyBranding } from "@/lib/documents/company-branding";
 import { mapInvoiceToDocument } from "@/lib/documents/map-invoice-document";
@@ -75,7 +75,7 @@ export function InvoicePrintable({
         </p>
       )}
       <CompanyHeader branding={branding} />
-      <InvoiceTitle title={labels.invoiceTitle} />
+      <DocumentTitle title={labels.invoiceTitle} />
       <InvoiceMetadata
         document={documentData}
         labels={{
@@ -96,7 +96,7 @@ export function InvoicePrintable({
       />
       <div className="document-avoid-break flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <NotesSection title={labels.pleaseNote} text={labels.pleaseNoteText} />
+          <DocumentNotes title={labels.pleaseNote} text={labels.pleaseNoteText} />
           <PaymentTerms title={labels.paymentTerms} text={labels.paymentTermsText} />
         </div>
         <div>
@@ -106,7 +106,7 @@ export function InvoicePrintable({
             statusLabel={statusLabel}
             formatMoney={formatMoneyValue}
           />
-          <SignatureSection label={labels.accountsSignature} />
+          <DocumentSignature label={labels.accountsSignature} />
         </div>
       </div>
       <CompanyFooter message={labels.footerThanks} />

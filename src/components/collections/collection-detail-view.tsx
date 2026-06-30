@@ -5,6 +5,7 @@ import { useCallback, useMemo, useState } from "react";
 import type { UserRole } from "@prisma/client";
 
 import { CollectionAdvanceBanner } from "@/components/collections/collection-advance-banner";
+import { CollectionDocumentActions } from "@/components/collections/collection-document-actions";
 import { CollectionHistoryTimeline } from "@/components/collections/collection-history-timeline";
 import {
   canAllocateCollection,
@@ -166,6 +167,8 @@ export function CollectionDetailView({
         </div>
 
         <div className="space-y-6 lg:sticky lg:top-6 lg:self-start">
+          <CollectionDocumentActions collection={collection} />
+
           <section className="overflow-hidden rounded-xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-900">
             <header className="border-b border-slate-100 px-5 py-4 dark:border-slate-800/80">
               <h2 className="text-sm font-semibold text-slate-900 dark:text-slate-100">

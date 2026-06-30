@@ -91,6 +91,9 @@ export interface CollectionHistoryDTO {
 
 /** Full collection projection including allocation rows. */
 export interface CollectionDetailDTO extends CollectionDTO {
+  dealerAddress: string;
+  dealerMobile: string;
+  dealerEmail: string | null;
   allocations: CollectionAllocationDTO[];
   auditHistory: CollectionHistoryDTO[];
 }

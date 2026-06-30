@@ -158,3 +158,14 @@ export function resolveInvoiceStatusAfterAllocation(
   }
   return InvoiceStatus.Issued;
 }
+
+const PRINTABLE_RECEIPT_STATUSES: ReadonlySet<CollectionStatus> = new Set([
+  CollectionStatus.Confirmed,
+  CollectionStatus.PartiallyAllocated,
+  CollectionStatus.Allocated,
+]);
+
+/** Money receipts may only be printed for confirmed, non-reversed collections. */
+export function canPrintMoneyReceipt(status: CollectionStatus): boolean {
+  return PRINTABLE_RECEIPT_STATUSES.has(status);
+}

@@ -1,3 +1,4 @@
+import { DocumentParties } from "@/components/documents/sections/document-parties";
 import type { DocumentPartyDTO } from "@/types/document";
 
 interface ShipToSectionProps {
@@ -5,16 +6,7 @@ interface ShipToSectionProps {
   party: DocumentPartyDTO;
 }
 
+/** @deprecated Use DocumentParties */
 export function ShipToSection({ label, party }: ShipToSectionProps) {
-  return (
-    <div className="min-w-0">
-      <p className="mb-0.5 text-[8.5pt] font-bold doc-blue">{label}</p>
-      <p className="text-[8pt] font-semibold leading-snug">{party.name}</p>
-      <p className="text-[8pt] leading-snug text-[var(--doc-muted)]">{party.address}</p>
-      <p className="text-[8pt] leading-snug text-[var(--doc-muted)]">{party.phone}</p>
-      {party.email ? (
-        <p className="text-[8pt] leading-snug text-[var(--doc-muted)]">{party.email}</p>
-      ) : null}
-    </div>
-  );
+  return <DocumentParties parties={[{ label, party }]} />;
 }

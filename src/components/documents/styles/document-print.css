@@ -190,6 +190,25 @@
   width: 12%;
 }
 
+.doc-data-table tbody td {
+  font-size: 8pt;
+  line-height: 1.3;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.doc-data-table .col-ref-type {
+  width: 28%;
+}
+
+.doc-data-table .col-ref-no {
+  width: 44%;
+}
+
+.doc-data-table .col-ref-amount {
+  width: 28%;
+}
+
 .doc-preview-scale {
   transform-origin: top center;
 }

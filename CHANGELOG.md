@@ -4,6 +4,102 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [REPOSITORY_MIGRATION_AND_METADATA_DUMP] — 2026-07-01
+
+### Purpose
+
+Permanent institutional knowledge consolidation after PHASE_06C (Document Platform) and PHASE_06D (Financial Architecture Certification). Architecture metadata extracted from codebase, ADRs, and governance history into dedicated repository memory files for future AI sessions. **No application code, schema, migrations, or business logic changes.**
+
+### Files Created
+
+- `SYSTEM_CONTEXT.md` — high-level ERP architecture, modules, deployment, RBAC, data flow, extension points
+- `CLIENT_FEEDBACK_LOG.md` — client request history (implemented, pending, deferred, rejected)
+- `FINANCIAL_INVARIANTS.md` — mandatory accounting rulebook
+- `TECH_DEBT.md` — deferred improvements (critical / medium / low)
+- `KNOWN_RISKS.md` — operational risk register with mitigation status
+- `ARCHITECTURE_DECISIONS_REJECTED.md` — rejected designs and rationale
+
+### Files Updated
+
+- `PROJECT_BRAIN.md` — appended PHASE_06A–06D learnings (document platform, money receipt, posting service, allocation, advance payment, ledger design)
+- `NEXT_ACTION.md` — roadmap: Invoice PDF Patch → PHASE_07A–07C → Reporting → Analytics → Production Hardening
+- `CHANGELOG.md` — this entry
+
+### Architecture Summary
+
+- **Pipeline certified:** Order → Challan → Invoice → Collection → Money Receipt (8.7/10 readiness)
+- **Document Platform:** canonical `Document*` primitives; invoice + money receipt on single print pipeline
+- **Financial boundary:** `posting-service.ts` sole `Dealer.currentBalance` writer; allocation does not double-post
+- **Source of truth:** Ledger (future Tier 1) → documents (Tier 2) → `currentBalance` cache (Tier 3)
+- **Next:** Invoice PDF patch polish, then PHASE_07A ledger schema hardening
+
+### Scope
+
+Documentation and repository metadata only. Zero TypeScript, React, Prisma, or UI changes.
+
+---
+
+## [PHASE_06D_FINANCIAL_ARCHITECTURE_CERTIFICATION] — 2026-06-30
+
+### Added
+
+- **ADR-024** — Financial Architecture Certification: full pipeline review, source-of-truth hierarchy, posting strategy, ledger design, dealer statement architecture, allocation/advance certification, reporting readiness, risk register, PHASE_07 breakdown
+
+### Certification Verdict
+
+- Financial architecture **certified** for PHASE_07 Ledger — no refactor of Invoice Engine, Collection Engine, or Financial Posting Service required
+- Source of truth: `LedgerEntry` (future authoritative) → financial documents → `Dealer.currentBalance` (operational cache)
+- All future financial operations must route through `posting-service.ts`
+- Generic `CollectionAllocation` abstraction certified — no redesign for OpeningBalance, CreditNote, DebitNote, JournalEntry
+- Advance payment / negative AR balance certified for statement and ledger compatibility
+- Overall ERP production readiness score: **8.7 / 10**
+
+### Recommended PHASE_07 Sequence
+
+- **07A** — Ledger schema hardening (`postingKey`, enum alignment)
+- **07B** — Ledger posting in `posting-service.ts`
+- **07C** — Opening balance
+- **07D** — Ledger UI + dealer subledger statement
+- **07E** — Reconciliation & backfill
+- **07F** — Chart of Accounts foundation (optional)
+
+### Scope
+
+Architecture certification and governance documentation only. No application code, migrations, server actions, or UI.
+
+---
+
+## [PHASE_06C_ENTERPRISE_MONEY_RECEIPT_ENGINE] — 2026-06-30
+
+### Added
+
+- **ERP Document Platform** — canonical primitives: `DocumentTitle`, `DocumentParties`, `DocumentMetadata`, `DocumentTable`, `DocumentFinancialSummary`, `DocumentNotes`, `DocumentSignature`, `DocumentSeal`, `DocumentPrintToolbar`
+- **Money Receipt engine** — `MoneyReceiptPrintable`, `MoneyReceiptDocumentPreview`, `mapCollectionToReceiptDocument()`, `loadMoneyReceiptDocument()`
+- **Route** — `/collections/[id]/receipt` (preview, print, PDF)
+- **`canPrintMoneyReceipt()`** — blocks Draft and Reversed collections
+- **`CollectionDocumentActions`** — preview / print / PDF on collection detail
+- **ADR-023** — Enterprise Money Receipt Engine architecture
+- **Bilingual localization** — `document.receipt.*` keys (EN + BN)
+
+### Changed
+
+- `InvoicePrintable` refactored to compose document platform primitives
+- `ProductTable` and `InvoiceMetadata` use shared `DocumentTable` / `DocumentMetadata`
+- `CollectionDetailDTO` extended with dealer contact fields for receipt party block
+- Collection list print action enabled for printable statuses
+
+### Verification
+
+- `npx prisma generate` — OK
+- `npx tsc --noEmit` — 0 errors
+- `npx eslint` — 0 errors
+
+### Scope
+
+- No ledger, dealer statements, due reports, email/SMS, or digital signature logic
+
+---
+
 ## [PHASE_06B_ENTERPRISE_COLLECTIONS_UI] — 2026-06-30
 
 ### Added

@@ -37,6 +37,7 @@ import {
   canAllocateCollection,
   canReverseCollection,
 } from "@/components/collections/collection-reverse-dialog";
+import { canPrintMoneyReceipt } from "@/lib/collections/workflow";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { listCollections } from "@/lib/actions/collections/list-collections";
 import { hasPermission } from "@/lib/permissions";
@@ -304,15 +305,25 @@ export function CollectionTable() {
                   {t("collection.actions.reverse")}
                 </Link>
               )}
-              <button
-                type="button"
-                disabled
-                title={t("collection.actions.printPlaceholder")}
-                className="inline-flex cursor-not-allowed items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-slate-400 opacity-60"
-              >
-                <Printer aria-hidden="true" className="size-3.5" />
-                {t("collection.actions.print")}
-              </button>
+              {canPrintMoneyReceipt(row.status) ? (
+                <Link
+                  href={`/collections/${row.id}/receipt`}
+                  className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-slate-700 transition-colors hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-slate-800"
+                >
+                  <Printer aria-hidden="true" className="size-3.5" />
+                  {t("collection.actions.print")}
+                </Link>
+              ) : (
+                <button
+                  type="button"
+                  disabled
+                  title={t("collection.actions.printUnavailable")}
+                  className="inline-flex cursor-not-allowed items-center gap-1 rounded-md px-2 py-1 text-xs font-medium text-slate-400 opacity-60"
+                >
+                  <Printer aria-hidden="true" className="size-3.5" />
+                  {t("collection.actions.print")}
+                </button>
+              )}
             </div>
           );
         },

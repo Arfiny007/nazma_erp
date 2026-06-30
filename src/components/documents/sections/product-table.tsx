@@ -1,3 +1,4 @@
+import { DocumentTable } from "@/components/documents/sections/document-table";
 import { DOCUMENT_MAX_PRODUCT_ROWS } from "@/types/document";
 import type { DocumentLabels, DocumentProductRowDTO } from "@/types/document";
 import type { InvoiceItemDTO } from "@/types/invoice";
@@ -63,46 +64,81 @@ export function ProductTable({
   const rows = padRows(toProductRows(items));
 
   return (
-    <section className="document-avoid-break mb-2 flex-1">
-      <table className="doc-table doc-product-table" aria-label={labels.productTableCaption}>
-        <thead>
-          <tr className="doc-blue-bar">
-            <th scope="col" className="col-sl text-center">{labels.columnSl}</th>
-            <th scope="col" className="col-code">{labels.columnProductCode}</th>
-            <th scope="col" className="col-name">{labels.columnProductName}</th>
-            <th scope="col" className="col-unit text-center">{labels.columnUnit}</th>
-            <th scope="col" className="col-qty text-right">{labels.columnQty}</th>
-            <th scope="col" className="col-price text-right">{labels.columnUnitPrice}</th>
-            <th scope="col" className="col-discount text-right">{labels.columnDiscount}</th>
-            <th scope="col" className="col-amount text-right">{labels.columnAmount}</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => {
+    <DocumentTable
+      variant="product"
+      caption={labels.productTableCaption}
+      rows={rows}
+      rowKey={(row) => String(row.serial)}
+      columns={[
+        {
+          key: "sl",
+          header: labels.columnSl,
+          align: "center",
+          className: "col-sl",
+          render: (row) => `${row.serial}.`,
+        },
+        {
+          key: "code",
+          header: labels.columnProductCode,
+          className: "col-code",
+          render: (row) => row.productCode,
+        },
+        {
+          key: "name",
+          header: labels.columnProductName,
+          className: "col-name",
+          render: (row) => row.productName,
+        },
+        {
+          key: "unit",
+          header: labels.columnUnit,
+          align: "center",
+          className: "col-unit",
+          render: (row) => row.unit,
+        },
+        {
+          key: "qty",
+          header: labels.columnQty,
+          align: "right",
+          className: "col-qty",
+          render: (row) => {
             const isEmpty = !row.productCode && !row.productName;
-            return (
-              <tr key={row.serial}>
-                <td className="text-center tabular-nums">{row.serial}.</td>
-                <td>{row.productCode}</td>
-                <td>{row.productName}</td>
-                <td className="text-center">{row.unit}</td>
-                <td className="text-right tabular-nums">
-                  {isEmpty ? "" : formatQuantity(row.quantity)}
-                </td>
-                <td className="text-right tabular-nums">
-                  {isEmpty ? "" : formatMoney(row.unitPrice)}
-                </td>
-                <td className="text-right tabular-nums">
-                  {isEmpty ? "" : formatMoney(row.discount)}
-                </td>
-                <td className="text-right tabular-nums">
-                  {isEmpty ? "" : formatMoney(row.amount)}
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    </section>
+            return isEmpty ? "" : formatQuantity(row.quantity);
+          },
+        },
+        {
+          key: "price",
+          header: labels.columnUnitPrice,
+          align: "right",
+          className: "col-price",
+          render: (row) => {
+            const isEmpty = !row.productCode && !row.productName;
+            return isEmpty ? "" : formatMoney(row.unitPrice);
+          },
+        },
+        {
+          key: "discount",
+          header: labels.columnDiscount,
+          align: "right",
+          className: "col-discount",
+          render: (row) => {
+            const isEmpty = !row.productCode && !row.productName;
+            return isEmpty ? "" : formatMoney(row.discount);
+          },
+        },
+        {
+          key: "amount",
+          header: labels.columnAmount,
+          align: "right",
+          className: "col-amount",
+          render: (row) => {
+            const isEmpty = !row.productCode && !row.productName;
+            return isEmpty ? "" : formatMoney(row.amount);
+          },
+        },
+      ]}
+    />
   );
 }
+
+export { DocumentTable };

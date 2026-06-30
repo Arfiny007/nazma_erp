@@ -112,7 +112,15 @@ export const collectionListInclude = {
 } satisfies Prisma.CollectionInclude;
 
 export const collectionDetailInclude = {
-  dealer: { select: { dealerCode: true, companyName: true } },
+  dealer: {
+    select: {
+      dealerCode: true,
+      companyName: true,
+      address: true,
+      mobile: true,
+      email: true,
+    },
+  },
   createdBy: { select: { id: true, name: true } },
   confirmedBy: { select: { id: true, name: true } },
   allocations: { orderBy: { allocationOrder: "asc" } },
@@ -260,6 +268,9 @@ export async function toCollectionDetailDTO(
 
   return {
     ...toCollectionDTO(collection),
+    dealerAddress: collection.dealer.address,
+    dealerMobile: collection.dealer.mobile,
+    dealerEmail: collection.dealer.email,
     allocations,
     auditHistory,
   };
