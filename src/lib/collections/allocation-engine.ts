@@ -31,6 +31,7 @@ import {
   COLLECTION_DEALLOCATED_ACTION,
   COLLECTION_REVERSED_ACTION,
   COLLECTION_REVERSED_MISALLOCATION_ACTION,
+  FINANCIAL_REFERENCE_COLLECTION,
   FINANCIAL_REFERENCE_INVOICE,
 } from "@/lib/finance/types";
 import type { AllocationPreviewLine } from "@/types/collection";
@@ -249,7 +250,7 @@ export async function executeConfirmCollectionTransaction(
     amount: collection.receivedAmount,
     previousBalance: lockedDealer.currentBalance,
     userId: input.userId,
-    referenceType: FINANCIAL_REFERENCE_INVOICE,
+    referenceType: FINANCIAL_REFERENCE_COLLECTION,
     referenceId: collection.id,
     referenceNo: collection.collectionNo,
     collectionId: collection.id,
@@ -586,7 +587,7 @@ export async function executeReverseCollectionTransaction(
     amount: collection.receivedAmount,
     previousBalance: lockedDealer.currentBalance,
     userId: input.userId,
-    referenceType: FINANCIAL_REFERENCE_INVOICE,
+    referenceType: FINANCIAL_REFERENCE_COLLECTION,
     referenceId: collection.id,
     referenceNo: collection.collectionNo,
     collectionId: collection.id,

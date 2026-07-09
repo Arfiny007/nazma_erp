@@ -2,8 +2,8 @@
 
 Operational risk register as of PHASE_06D completion. None are blocking for controlled production use of the Order → Invoice → Collection pipeline.
 
-**Overall readiness:** 8.7 / 10 (ADR-024)  
-**Last updated:** 2026-07-09 (PHASE_07A — Enterprise Ledger Foundation)
+**Overall readiness:** 9.1 / 10 (ADR-027)  
+**Last updated:** 2026-07-09 (PHASE_07B.5 — Enterprise Financial Integrity Certification)
 
 ---
 
@@ -16,9 +16,9 @@ Operational risk register as of PHASE_06D completion. None are blocking for cont
 | Description | Issued invoices cannot be reversed in-system |
 | Impact | Billing errors require manual workarounds |
 | Likelihood | Medium |
-| Mitigation | `postInvoiceReversal()` / credit note in PHASE_07; never edit issued lines |
+| Mitigation | `postInvoiceReversal()` / credit note in a dedicated phase; never edit issued lines; PHASE_07B posting engine ready to accept these via `buildReversalPosting` |
 | Status | **Open** |
-| Future Phase | PHASE_07B or dedicated credit note phase |
+| Future Phase | Dedicated credit-note phase |
 
 ### F2. Dealer.currentBalance as Sole Truth
 
@@ -26,9 +26,9 @@ Operational risk register as of PHASE_06D completion. None are blocking for cont
 |-----------|-------|
 | Description | Reports trusting cache without reconciliation may be wrong |
 | Impact | Incorrect balances in ad-hoc reports |
-| Likelihood | Low (sole writer + dealer lock) |
-| Mitigation | Treat as operational cache; ledger + reconciliation (PHASE_07E) |
-| Status | **Mitigated** (posting boundary); **Open** (reconciliation pending) |
+| Likelihood | Very low (sole writer + dealer lock + `LedgerEntry.balance` parity assertion on every commit — PHASE_07B) |
+| Mitigation | Cache asserted equal to ledger on every commit; `reconcileAllDealers` + chain validation (PHASE_07B.5); scheduled job in PHASE_07E |
+| Status | **Mitigated** (parity on every commit + reconciliation helpers); **Open** for scheduled offline job |
 | Future Phase | PHASE_07E |
 
 ### F3. Allocation Rows Deleted on Reversal
@@ -49,8 +49,8 @@ Operational risk register as of PHASE_06D completion. None are blocking for cont
 | Description | Cannot onboard dealers with pre-existing AR at go-live |
 | Impact | Production migration requires manual balance setup |
 | Likelihood | High at production cutover |
-| Mitigation | `postOpeningBalance()` + PHASE_07C migration script |
-| Status | **Open** |
+| Mitigation | `postOpeningBalance()` + PHASE_07C migration script; **PHASE_07C approved by ADR-027** |
+| Status | **Open** (implementation) — **Unblocked** |
 | Future Phase | PHASE_07C |
 
 ### F5. Advance Payment GL Treatment
@@ -75,9 +75,9 @@ Operational risk register as of PHASE_06D completion. None are blocking for cont
 | Description | ~~`referenceType` String; no `postingKey`; weak reversal linkage~~ |
 | Impact | ~~Type drift, duplicate entries, weak audit chain~~ |
 | Likelihood | ~~Certain if ledger built without hardening~~ |
-| Mitigation | PHASE_07A schema hardening + `createLedgerEntry` idempotency (ADR-025) |
-| Status | **Mitigated** (schema hardened; posting integration pending PHASE_07B) |
-| Future Phase | ~~PHASE_07A~~ → PHASE_07B for posting wiring |
+| Mitigation | PHASE_07A schema hardening + `createLedgerEntry` idempotency (ADR-025); PHASE_07B wired posting (ADR-026) |
+| Status | **Resolved** — schema hardened and posting engine wired |
+| Future Phase | ~~PHASE_07A~~ / ~~PHASE_07B~~ ✅ DONE |
 
 ### A2. Full GL Not Architected
 

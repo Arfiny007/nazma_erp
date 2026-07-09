@@ -59,6 +59,11 @@ export {
   reconcileDealerLedger,
   assertDealerLedgerReconciled,
   replayDealerLedgerBalance,
+  validateDealerLedgerChain,
+  assertDealerLedgerIntegrity,
+  reconcileAllDealers,
+  type DealerLedgerChainValidation,
+  type RepositoryLedgerReconciliation,
 } from "@/lib/ledger/ledger-reconciliation";
 
 export {

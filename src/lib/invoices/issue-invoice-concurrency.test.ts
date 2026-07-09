@@ -1,6 +1,8 @@
 import {
   DeliveryChallanStatus,
   DeliveryMode,
+  FinancialReferenceType,
+  LedgerPostingType,
   OrderStatus,
   Prisma,
   PrismaClient,
@@ -8,6 +10,7 @@ import {
 import { afterAll, afterEach, beforeAll, describe, expect, it } from "vitest";
 
 import { executeIssueInvoiceTransaction } from "@/lib/invoices/issue-invoice-transaction";
+import { buildLedgerPostingKey } from "@/lib/ledger";
 
 /**
  * Resolves a test database URL. Use INTEGRATION_DATABASE_URL when the app
@@ -168,6 +171,9 @@ async function cleanupTestDealers(prisma: PrismaClient): Promise<void> {
     return;
   }
 
+  await prisma.ledgerEntry.deleteMany({
+    where: { dealerCode: { in: testDealerCodes } },
+  });
   await prisma.invoice.deleteMany({
     where: { dealerCode: { in: testDealerCodes } },
   });
@@ -279,6 +285,26 @@ describe("issue invoice concurrency", () => {
       select: { currentBalance: true },
     });
     expect(dealer?.currentBalance.toFixed(2)).toBe(expectedFinalBalance.toFixed(2));
+
+    // PHASE_07B — each invoice posted an Issue ledger entry; the last row's
+    // running balance equals `Dealer.currentBalance`; append-only chain.
+    const ledgerEntries = await prisma.ledgerEntry.findMany({
+      where: { dealerCode: fixture.dealerCode },
+      orderBy: [{ postingDate: "asc" }, { id: "asc" }],
+    });
+    expect(ledgerEntries).toHaveLength(2);
+    expect(ledgerEntries[0].postingType).toBe(LedgerPostingType.Issue);
+    expect(ledgerEntries[1].postingType).toBe(LedgerPostingType.Issue);
+    expect(ledgerEntries[0].balance.toFixed(2)).toBe(
+      expectedFirstCurrent.toFixed(2),
+    );
+    expect(ledgerEntries[1].balance.toFixed(2)).toBe(
+      expectedSecondCurrent.toFixed(2),
+    );
+    expect(ledgerEntries[1].balance.toFixed(2)).toBe(
+      expectedFinalBalance.toFixed(2),
+    );
+    expect(new Set(ledgerEntries.map((e) => e.postingKey)).size).toBe(2);
     },
   );
 
@@ -332,6 +358,14 @@ describe("issue invoice concurrency", () => {
     });
     const expectedBalance = fixture.startingBalance.plus(fixture.invoiceAmount);
     expect(dealer?.currentBalance.toFixed(2)).toBe(expectedBalance.toFixed(2));
+
+    // Exactly one ledger entry — credit-limit rejection rolled back both the
+    // dealer balance update AND the ledger insert atomically.
+    const ledgerEntries = await prisma.ledgerEntry.findMany({
+      where: { dealerCode: fixture.dealerCode },
+    });
+    expect(ledgerEntries).toHaveLength(1);
+    expect(ledgerEntries[0].balance.toFixed(2)).toBe(expectedBalance.toFixed(2));
     },
   );
 
@@ -370,6 +404,18 @@ describe("issue invoice concurrency", () => {
       where: { deliveryChallanId: challanId },
     });
     expect(invoiceCount).toBe(1);
+
+    // Only ONE ledger row exists: idempotent workflow guard prevents double
+    // posting and `postingKey @unique` is the defense-in-depth backstop.
+    const postingKey = buildLedgerPostingKey({
+      referenceType: FinancialReferenceType.Invoice,
+      referenceId: firstId,
+      postingType: LedgerPostingType.Issue,
+    });
+    const ledgerCount = await prisma.ledgerEntry.count({
+      where: { postingKey },
+    });
+    expect(ledgerCount).toBe(1);
     },
   );
 
@@ -414,6 +460,14 @@ describe("issue invoice concurrency", () => {
     });
     const expectedBalance = fixture.startingBalance.plus(fixture.invoiceAmount);
     expect(dealer?.currentBalance.toFixed(2)).toBe(expectedBalance.toFixed(2));
+
+    // Ledger row: exactly one; `balance` matches `Dealer.currentBalance`.
+    const ledgerEntries = await prisma.ledgerEntry.findMany({
+      where: { dealerCode: fixture.dealerCode },
+    });
+    expect(ledgerEntries).toHaveLength(1);
+    expect(ledgerEntries[0].balance.toFixed(2)).toBe(expectedBalance.toFixed(2));
+    expect(ledgerEntries[0].postingType).toBe(LedgerPostingType.Issue);
     },
   );
 });

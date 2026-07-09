@@ -2,8 +2,8 @@
 
 Authoritative engineering rulebook. Every rule below is mandatory. Violation constitutes a production defect and potential accounting corruption.
 
-**Certification basis:** ADR-015, ADR-021, ADR-024, ADR-025  
-**Last updated:** 2026-07-09 (PHASE_07A — Enterprise Ledger Foundation)
+**Certification basis:** ADR-015, ADR-021, ADR-024, ADR-025, ADR-026, ADR-027  
+**Last updated:** 2026-07-09 (PHASE_07B.5 — Enterprise Financial Integrity Certification)
 
 ---
 
@@ -13,8 +13,8 @@ Authoritative engineering rulebook. Every rule below is mandatory. Violation con
 |------|--------|
 | Sole writer | ONLY `src/lib/finance/posting-service.ts` may mutate `Dealer.currentBalance` |
 | Semantics | Positive = dealer owes company (AR); Zero = settled; Negative = company owes dealer (advance/credit) |
-| Role | Operational cache for fast lookup, credit limit, UI badges — NOT primary accounting source of truth |
-| Reconciliation | Must reconcile to ledger entries (PHASE_07+) and document replay |
+| Role | Operational cache for fast lookup, credit limit, UI badges — asserted equal to `LedgerEntry.balance` on every commit (PHASE_07B) |
+| Reconciliation | `assertLedgerBalanceMatchesCache` runs inside every posting transaction; drift rolls back atomically |
 | Forbidden | Direct `dealer.update({ currentBalance })` from feature code, UI, or allocation engine |
 
 ---
@@ -59,11 +59,12 @@ Authoritative engineering rulebook. Every rule below is mandatory. Violation con
 | Rule | Detail |
 |------|--------|
 | Location | `src/lib/finance/posting-service.ts` |
-| Mandate | ALL future financial operations MUST pass through this module |
+| Mandate | ALL financial operations MUST pass through this module |
 | Current functions | `postReceivableIncrease()`, `postReceivableDecrease()`, `postReceivableDecreaseReversal()` |
 | Future functions | `postOpeningBalance()`, `postCreditNote()`, `postDebitNote()`, `postInvoiceReversal()`, `postJournalEntry()` |
-| Side effects | Balance update + audit log (+ ledger entry in PHASE_07) |
-| Forbidden | Feature-level balance mutations bypassing posting service |
+| Side effects | Balance update + `LedgerEntry` append + cache/ledger parity assertion + audit log (all in one transaction) |
+| Sole ledger writer | `createLedgerEntry` (from `@/lib/ledger`) is imported ONLY by `posting-service.ts` |
+| Forbidden | Feature-level balance mutations bypassing posting service; direct `LedgerEntry` inserts from anywhere else |
 
 ---
 
@@ -263,7 +264,7 @@ Reports and statements must not trust Tier 3 alone without reconciliation to Tie
 | Rule | Detail |
 |------|--------|
 | Write path | `LedgerEntry` inserted only via `createLedgerEntry` in `@/lib/ledger` |
-| Caller | `createLedgerEntry` is invoked only from `posting-service.ts` (PHASE_07B onwards) |
+| Caller | `createLedgerEntry` is invoked only from `posting-service.ts` |
 | Append-only | Ledger entries never updated or deleted; runtime guard `assertLedgerAppendOnly` |
 | Reversals | Compensating entries with `reversesEntryId` and `postingType = Reversal`; `buildReversalPosting` helper |
 | Running balance | `LedgerEntry.balance = previousBalance + debit − credit`; MUST equal `Dealer.currentBalance` after each post (`assertLedgerBalanceMatchesCache`) |
@@ -272,8 +273,39 @@ Reports and statements must not trust Tier 3 alone without reconciliation to Tie
 | Amount rules | `debit ≥ 0`, `credit ≥ 0`, exactly one > 0 (`assertLedgerPostingInputValid`) |
 | Enum discipline | `referenceType: FinancialReferenceType`, `postingType: LedgerPostingType` — no strings |
 | Actor audit | `createdById` on every entry (nullable for system backfills) |
-| Reconciliation | `reconcileDealerLedger` + `replayDealerLedgerBalance` — drift never silently corrected |
+| Reconciliation | `reconcileDealerLedger` + `replayDealerLedgerBalance` + `validateDealerLedgerChain` + `reconcileAllDealers` — drift never silently corrected |
 | Opening balance | `buildOpeningBalancePosting` sign-aware; `previousBalance = 0.00` mandatory |
+
+---
+
+## 19. Ledger Posting Engine Invariants (PHASE_07B — shipped)
+
+| Rule | Detail |
+|------|--------|
+| Every receivable event | `postReceivable*` MUST produce exactly one `LedgerEntry` inside the caller's transaction |
+| Invoice issue | `postingType = Issue`, `referenceType = Invoice`, Debit = `grandTotal` |
+| Collection confirm | `postingType = Collection`, `referenceType = Collection`, Credit = `receivedAmount` |
+| Collection reverse | `postingType = Reversal`, `referenceType = Collection`, Debit = `receivedAmount`, `reversesEntryId` = original Collection entry id when it exists |
+| Allocation | `applyDealerBalance = false` → NO balance touch, NO ledger row (cash already posted on confirm) |
+| Balance parity | `assertLedgerBalanceMatchesCache(dealerCode, ledgerEntry.balance, newBalance)` after every insert |
+| Order of side effects | (1) Dealer balance atomic ± → (2) `createLedgerEntry` → (3) parity assertion → (4) audit row |
+| Transaction atomicity | Balance mutation + ledger insert + parity assertion + audit row commit or roll back together |
+| Idempotent replay | `createLedgerEntry` P2002 on `postingKey` collapses to `isNew = false` on matching payload; raises `LedgerDuplicatePostingError` on payload drift |
+| Reversal linkage | `reversesEntryId` populated when canonical original exists; null for pre-PHASE_07B collections — ledger complete going forward |
+| Audit cross-reference | Audit payload carries `ledgerEntryId`, `ledgerPostingKey`, `ledgerPostingType`, `ledgerIsNew`, and (on reversal) `ledgerReversesEntryId` |
+| Forbidden | Direct `LedgerEntry` inserts, updates, or deletes anywhere other than `createLedgerEntry`; direct dealer balance mutations outside `posting-service.ts` |
+
+---
+
+## 20. Financial Integrity Certification Invariants (PHASE_07B.5 — shipped)
+
+| Rule | Detail |
+|------|--------|
+| Repository reconciliation | `SUM(debit) − SUM(credit) = last LedgerEntry.balance = Dealer.currentBalance` for dealers with ledger rows |
+| Chain integrity | Entry `i > 0`: `balance[i] = balance[i−1] + debit[i] − credit[i]` |
+| Empty ledger | Reconciled only when `Dealer.currentBalance = 0.00`; non-zero cache without ledger = pre-backfill drift |
+| Scheduled job | `reconcileAllDealers` ready for PHASE_07E cron; not yet scheduled |
+| Certification | ADR-027 — Opening Balance (PHASE_07C) approved |
 
 ---
 
@@ -302,3 +334,5 @@ Before merging any financial feature:
 - ADR-021 — Collection financial certification
 - ADR-024 — Financial architecture certification
 - ADR-025 — Enterprise Ledger Foundation (PHASE_07A)
+- ADR-026 — Enterprise Ledger Posting Engine (PHASE_07B)
+- ADR-027 — Enterprise Financial Integrity Certification (PHASE_07B.5)

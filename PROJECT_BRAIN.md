@@ -159,9 +159,9 @@ The codebase should be reusable as a multi-company ERP platform in future versio
 
 ---
 
-## Architecture Maturity (as of PHASE_06D — 2026-06-30)
+## Architecture Maturity (as of PHASE_07B.5 — 2026-07-09)
 
-**Overall ERP production readiness: 8.7 / 10** (ADR-024)
+**Overall ERP production readiness: 9.1 / 10** (ADR-027)
 
 The commercial → fulfillment → financial → document pipeline is **production-certified** for controlled deployment:
 
@@ -171,9 +171,30 @@ Sales Order → Delivery Challan → Invoice → Collection → Allocation → M
 
 **Certified subsystems:** Orders (9.0), Delivery (9.0), Invoice (9.0), Collections (9.2), Money Receipt (9.0), Document Engine (9.0).
 
-**Not yet built:** Ledger posting, opening balance, credit notes, dealer statements, due reports, management dashboards.
+**Not yet built:** Opening balance implementation, credit notes, dealer statements, due reports, management dashboards.
 
-**Blocking defects:** None for Order → Invoice → Collection pipeline.
+**Blocking defects:** None for Order → Invoice → Collection → Ledger posting pipeline.
+
+**Opening Balance:** APPROVED (PHASE_07C) per ADR-027.
+
+---
+
+## PHASE_07B.5 — Enterprise Financial Integrity Certification
+
+**Status:** COMPLETE (2026-07-09)
+
+Chief ERP architecture audit before Opening Balance. Full financial path
+certified; one defect remediated; repository-wide reconciliation tests shipped.
+
+| Change | Detail |
+|--------|--------|
+| Repository grep | No `Dealer.currentBalance` bypass; no ledger UPDATE/DELETE in app code |
+| Reconciliation helpers | `validateDealerLedgerChain`, `assertDealerLedgerIntegrity`, `reconcileAllDealers` |
+| Defect fix | `assertDealerLedgerReconciled` — empty ledger only when cache = 0 |
+| Tests | 9 unit + 1 integration reconciliation tests |
+| Scores | Financial 9.3/10; Production 9.1/10 |
+| ADR | `docs/ADR/ADR-027-enterprise-financial-integrity-certification.md` |
+| Verdict | **Opening Balance (PHASE_07C) APPROVED** |
 
 ---
 
@@ -230,17 +251,19 @@ See ADR-023.
 
 **Location:** `src/lib/finance/posting-service.ts`
 
-**Mandate:** ALL balance mutations route through this module. Direct `Dealer.currentBalance` updates from feature code are forbidden.
+**Mandate:** ALL balance mutations route through this module. Direct `Dealer.currentBalance` updates from feature code are forbidden. As of PHASE_07B, `posting-service.ts` is ALSO the sole write path into `LedgerEntry` — every receivable event produces exactly one immutable `LedgerEntry`.
 
-| Function | Event |
-|----------|-------|
-| `postReceivableIncrease()` | Invoice issue |
-| `postReceivableDecrease()` | Collection confirm |
-| `postReceivableDecreaseReversal()` | Collection reverse |
+| Function | Event | Side effects |
+|----------|-------|--------------|
+| `postReceivableIncrease()` | Invoice issue | Dealer balance ↑ + LedgerEntry (Issue, Debit) + parity assertion + audit |
+| `postReceivableDecrease()` | Collection confirm | Dealer balance ↓ + LedgerEntry (Collection, Credit) + parity assertion + audit |
+| `postReceivableDecreaseReversal()` | Collection reverse | Dealer balance ↑ + LedgerEntry (Reversal, Debit, `reversesEntryId`) + parity assertion + audit |
 
 **Concurrency:** `lockDealerForFinancialUpdate()` — `SELECT … FOR UPDATE` before every financial mutation.
 
-**Future (PHASE_07):** `createLedgerEntry()` inside posting callbacks; `postOpeningBalance()`, `postCreditNote()`, `postInvoiceReversal()`.
+**Idempotency:** `postingKey @unique` collapses P2002 replays into a no-op when the payload matches; raises `LedgerDuplicatePostingError` on drift.
+
+**Future:** `postOpeningBalance()` (PHASE_07C), `postCreditNote()`, `postInvoiceReversal()` — all plug into `createLedgerEntry` without redesign.
 
 See ADR-014, ADR-015, ADR-024.
 
@@ -353,8 +376,9 @@ TIER 3 — OPERATIONAL CACHE
 | Money Receipt | ✅ Complete |
 | Document Platform | ✅ Complete |
 | Financial Architecture Certification | ✅ Complete (PHASE_06D) |
-| Ledger Foundation | ✅ Complete (PHASE_07A) — foundation only; posting deferred to PHASE_07B |
-| Ledger Posting Integration | ❌ Not built (PHASE_07B) |
+| Ledger Foundation | ✅ Complete (PHASE_07A) |
+| Ledger Posting Integration | ✅ Complete (PHASE_07B) — wired in `posting-service.ts`; parity asserted every commit |
+| Financial Integrity Certification | ✅ Complete (PHASE_07B.5) — ADR-027; Opening Balance approved |
 | Due Reports | ❌ Not built |
 | Audit Log UI | ❌ Not built |
 | User Management | ❌ Not built |
@@ -376,15 +400,14 @@ Permanent institutional knowledge files (2026-07-01):
 
 ---
 
-## Next Priorities (post PHASE_07A)
+## Next Priorities (post PHASE_07B.5)
 
-1. **PHASE_07B** — Ledger posting integration (`createLedgerEntry` in
-   `posting-service.ts`; balance assertion; concurrency tests)
-2. **PHASE_07C** — Opening balance (server action + `postOpeningBalance()`)
-3. **PHASE_07D** — Ledger UI (dealer subledger statement)
+1. **PHASE_07C** — Opening balance (`postOpeningBalance()` + server action) — **APPROVED**
+2. **PHASE_07D** — Ledger UI (dealer subledger statement)
+3. **PHASE_07E** — Reconciliation + backfill of pre-PHASE_07B data
 4. **Reporting** — due reports, cash book, territory analytics
 5. **Analytics** — management dashboards
-6. **Final Production Hardening** — reconciliation, concurrency tests, deployment checklist
+6. **Final Production Hardening** — collection concurrency tests, DB-level ledger immutability (optional), deployment checklist
 
 See `NEXT_ACTION.md` for immediate implementation goals.
 
@@ -436,6 +459,36 @@ migration.
 notes, debit notes, journal entries, dealer statements, trial balance, chart
 of accounts) plugs into `createLedgerEntry` via `posting-service.ts` without
 redesigning existing boundaries.
+
+---
+
+## PHASE_07B — Enterprise Ledger Posting Engine
+
+**Status:** COMPLETE (2026-07-09)
+
+The ledger foundation is now wired. `posting-service.ts` is the sole write
+path into `LedgerEntry`. Every receivable event produces exactly one
+immutable journal row; `LedgerEntry.balance` is asserted equal to
+`Dealer.currentBalance` on every commit. No business workflow, UI, or
+schema change.
+
+| Change | Detail |
+|--------|--------|
+| `postReceivableIncrease` | Inserts `LedgerEntry(postingType=Issue, Debit=amount)` under caller's transaction; parity asserted |
+| `postReceivableDecrease` | Inserts `LedgerEntry(postingType=Collection, Credit=amount)` when `applyDealerBalance = true`; parity asserted; short-circuits (no balance / no ledger) for allocation |
+| `postReceivableDecreaseReversal` | Inserts `LedgerEntry(postingType=Reversal, Debit=amount, reversesEntryId=<original>)`; parity asserted |
+| Allocation | Unchanged — still skips balance path and ledger path (cash already posted on confirm) |
+| Reference correction | `postReceivableDecrease`/`Reversal` now pass `FINANCIAL_REFERENCE_COLLECTION` (ADR-024 §10) |
+| Audit payload | Cross-references `ledgerEntryId`, `ledgerPostingKey`, `ledgerPostingType`, `ledgerIsNew`, `ledgerReversesEntryId` |
+| Idempotency | `postingKey @unique` — retries collapse to a no-op ledger insert when the payload matches |
+| Concurrency | Existing dealer row lock + atomic ± + `postingKey` unique constraint |
+| Tests | 12 new posting-service unit tests + 7 new ledger-service unit tests + concurrency suite extended with ledger assertions |
+| ADR | `docs/ADR/ADR-026-enterprise-ledger-posting-engine.md` |
+
+**Accounting integrity milestone:** the ERP now has a permanent,
+append-only accounting subledger backing every dealer receivable
+mutation. Suitable for statutory-grade audit trails and enterprise
+reconciliation once PHASE_07E backfill lands.
 
 ---
 

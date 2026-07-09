@@ -6,7 +6,7 @@ Current Phase:
 
 
 
-PHASE_07A_ENTERPRISE_LEDGER_FOUNDATION
+PHASE_07B.5_ENTERPRISE_FINANCIAL_INTEGRITY_CERTIFICATION
 
 
 
@@ -71,6 +71,8 @@ COMPLETE
 | **PHASE_06D.1_INVOICE_PDF_CLIENT_REVISION** | Client-approved invoice layout revision 2 (presentation only) | **✅ COMPLETE** |
 | **PHASE_06D.2_ENTERPRISE_DOCUMENT_PLATFORM_DESIGN_FREEZE** | Enterprise design system freeze — design tokens, header, title, financial summary grouping, single signature, professional notes, enterprise footer, rebalanced table, single dealer section | **✅ COMPLETE** |
 | **PHASE_07A_ENTERPRISE_LEDGER_FOUNDATION** | Ledger schema hardening + strongly typed posting-key abstraction + immutable ledger service + reconciliation + opening-balance builders (foundation only — no UI, no reports, no wired posting) | **✅ COMPLETE** |
+| **PHASE_07B_LEDGER_POSTING_INTEGRATION** | `createLedgerEntry` wired into `postReceivableIncrease` / `postReceivableDecrease` / `postReceivableDecreaseReversal`; `LedgerEntry.balance == Dealer.currentBalance` asserted every commit; append-only; compensating reversal; concurrency + idempotency tests | **✅ COMPLETE** |
+| **PHASE_07B.5_ENTERPRISE_FINANCIAL_INTEGRITY_CERTIFICATION** | Chief ERP architecture audit of full financial path; repository grep; reconciliation tests; `assertDealerLedgerReconciled` tightened; ADR-027; Opening Balance approved | **✅ COMPLETE** |
 
 
 
@@ -279,3 +281,120 @@ no reports, no data migration.
 `postReceivableDecreaseReversal`; assert `LedgerEntry.balance =
 Dealer.currentBalance` after each post. Integration tests mirror the
 PHASE_05C2A invoice concurrency suite.
+
+---
+
+# PHASE_07B_LEDGER_POSTING_INTEGRATION
+
+Status: COMPLETE (2026-07-09)
+
+## Objectives
+
+Wire the PHASE_07A ledger foundation into the Financial Posting Service so
+that every receivable event permanently creates an immutable
+`LedgerEntry`, without changing any caller, business workflow, UI, or
+schema.
+
+* `createLedgerEntry` invoked from `postReceivableIncrease`,
+  `postReceivableDecrease`, and `postReceivableDecreaseReversal`
+* `LedgerEntry.balance == Dealer.currentBalance` asserted on every
+  commit via `assertLedgerBalanceMatchesCache`
+* Compensating reversal — collection reverse links `reversesEntryId` to
+  the canonical Collection posting when it exists
+* Semantic correction — collection cash-receipt postings now use
+  `FinancialReferenceType.Collection` (ADR-024 §10 low-priority item)
+* PostingService remains the sole mutation boundary for balances AND
+  the sole write path into `LedgerEntry`
+* Ledger append-only preserved — `assertLedgerAppendOnly` + reviewer
+  discipline; no `ledgerEntry.update` / `delete` in code
+* Idempotency preserved — deterministic `postingKey @unique` collapses
+  replays into no-ops
+* Concurrency invariants preserved — dealer row lock, atomic increment,
+  single-transaction commit
+* Audit rows carry `ledgerEntryId`, `ledgerPostingKey`,
+  `ledgerPostingType`, `ledgerIsNew`, `ledgerReversesEntryId`
+
+## Completion Criteria
+
+* Invoice creates LedgerEntry (postingType = Issue, Debit): ✓
+* Collection confirm creates LedgerEntry (postingType = Collection, Credit): ✓
+* Collection reverse creates compensating LedgerEntry (postingType = Reversal, Debit) with `reversesEntryId`: ✓
+* `LedgerEntry.balance == Dealer.currentBalance` asserted on every post: ✓
+* Duplicate posting prevented via `postingKey @unique`: ✓
+* Allocation continues to skip balance + ledger: ✓
+* Dealer row lock preserved: ✓
+* Decimal (18, 2) preserved: ✓
+* Transactions atomic: ✓
+* Concurrency + idempotency tests extended: ✓
+* `npx tsc --noEmit` — 0 errors: ✓
+* `npx eslint` — 0 errors: ✓
+* `npx vitest run` — 83 passed, 4 skipped (pre-existing DB integration tests): ✓
+* ADR-026 authored: ✓
+* Governance docs updated: ✓
+
+## Explicitly NOT Changed
+
+* Prisma schema, migrations
+* Invoice Engine, Collection Engine, Delivery Engine, Order Engine
+* Document platform, UI, RBAC, localization
+* Public caller signatures of `postReceivable*` functions
+* Financial calculations, dealer balance semantics
+* Allocation engine's balance semantics (allocation still skips balance path)
+
+---
+
+## Next Phase
+
+**PHASE_07C_OPENING_BALANCE** — `openDealerBalance()` server action and
+`postOpeningBalance()` in `posting-service.ts` using the PHASE_07A
+opening-balance builders. **Approved by ADR-027.** Then PHASE_07D (Ledger UI +
+dealer statement), PHASE_07E (reconciliation + backfill).
+
+---
+
+# PHASE_07B.5_ENTERPRISE_FINANCIAL_INTEGRITY_CERTIFICATION
+
+Status: COMPLETE (2026-07-09)
+
+## Objectives
+
+Chief ERP Architecture Audit before Opening Balance. Certify every financial
+path from Invoice through PostingService, LedgerEntry, Dealer.currentBalance,
+and Audit. No feature work.
+
+* Full repository grep for balance/ledger bypass and float arithmetic
+* Verify append-only ledger, PostingKey idempotency, running balance chain
+* Verify transaction atomicity, allocation non-posting, reversal compensating model
+* Stress/concurrency review (invoice integration tests + posting unit tests)
+* Implement repository-wide reconciliation tests
+* Remediate any architectural weakness found
+* Document certification in ADR-027
+
+## Completion Criteria
+
+* PostingService sole writer for `Dealer.currentBalance` and `LedgerEntry`: ✓
+* No ledger UPDATE/DELETE in application code: ✓
+* PostingKey deterministic; replay safe; drift rejected: ✓
+* Running balance = previous + debit − credit: ✓
+* Cache/ledger parity on every commit: ✓
+* Allocation skips balance and ledger: ✓
+* Decimal(18,2) in financial paths: ✓
+* `assertDealerLedgerReconciled` tightened (empty ledger only when cache = 0): ✓
+* `validateDealerLedgerChain`, `assertDealerLedgerIntegrity`, `reconcileAllDealers`: ✓
+* `ledger-reconciliation.test.ts` (9 unit tests): ✓
+* `ledger-reconciliation.integration.test.ts` (DB scan): ✓
+* ADR-027 authored: ✓
+* Governance docs updated: ✓
+* Opening Balance (PHASE_07C) approved: ✓
+
+## Explicitly NOT Changed
+
+* Prisma schema, migrations
+* Invoice Engine, Collection Engine, posting-service public API
+* UI, reports, opening balance implementation
+
+---
+
+## Next Phase (superseded header retained for history)
+
+**PHASE_07C_OPENING_BALANCE** — see above.

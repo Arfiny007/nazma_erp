@@ -4,9 +4,9 @@ Definitive engineering context for AI sessions and new maintainers.
 
 Read this document first. Then consult `PROJECT_BRAIN.md`, `CURRENT_PHASE.md`, and relevant ADRs.
 
-**Last updated:** 2026-07-09 (PHASE_07A — Enterprise Ledger Foundation)  
-**Current phase:** PHASE_07A complete → Next: PHASE_07B ledger posting integration  
-**Production readiness:** 8.7 / 10 (ADR-024)
+**Last updated:** 2026-07-09 (PHASE_07B.5 — Enterprise Financial Integrity Certification)  
+**Current phase:** PHASE_07B.5 complete → Next: PHASE_07C opening balance  
+**Production readiness:** 9.1 / 10 (ADR-027)
 
 ---
 
@@ -125,8 +125,9 @@ See ADR-011 for fulfillment architecture.
 | Invoices | ✅ Complete | `/invoices`, `/invoices/issue`, `/invoices/[id]/print` |
 | Collections | ✅ Complete | `/collections`, `/collections/[id]/allocate` |
 | Money Receipt | ✅ Complete | `/collections/[id]/receipt` |
-| Ledger Foundation | ✅ Complete (PHASE_07A) — no UI/reports/posting yet | `src/lib/ledger/*` |
-| Ledger Posting Integration | ❌ Not built (PHASE_07B) | — |
+| Ledger Foundation | ✅ Complete (PHASE_07A) | `src/lib/ledger/*` |
+| Ledger Posting Integration | ✅ Complete (PHASE_07B) — wired into `posting-service.ts`; no UI/reports yet | `src/lib/finance/posting-service.ts` |
+| Financial Integrity Certification | ✅ Complete (PHASE_07B.5) — repository audit; reconciliation tests; ADR-027 | `src/lib/ledger/ledger-reconciliation.ts` |
 | Due Reports | ❌ Not built | — |
 | Audit Log UI | ❌ Not built | — |
 | User Management | ❌ Not built | — |
@@ -179,9 +180,11 @@ See ADR-017, ADR-023.
 
 **Concurrency:** `lockDealerForFinancialUpdate()` — `SELECT … FOR UPDATE` in `dealer-lock.ts`
 
-**PHASE_07A (shipped):** ledger foundation module `src/lib/ledger/` — posting-key builder, immutable posting contracts, `createLedgerEntry` service, reconciliation helpers, opening-balance builders. Posting service inputs extended with optional ledger metadata; bodies unchanged.
+**PHASE_07A (shipped):** ledger foundation module `src/lib/ledger/` — posting-key builder, immutable posting contracts, `createLedgerEntry` service, reconciliation helpers, opening-balance builders. Posting service inputs extended with optional ledger metadata.
 
-**Future (PHASE_07B onwards):** wire `createLedgerEntry()` inside posting service callbacks; `postOpeningBalance()`, `postCreditNote()`, `postInvoiceReversal()`
+**PHASE_07B (shipped):** `createLedgerEntry` wired inside all three receivable functions. Every posting now inserts an immutable `LedgerEntry` and asserts `LedgerEntry.balance == Dealer.currentBalance` via `assertLedgerBalanceMatchesCache`. Compensating reversal via `postingType = Reversal` + `reversesEntryId`. Idempotent under retry via `postingKey @unique`. Collection cash-receipt `referenceType` corrected to `Collection` (ADR-024 §10).
+
+**Future (PHASE_07C onwards):** `postOpeningBalance()`, `postCreditNote()`, `postInvoiceReversal()`; reconciliation job (PHASE_07E); Chart of Accounts (PHASE_07F+).
 
 ---
 
@@ -213,9 +216,9 @@ See ADR-019, ADR-020, ADR-024.
 
 ### Source-of-Truth Hierarchy (ADR-024)
 
-1. **Tier 1 — Authoritative (PHASE_07+):** `LedgerEntry` (append-only journal subledger)
+1. **Tier 1 — Authoritative:** `LedgerEntry` (append-only journal subledger; populated as of PHASE_07B)
 2. **Tier 2 — Document truth:** Invoice, InvoiceItem, Collection, CollectionAllocation
-3. **Tier 3 — Operational cache:** `Dealer.currentBalance`, invoice due fields, collection pool fields
+3. **Tier 3 — Operational cache:** `Dealer.currentBalance`, invoice due fields, collection pool fields — asserted equal to Tier 1 on every commit
 
 ---
 
@@ -228,7 +231,7 @@ See ADR-019, ADR-020, ADR-024.
 | `Invoice` / `InvoiceItem` | Receivable document + immutable line snapshots |
 | `Collection` / `CollectionAllocation` | Cash receipt + polymorphic application |
 | `Dealer` | Customer master + AR cache |
-| `LedgerEntry` | Journal subledger (schema exists; posting deferred) |
+| `LedgerEntry` | Append-only journal subledger (populated on every receivable event as of PHASE_07B) |
 | `AuditLog` | Append-only event trail |
 
 ---
@@ -310,14 +313,32 @@ issueInvoice()
   → lockDealerForFinancialUpdate()
   → build Invoice + InvoiceItem snapshots
   → postReceivableIncrease()
-  → AuditLog (INVOICE_CREATED, DEALER_BALANCE_UPDATED)
+      ├── Dealer.currentBalance += grandTotal (atomic, drift-checked)
+      ├── createLedgerEntry(postingType=Issue, Debit=grandTotal)
+      └── assertLedgerBalanceMatchesCache
+  → AuditLog (INVOICE_CREATED, DEALER_BALANCE_UPDATED + ledgerEntryId)
   → commit
 
 confirmCollection()
   → lockDealerForFinancialUpdate()
   → Collection status → Confirmed
-  → postReceivableDecrease()
-  → AuditLog (COLLECTION_CONFIRMED, DEALER_BALANCE_DECREASED)
+  → postReceivableDecrease(referenceType=Collection)
+      ├── Dealer.currentBalance -= receivedAmount (atomic, drift-checked)
+      ├── createLedgerEntry(postingType=Collection, Credit=receivedAmount)
+      └── assertLedgerBalanceMatchesCache
+  → AuditLog (COLLECTION_CONFIRMED, DEALER_BALANCE_DECREASED + ledgerEntryId)
+  → commit
+
+reverseCollection()
+  → lockDealerForFinancialUpdate()
+  → per-allocation invoice field reversal
+  → postReceivableDecreaseReversal(referenceType=Collection)
+      ├── Dealer.currentBalance += receivedAmount (atomic, drift-checked)
+      ├── createLedgerEntry(postingType=Reversal, Debit=receivedAmount,
+      │                    reversesEntryId=<original Collection entry>)
+      └── assertLedgerBalanceMatchesCache
+  → Collection status → Reversed
+  → AuditLog (COLLECTION_REVERSED + ledgerEntryId + ledgerReversesEntryId)
   → commit
 
 allocateCollection()
@@ -326,6 +347,7 @@ allocateCollection()
   → Invoice.collectionReceived / currentDue update
   → pool invariant check
   → NO posting service balance call
+  → NO ledger entry (cash already posted on confirm)
   → commit
 ```
 
@@ -348,6 +370,9 @@ allocateCollection()
 | PHASE_06B | Collections UI |
 | PHASE_06C | Money Receipt + document platform upgrade |
 | PHASE_06D | Financial architecture certification (ADR-024) |
+| PHASE_07A | Enterprise Ledger Foundation (ADR-025) |
+| PHASE_07B | Enterprise Ledger Posting Engine (ADR-026) |
+| PHASE_07B.5 | Enterprise Financial Integrity Certification (ADR-027) |
 
 ---
 
@@ -356,8 +381,6 @@ allocateCollection()
 | Phase | Description |
 |-------|-------------|
 | Invoice PDF Patch | Layout polish from client feedback (document platform only) |
-| PHASE_07A | Ledger schema hardening |
-| PHASE_07B | Ledger posting integration |
 | PHASE_07C | Opening balance |
 | PHASE_07D | Ledger UI + dealer subledger statement |
 | PHASE_07E | Reconciliation & backfill |
@@ -398,7 +421,7 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 
 ## 21. Production Readiness (ADR-024)
 
-**Overall score: 8.7 / 10**
+**Overall score: 9.1 / 10** (ADR-027)
 
 | Subsystem | Score |
 |-----------|-------|
@@ -408,15 +431,17 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 | Collections | 9.2 |
 | Money Receipt | 9.0 |
 | Document Engine | 9.0 |
-| Financial Posting | 8.5 |
-| Ledger Readiness | 8.5 |
+| Financial Posting | 9.3 |
+| Ledger | 9.3 |
 | Reporting Readiness | 7.0 |
 
 **Suitable for controlled production:** Order → Challan → Invoice → Collection → Money Receipt pipeline.
 
-**Not yet production-ready:** Ledger, due reports, credit notes, opening balance, dashboards, statutory financial statements.
+**Not yet production-ready:** Ledger UI, due reports, credit notes, opening balance, dashboards, statutory financial statements.
 
-**Blocking defects:** None identified for Order → Invoice → Collection pipeline as of PHASE_06D.
+**Blocking defects:** None for Order → Invoice → Collection → Ledger posting pipeline as of PHASE_07B.5.
+
+**Opening Balance (PHASE_07C):** APPROVED to proceed per ADR-027.
 
 ---
 
@@ -445,7 +470,7 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 
 | Extension | Hook |
 |-----------|------|
-| Ledger posting | `createLedgerEntry()` in `@/lib/ledger` — call from `posting-service.ts` (PHASE_07B) |
+| Opening balance | `postOpeningBalance()` — uses `buildOpeningBalancePosting` from `@/lib/ledger` (PHASE_07C) |
 | Credit notes | `FinancialReferenceType.CreditNote` + `postCreditNote()` |
 | Opening balance | `FinancialReferenceType.OpeningBalance` + `postOpeningBalance()` |
 | Dealer statement | Document platform + hybrid ledger/document composer |
@@ -472,6 +497,8 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 | ADR-023 | Money receipt engine |
 | ADR-024 | Financial architecture certification |
 | ADR-025 | Enterprise Ledger Foundation (PHASE_07A) |
+| ADR-026 | Enterprise Ledger Posting Engine (PHASE_07B) |
+| ADR-027 | Enterprise Financial Integrity Certification (PHASE_07B.5) |
 
 ---
 

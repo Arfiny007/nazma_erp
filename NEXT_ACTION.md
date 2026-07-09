@@ -2,106 +2,59 @@
 
 ## Current State
 
-PHASE_07A_ENTERPRISE_LEDGER_FOUNDATION is **complete** (2026-07-09):
+PHASE_07B.5_ENTERPRISE_FINANCIAL_INTEGRITY_CERTIFICATION is **complete**
+(2026-07-09):
 
-- `LedgerEntry` model hardened — `referenceType` enum, `postingType`,
-  `postingDate`, `postingKey @unique`, `referenceNo`, `reversesEntryId`,
-  `createdById`, composite indexes
-- `LedgerPostingType` enum introduced; `FinancialReferenceType` extended
-  with `Collection`
-- `src/lib/ledger/` foundation module: posting-key builder, immutable
-  posting contracts, `createLedgerEntry` (idempotent, balance-asserting,
-  append-only), reconciliation helpers, opening-balance builders
-- `posting-service.ts` inputs extended with optional ledger metadata
-  (bodies unchanged — PHASE_07B consumes)
-- 35 new unit tests; 64 total pass, 4 skipped (pre-existing DB integration
-  tests)
-- Prisma migration `20260709000000_phase_07a_ledger_foundation/migration.sql`
-  authored (apply via `npx prisma migrate deploy`)
-- ADR-025 authored; governance docs updated
+- Chief ERP architecture audit of full financial path certified (ADR-027)
+- Repository grep: no balance or ledger bypass; no ledger UPDATE/DELETE in app code
+- `validateDealerLedgerChain`, `assertDealerLedgerIntegrity`, `reconcileAllDealers` shipped
+- `assertDealerLedgerReconciled` tightened — empty ledger reconciled only when cache = 0
+- 9 new reconciliation unit tests + 1 integration test (DB optional)
+- **Opening Balance (PHASE_07C) APPROVED** — accounting engine production-safe
 
-Financial architecture (ADR-024) is unchanged. Foundation is production-ready
-for PHASE_07B wiring.
+PHASE_07B remains complete. Financial architecture certification score: **9.1 / 10**.
 
-PHASE_06D.2_ENTERPRISE_DOCUMENT_PLATFORM_DESIGN_FREEZE remains complete:
-
-- Enterprise Document Platform has reached **Production Design Freeze** status
-- Design tokens (`src/lib/documents/design-tokens.ts`) introduced — single source of truth for all document visual constants
-- CompanyHeader: 32pt font-black company name, vertical rule separator, professional T/E/W address block
-- DocumentTitle: 17pt font-black, 0.12em letter-spacing, stronger visual weight
-- InvoiceMetadata: single "Dealer Information" section (B2B ERP — no redundant Ship To)
-- Product table: col-name expanded to 42%; tabular-nums on numeric columns
-- Financial summary: visual divider groups Invoice Amount vs Due Summary
-- Single "Authorized By" signature block replaces three-signature layout
-- Professional "Terms & Conditions" notes replace consumer-oriented text
-- PaymentTerms section removed from invoice print
-- Enterprise footer: blue top bar + "Confidential — For addressee only" + thank-you message
-- Preview = Print = PDF preserved via single pipeline
-- Money Receipt pipeline unaffected (DocumentFinancialSummary changes backward-compatible)
-- No financial, posting, or workflow changes
-
-PHASE_06D.1 invoice layout revision remains valid.
-PHASE_06D financial architecture certification remains valid (8.7 / 10).
-
-**Not yet built:** Ledger posting, opening balance, credit notes, dealer statements, due reports.
+**Not yet built:** Opening balance implementation, ledger UI + dealer statement,
+reconciliation scheduled job, backfill of pre-PHASE_07B data, credit notes, due reports.
 
 ---
 
 ## Next Steps
 
-Roadmap after PHASE_07A:
+Roadmap after PHASE_07B.5:
 
-### 1. Apply the PHASE_07A Migration
-
-Before starting PHASE_07B, apply the schema hardening in every environment:
-
-```
-npx prisma migrate deploy
-npx prisma generate
-```
-
-The migration is additive for the `LedgerEntry` table (no historical rows
-exist yet) and additive for the `FinancialReferenceType` enum. Zero
-downtime.
-
-### 2. PHASE_07B — Ledger Posting Integration
-
-- Wire `createLedgerEntry` inside `postReceivableIncrease`,
-  `postReceivableDecrease`, `postReceivableDecreaseReversal`
-- Compute `previousBalance` from last `LedgerEntry` (or `Dealer.currentBalance`
-  during migration)
-- Assert `LedgerEntry.balance === Dealer.currentBalance` via
-  `assertLedgerBalanceMatchesCache`
-- Concurrency integration tests mirroring PHASE_05C2A
-- Semantic correction: `postReceivableDecrease` referenceType →
-  `Collection` (ADR-024 §10 low-priority item)
-
-### 3. PHASE_07C — Opening Balance
+### 1. PHASE_07C — Opening Balance (APPROVED)
 
 - `openDealerBalance()` server action + Zod validator
-- `postOpeningBalance()` in `posting-service.ts` (uses
-  `buildOpeningBalancePosting` from `@/lib/ledger`)
-- `FinancialReferenceType.OpeningBalance` handler in allocation engine
+- `postOpeningBalance()` in `posting-service.ts` using
+  `buildOpeningBalancePosting` from `@/lib/ledger`
+- `FinancialReferenceType.OpeningBalance` handler
 - Migration path for existing dealers with non-zero `currentBalance`
+- Assert `previousBalance = 0.00` and `Dealer.currentBalance = 0.00`
+  before posting the opening entry
+- RBAC — Super_Admin / Manager only
 
-### 4. PHASE_07D — Ledger UI
+### 2. PHASE_07D — Ledger UI
 
-- Ledger list / detail routes
+- Ledger list / detail routes (`/ledger`)
 - Dealer subledger statement (hybrid: ledger balance + document lines)
 - Document platform statement composer
 - Print / PDF via existing document pipeline
+- Read-only projections of `LedgerEntry` — no ledger writes from UI
 
-### 5. PHASE_07E — Reconciliation & Backfill
+### 3. PHASE_07E — Reconciliation & Backfill
 
 - Backfill script: replay invoices + collections → ledger entries for
-  existing data
-- Reconciliation job using `reconcileDealerLedger` /
-  `replayDealerLedgerBalance` / `assertDealerLedgerReconciled`
-- Optional scheduled integrity check
+  existing data (idempotent via `postingKey`)
+- Scheduled reconciliation job using `reconcileDealerLedger`,
+  `assertDealerLedgerReconciled`, `replayDealerLedgerBalance`
+- Tighten `assertDealerLedgerReconciled` — remove PHASE_07A
+  empty-ledger short-circuit once backfill is complete
+- Optional DB-level immutability policy (TECH_DEBT C6)
 
-### 4. Reporting
+### 4. Reporting (PHASE_08)
 
-- Due reports and aging (PHASE_08)
+- Due reports and aging
 - Cash book, collection register
 - Territory / area analytics
 - Sales reports from `InvoiceItem` snapshots
@@ -114,11 +67,12 @@ downtime.
 
 ### 6. Final Production Hardening
 
-- Balance reconciliation job (`currentBalance` vs ledger vs document replay)
 - Collection concurrency integration tests
 - Composite database indexes for reporting
 - Deployment checklist (credential rotation, migration pipeline)
-- Optional: credit note / invoice void workflow
+- Optional: credit note / invoice void workflow — plugs into
+  `postCreditNote()` and `postInvoiceReversal()`
+- Optional: DB-level `REVOKE UPDATE, DELETE` on `LedgerEntry`
 
 ### Explicitly Out of Scope (until respective phase)
 
@@ -138,7 +92,14 @@ downtime.
 
 ## Notes
 
-- `Dealer.currentBalance` = AR cache (positive: dealer owes; negative: advance/credit) — reconcile to ledger in PHASE_07E
-- All balance mutations must continue through `posting-service.ts` only
-- Collection allocation does not post balance — cash posted on confirm only (by design)
-- Delivery Challan remains NON-FINANCIAL
+- `Dealer.currentBalance` = AR cache (positive: dealer owes; negative:
+  advance/credit) — now provably reconciled to `LedgerEntry.balance` on
+  every commit (`assertLedgerBalanceMatchesCache`)
+- All balance mutations continue through `posting-service.ts` only
+- All ledger writes flow through `createLedgerEntry` — called ONLY from
+  `posting-service.ts`
+- Collection allocation does not post balance and does not post ledger —
+  cash + ledger posted on confirm only (by design)
+- Delivery Challan remains NON-FINANCIAL — no balance touch, no ledger row
+- Ledger is APPEND-ONLY — never update or delete a historical row; use
+  `buildReversalPosting` for corrections
