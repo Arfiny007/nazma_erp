@@ -2,28 +2,28 @@
 
 ## Current State
 
-PHASE_07D2_ENTERPRISE_DEALER_STATEMENT_UI is **complete** (2026-07-09):
+PHASE_07D3_ENTERPRISE_DEALER_STATEMENT_DOCUMENT_PLATFORM is **complete** (2026-07-10):
 
-- Production Dealer Statement at `/ledger` — dense enterprise ERP layout
-- Consumes `getDealerStatement()` only — no duplicated query or money math
-- Header, filters, summary cards, ledger table, integrity badge, pagination
-- Future-ready posting type / reference type / text search controls
-- `/ledger/demo` removed (obsolete)
-- 13 presentation tests; ADR-030 authored
-- Full suite: **171 passed / 7 skipped**
+- Printable Dealer Statement via Document Platform — `DealerStatementPrintable`
+- Statement mapper maps `DealerStatementDTO` → document payload (formatting only)
+- **Print Statement** button on `/ledger` — fetches full DTO, opens preview, `window.print()`
+- Preview = Print = PDF (vector HTML/CSS); multi-page A4 pagination
+- 7 new presentation tests; ADR-031 authored
+- Full suite: **178 passed / 7 skipped**
 
-PHASE_07D1 read engine, PHASE_07C Opening Balance, and PHASE_07B.5
-certification remain complete. Financial architecture score: **9.1 / 10**.
+PHASE_07D2 production UI, PHASE_07D1 read engine, PHASE_07C Opening Balance,
+and PHASE_07B.5 certification remain complete. Financial architecture score:
+**9.1 / 10**.
 
-**Not yet built:** Statement PDF/Excel/print composer, reconciliation
-scheduled job, backfill of pre-PHASE_07B data, credit notes, due reports,
-bulk opening balance import UI.
+**Not yet built:** Excel/email statement export, reconciliation scheduled job,
+backfill of pre-PHASE_07B data, credit notes, due reports, bulk opening balance
+import UI.
 
 ---
 
 ## Next Steps
 
-Roadmap after PHASE_07D2:
+Roadmap after PHASE_07D3:
 
 ### 1. PHASE_07E — Reconciliation & Backfill (NEXT)
 
@@ -35,10 +35,9 @@ Roadmap after PHASE_07D2:
   empty-ledger short-circuit once backfill is complete
 - Optional DB-level immutability policy (TECH_DEBT C6)
 
-### 2. Statement Document Composer (presentation follow-on)
+### 2. Statement Excel / Email Export (presentation follow-on)
 
-- Document platform printable / PDF statement from `DealerStatementDTO`
-- Excel export / email delivery — same DTO, no second query path
+- Excel export / email delivery — same `DealerStatementDTO`, no second query path
 - Wire future filters into `getDealerStatementSchema` when needed
 
 ### 3. Bulk Opening Balance Import (architecture ready, UI not built)

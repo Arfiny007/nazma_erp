@@ -74,3 +74,14 @@ export const DOC_DATA_TABLE_COLS = {
   refNo: "44%",
   refAmount: "28%",
 } as const;
+
+/** Statement table column widths — 7 columns. Sum = 100%. */
+export const DOC_STATEMENT_TABLE_COLS = {
+  date: "11%",
+  postingType: "13%",
+  referenceNo: "14%",
+  description: "28%",
+  debit: "11%",
+  credit: "11%",
+  runningBalance: "12%",
+} as const;

@@ -231,6 +231,79 @@
   font-feature-settings: "tnum";
 }
 
+/* ─── Statement table (Dealer Statement) ─────────────────────────────────────── */
+
+.doc-statement-table tbody td {
+  font-size: 7.5pt;
+  line-height: 1.25;
+  white-space: normal;
+  word-break: break-word;
+}
+
+.doc-statement-table .col-st-date {
+  width: 11%;
+}
+
+.doc-statement-table .col-st-type {
+  width: 13%;
+}
+
+.doc-statement-table .col-st-ref {
+  width: 14%;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.doc-statement-table .col-st-desc {
+  width: 28%;
+}
+
+.doc-statement-table .col-st-debit,
+.doc-statement-table .col-st-credit,
+.doc-statement-table .col-st-balance {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+.doc-statement-table .col-st-debit {
+  width: 11%;
+}
+
+.doc-statement-table .col-st-credit {
+  width: 11%;
+}
+
+.doc-statement-table .col-st-balance {
+  width: 12%;
+  font-weight: 600;
+}
+
+.doc-statement-row-opening {
+  background-color: rgba(239, 246, 255, 0.85);
+}
+
+.doc-statement-row-collection {
+  background-color: rgba(236, 253, 245, 0.75);
+}
+
+.doc-statement-row-reversal {
+  background-color: rgba(255, 251, 235, 0.85);
+}
+
+@media print {
+  .doc-statement-row-opening,
+  .doc-statement-row-collection,
+  .doc-statement-row-reversal {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .doc-statement-table tbody tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+}
+
 /* ─── Financial summary ──────────────────────────────────────────────────────── */
 
 .doc-summary-row {

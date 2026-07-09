@@ -159,23 +159,45 @@ The codebase should be reusable as a multi-company ERP platform in future versio
 
 ---
 
-## Architecture Maturity (as of PHASE_07D2 — 2026-07-09)
+## Architecture Maturity (as of PHASE_07D3 — 2026-07-10)
 
 **Overall ERP production readiness: 9.1 / 10** (ADR-027, ADR-028)
 
 The commercial → fulfillment → financial → document pipeline is **production-certified** for controlled deployment:
 
 ```
-Sales Order → Delivery Challan → Invoice → Collection → Allocation → Money Receipt
+Sales Order → Delivery Challan → Invoice → Collection → Allocation → Money Receipt → Dealer Statement (UI + Print)
 ```
 
-**Certified subsystems:** Orders (9.0), Delivery (9.0), Invoice (9.0), Collections (9.2), Money Receipt (9.0), Document Engine (9.0), Financial Initialization (9.2), Dealer Statement UI (9.2).
+**Certified subsystems:** Orders (9.0), Delivery (9.0), Invoice (9.0), Collections (9.2), Money Receipt (9.0), Document Engine (9.0), Financial Initialization (9.2), Dealer Statement UI (9.2), Dealer Statement Document (9.2).
 
-**Not yet built:** Statement PDF/Excel/print composer, credit notes, due reports, management dashboards, bulk opening balance import UI.
+**Not yet built:** Statement Excel/email export, credit notes, due reports, management dashboards, bulk opening balance import UI.
 
-**Blocking defects:** None for Order → Invoice → Collection → Ledger posting → Opening Balance → Dealer Statement read + production UI pipeline.
+**Blocking defects:** None for Order → Invoice → Collection → Ledger posting → Opening Balance → Dealer Statement read + UI + printable document pipeline.
 
-**Opening Balance:** SHIPPED (PHASE_07C) per ADR-028. **Dealer Subledger Foundation:** SHIPPED (PHASE_07D1) per ADR-029. **Dealer Statement UI:** SHIPPED (PHASE_07D2) per ADR-030. **PHASE_07E (Reconciliation & Backfill):** NEXT.
+**Opening Balance:** SHIPPED (PHASE_07C) per ADR-028. **Dealer Subledger Foundation:** SHIPPED (PHASE_07D1) per ADR-029. **Dealer Statement UI:** SHIPPED (PHASE_07D2) per ADR-030. **Dealer Statement Document:** SHIPPED (PHASE_07D3) per ADR-031. **PHASE_07E (Reconciliation & Backfill):** NEXT.
+
+---
+
+## PHASE_07D3 — Enterprise Dealer Statement Document Platform
+
+**Status:** COMPLETE (2026-07-10)
+
+Printable Dealer Statements via the Document Platform. Document composition
+only — consumes `DealerStatementDTO` exactly as shipped in PHASE_07D1.
+Never recalculates running balances or monetary totals.
+
+| Change | Detail |
+|--------|--------|
+| Composer | `DealerStatementPrintable` — DocumentLayout + platform primitives |
+| Mapper | `mapDealerStatementToDocument()` — formatting only |
+| Print flow | `/ledger` Print Statement → fetch full DTO → preview → `window.print()` |
+| Table | Date, Posting Type, Reference No, Description, Debit, Credit, Running Balance |
+| Summary | Opening, debit, credit, closing, transaction count from DTO |
+| Accents | Opening (blue), Collection (green), Reversal (amber) — presentation only |
+| Tests | 7 document presentation tests |
+| ADR | `docs/ADR/ADR-031-enterprise-dealer-statement-document-platform.md` |
+| Verdict | **PHASE_07E (Reconciliation & Backfill) NEXT**; Excel/email deferred |
 
 ---
 
@@ -291,6 +313,7 @@ ADR-017 established the invoice document engine. PHASE_06C upgraded it into a **
 |----------|-----------|-------|
 | Invoice | `InvoicePrintable` | `/invoices/[id]/print` |
 | Money Receipt | `MoneyReceiptPrintable` | `/collections/[id]/receipt` |
+| Dealer Statement | `DealerStatementPrintable` | `/ledger` (print preview modal) |
 
 **Hard rules:** No client money math. Preview = Print = PDF. Vector HTML/CSS only (no html2canvas). Enterprise blue `#1a5dad`. Max 20 invoice rows per A4 page.
 
@@ -451,6 +474,7 @@ TIER 3 — OPERATIONAL CACHE
 | Financial Initialization Engine (Opening Balance) | ✅ Complete (PHASE_07C) — ADR-028; enterprise wizard UI; PHASE_07D1 approved |
 | Dealer Subledger Foundation (Statement Read Engine) | ✅ Complete (PHASE_07D1) — ADR-029; read-only `getDealerStatement()` |
 | Dealer Statement UI | ✅ Complete (PHASE_07D2) — ADR-030; production `/ledger` |
+| Dealer Statement Document | ✅ Complete (PHASE_07D3) — ADR-031; printable via Document Platform |
 | Due Reports | ❌ Not built |
 | Audit Log UI | ❌ Not built |
 | User Management | ❌ Not built |
@@ -472,10 +496,10 @@ Permanent institutional knowledge files (2026-07-01):
 
 ---
 
-## Next Priorities (post PHASE_07D2)
+## Next Priorities (post PHASE_07D3)
 
 1. **PHASE_07E** — Reconciliation + backfill of pre-PHASE_07B data
-2. **Statement Document Composer** — printable / PDF / Excel from `DealerStatementDTO`
+2. **Statement Excel / Email Export** — same `DealerStatementDTO`, toolbar actions only
 3. **Bulk Opening Balance Import** — file parser + import UI on top of the shipped `postOpeningBalanceBatch()` engine
 4. **Reporting** — due reports, cash book, territory analytics
 5. **Analytics** — management dashboards

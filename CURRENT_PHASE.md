@@ -6,7 +6,7 @@ Current Phase:
 
 
 
-PHASE_07D2_ENTERPRISE_DEALER_STATEMENT_UI
+PHASE_07D3_ENTERPRISE_DEALER_STATEMENT_DOCUMENT_PLATFORM
 
 
 
@@ -76,6 +76,7 @@ COMPLETE
 | **PHASE_07C_ENTERPRISE_FINANCIAL_INITIALIZATION_ENGINE** | Financial Initialization Platform — Opening Balance workflow (state machine, `postOpeningBalance()`, enterprise wizard UI); reusable for future bulk import / ERP migration / company / branch / fiscal year initialization; ADR-028 | **✅ COMPLETE** |
 | **PHASE_07D1_ENTERPRISE_DEALER_SUBLEDGER_FOUNDATION** | Read-only Dealer Statement engine — `getDealerStatement()` / `getDealerStatementSummary()`; `LedgerEntry`-authoritative running balance; server actions; `/ledger/demo` dev verification; ADR-029 | **✅ COMPLETE** |
 | **PHASE_07D2_ENTERPRISE_DEALER_STATEMENT_UI** | Production Dealer Statement UI at `/ledger` — header, filters, summary cards, ledger table, integrity badge; consumes PHASE_07D1 read engine only; ADR-030 | **✅ COMPLETE** |
+| **PHASE_07D3_ENTERPRISE_DEALER_STATEMENT_DOCUMENT_PLATFORM** | Printable Dealer Statement via Document Platform — mapper, `DealerStatementPrintable`, print preview from `/ledger`; ADR-031 | **✅ COMPLETE** |
 
 
 
@@ -557,5 +558,43 @@ mutations, posting changes, or LedgerEntry modifications.
 ## Next Phase
 
 **PHASE_07E_RECONCILIATION_AND_BACKFILL** — Backfill pre-PHASE_07B data;
-scheduled reconciliation job. Document platform statement composer /
-print / PDF remain a later presentation phase.
+scheduled reconciliation job.
+
+---
+
+# PHASE_07D3_ENTERPRISE_DEALER_STATEMENT_DOCUMENT_PLATFORM
+
+Status: COMPLETE (2026-07-10)
+
+## Objectives
+
+Create printable Dealer Statements using the existing Document Platform and
+`DealerStatementDTO`. Document composition only — no financial logic,
+posting changes, or read-engine redesign.
+
+* Statement mapper — `DealerStatementDTO` → printable document payload
+* `DealerStatementPrintable` — composes shared document primitives
+* Statement table, summary, notes sections
+* Print preview modal + **Print Statement** button on `/ledger`
+* Multi-page A4 print via natural table pagination
+* EN/BN localization; presentation tests; ADR-031
+
+## Completion Criteria
+
+* Document platform reused — no duplicate CSS/layout/components: ✓
+* DTO consumed directly — no Prisma, no money math: ✓
+* Running balance verbatim from DTO: ✓
+* Preview == Print == PDF single pipeline: ✓
+* Print Statement button on `/ledger`: ✓
+* ADR-031 authored: ✓
+* Governance docs updated: ✓
+* `npx tsc --noEmit` — 0 errors: ✓
+* `npx eslint` — 0 errors: ✓
+* `npx vitest run` — 178 passed / 7 skipped: ✓
+
+## Explicitly NOT Changed
+
+* PostingService, Invoice Engine, Collection Engine, Opening Balance Engine
+* Dealer Statement read engine (`getDealerStatement()`)
+* Financial calculations, LedgerEntry, Prisma schema, permissions
+* Excel / email / CSV export (deferred)

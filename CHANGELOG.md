@@ -4,6 +4,47 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_07D3_ENTERPRISE_DEALER_STATEMENT_DOCUMENT_PLATFORM] — 2026-07-10
+
+### Purpose
+
+Create printable Dealer Statements using the existing Document Platform and
+`DealerStatementDTO`. Document composition only — no financial logic, posting
+changes, or read-engine redesign.
+
+### Added
+
+- **Statement document module** (`src/components/documents/statement/`):
+  - `DealerStatementPrintable` — composes DocumentLayout + platform primitives
+  - `statement-mapper.ts` — DTO → printable payload (formatting only)
+  - `StatementTable`, `StatementSummary`, `StatementNotes`
+  - `DealerStatementDocumentPreview` — print preview modal
+- **Print fetch helper** — `fetchDealerStatementForPrint()` merges paginated DTO pages
+- **Print Statement button** on `/ledger` — fetch DTO → preview → `window.print()`
+- **Document platform extensions** — `DocumentTable` statement variant,
+  `allowPageBreak`, row accent classes; `DOC_STATEMENT_TABLE_COLS` token
+- **EN/BN localization** — `document.statement.*` keys
+- **Presentation tests** — 7 Vitest cases (mapper, merge, accents, summary)
+- **ADR-031** — Enterprise Dealer Statement Document Platform
+
+### Architecture
+
+- Single pipeline: `DealerStatementDTO` → mapper → Document Platform → print
+- Running balance and totals rendered verbatim — never recalculated in React
+- Preview = Print = PDF via vector HTML/CSS only
+
+### Verification
+
+- `npx tsc --noEmit` — 0 errors
+- `npx eslint` — 0 errors
+- `npx vitest run` — 178 passed / 7 skipped (7 new presentation tests)
+
+### Next
+
+**PHASE_07E — Reconciliation & Backfill**
+
+---
+
 ## [PHASE_07D2_ENTERPRISE_DEALER_STATEMENT_UI] — 2026-07-09
 
 ### Purpose

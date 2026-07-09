@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 
+import { DealerStatementDocumentPreview } from "@/components/documents/statement/dealer-statement-document-preview";
 import { DealerStatementAlert } from "@/components/ledger/dealer-statement-alert";
 import { DealerStatementEmptyState } from "@/components/ledger/dealer-statement-empty-state";
 import { DealerStatementFilters } from "@/components/ledger/dealer-statement-filters";
@@ -17,6 +18,7 @@ import {
   type StatementQuickFilter,
 } from "@/components/ledger/statement-row-styles";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { fetchDealerStatementForPrint } from "@/lib/documents/fetch-dealer-statement-for-print";
 import { getDealerStatement } from "@/lib/actions/ledger-statement/get-dealer-statement";
 import type { DealerDTO } from "@/types/dealer";
 import type { DealerStatementDTO } from "@/types/ledger-statement";
@@ -45,6 +47,10 @@ export function DealerStatementView() {
   const [statement, setStatement] = useState<DealerStatementDTO | null>(null);
   const [status, setStatus] = useState<FetchStatus>("idle");
   const [errorKey, setErrorKey] = useState<string | null>(null);
+
+  const [printStatement, setPrintStatement] = useState<DealerStatementDTO | null>(null);
+  const [printPreviewOpen, setPrintPreviewOpen] = useState(false);
+  const [printLoading, setPrintLoading] = useState(false);
 
   // Only date filters affect the read engine today. Posting type / reference /
   // search are future-ready UI controls and must not drive empty-state copy.
@@ -163,6 +169,46 @@ export function DealerStatementView() {
     setReloadToken((token) => token + 1);
   };
 
+  const handlePrintStatement = async () => {
+    if (!dealer?.dealerCode) {
+      return;
+    }
+
+    setPrintLoading(true);
+    setErrorKey(null);
+
+    try {
+      const payload = buildDealerStatementQueryPayload({
+        dealerCode: dealer.dealerCode,
+        fromDate,
+        toDate,
+        postingType,
+        referenceType,
+        search,
+        page: 1,
+        pageSize: STATEMENT_PAGE_SIZE,
+      });
+
+      const result = await fetchDealerStatementForPrint(payload);
+      if (!result.success) {
+        setErrorKey(
+          mapLedgerStatementErrorKey(
+            result.error.code,
+            result.error.messageKey,
+          ),
+        );
+        return;
+      }
+
+      setPrintStatement(result.data);
+      setPrintPreviewOpen(true);
+    } catch {
+      setErrorKey("ledgerStatement.error.generic");
+    } finally {
+      setPrintLoading(false);
+    }
+  };
+
   const isInitialLoading = status === "loading" && !statement;
   const isRefreshing = status === "loading" && Boolean(statement);
 
@@ -186,6 +232,8 @@ export function DealerStatementView() {
         onQuickFilterChange={setQuickFilter}
         onClear={handleClear}
         onRefresh={handleRefresh}
+        onPrint={handlePrintStatement}
+        printLoading={printLoading}
       />
 
       {status === "error" && errorKey && (
@@ -219,6 +267,14 @@ export function DealerStatementView() {
             </p>
           )}
         </>
+      )}
+
+      {printStatement && (
+        <DealerStatementDocumentPreview
+          statement={printStatement}
+          open={printPreviewOpen}
+          onClose={() => setPrintPreviewOpen(false)}
+        />
       )}
     </div>
   );

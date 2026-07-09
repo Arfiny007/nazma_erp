@@ -28,6 +28,7 @@ interface DealerStatementFiltersProps {
   search: string;
   quickFilter: StatementQuickFilter;
   filtersActive: boolean;
+  printLoading?: boolean;
   onDealerChange: (dealer: DealerDTO | null) => void;
   onFromDateChange: (value: string) => void;
   onToDateChange: (value: string) => void;
@@ -37,6 +38,7 @@ interface DealerStatementFiltersProps {
   onQuickFilterChange: (value: StatementQuickFilter) => void;
   onClear: () => void;
   onRefresh: () => void;
+  onPrint?: () => void;
 }
 
 export function DealerStatementFilters({
@@ -48,6 +50,7 @@ export function DealerStatementFilters({
   search,
   quickFilter,
   filtersActive,
+  printLoading = false,
   onDealerChange,
   onFromDateChange,
   onToDateChange,
@@ -57,6 +60,7 @@ export function DealerStatementFilters({
   onQuickFilterChange,
   onClear,
   onRefresh,
+  onPrint,
 }: DealerStatementFiltersProps) {
   const { t } = useLanguage();
 
@@ -219,6 +223,19 @@ export function DealerStatementFilters({
         >
           {t("ledgerStatement.filters.refresh")}
         </button>
+
+        {onPrint ? (
+          <button
+            type="button"
+            onClick={onPrint}
+            disabled={!dealer || printLoading}
+            className="rounded-lg border border-slate-300 bg-white px-3.5 py-2 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-slate-600 dark:bg-slate-900 dark:text-slate-200 dark:hover:bg-slate-800"
+          >
+            {printLoading
+              ? t("common.loading")
+              : t("document.statement.printStatement")}
+          </button>
+        ) : null}
       </div>
 
       {filtersActive && (

@@ -15,8 +15,12 @@ interface DocumentTableProps<T> {
   rows: T[];
   caption: string;
   /** Applies product-row styling for invoice line tables. */
-  variant?: "product" | "standard";
+  variant?: "product" | "standard" | "statement";
   rowKey: (row: T, index: number) => string;
+  /** Optional per-row class for presentation accents (e.g. statement posting types). */
+  getRowClassName?: (row: T, index: number) => string | undefined;
+  /** When true, the table may break across printed pages (long statements). */
+  allowPageBreak?: boolean;
 }
 
 function alignClass(align: DocumentTableAlign = "left"): string {
@@ -37,12 +41,22 @@ export function DocumentTable<T>({
   caption,
   variant = "standard",
   rowKey,
+  getRowClassName,
+  allowPageBreak = false,
 }: DocumentTableProps<T>) {
   const tableClass =
-    variant === "product" ? "doc-table doc-product-table" : "doc-table doc-data-table";
+    variant === "product"
+      ? "doc-table doc-product-table"
+      : variant === "statement"
+        ? "doc-table doc-statement-table"
+        : "doc-table doc-data-table";
+
+  const sectionClass = allowPageBreak
+    ? "mb-2 flex-1"
+    : "document-avoid-break mb-2 flex-1";
 
   return (
-    <section className="document-avoid-break mb-2 flex-1">
+    <section className={sectionClass}>
       <table className={tableClass} aria-label={caption}>
         <thead>
           <tr className="doc-blue-bar">
@@ -59,7 +73,10 @@ export function DocumentTable<T>({
         </thead>
         <tbody>
           {rows.map((row, index) => (
-            <tr key={rowKey(row, index)}>
+            <tr
+              key={rowKey(row, index)}
+              className={getRowClassName?.(row, index) ?? undefined}
+            >
               {columns.map((column) => (
                 <td
                   key={column.key}

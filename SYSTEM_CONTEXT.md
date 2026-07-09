@@ -4,9 +4,9 @@ Definitive engineering context for AI sessions and new maintainers.
 
 Read this document first. Then consult `PROJECT_BRAIN.md`, `CURRENT_PHASE.md`, and relevant ADRs.
 
-**Last updated:** 2026-07-09 (PHASE_07D2 — Enterprise Dealer Statement UI)  
-**Current phase:** PHASE_07D2 complete → Next: PHASE_07E Reconciliation & Backfill  
-**Production readiness:** 9.1 / 10 (ADR-027, ADR-028, ADR-029, ADR-030)
+**Last updated:** 2026-07-10 (PHASE_07D3 — Enterprise Dealer Statement Document Platform)  
+**Current phase:** PHASE_07D3 complete → Next: PHASE_07E Reconciliation & Backfill  
+**Production readiness:** 9.1 / 10 (ADR-027, ADR-028, ADR-029, ADR-030, ADR-031)
 
 ---
 
@@ -131,6 +131,7 @@ See ADR-011 for fulfillment architecture.
 | Financial Initialization Engine (Opening Balance) | ✅ Complete (PHASE_07C) — state machine, `postOpeningBalance()`, enterprise wizard; ADR-028 | `src/lib/finance/initialization/`, `/opening-balances` |
 | Dealer Subledger Foundation (Statement Read Engine) | ✅ Complete (PHASE_07D1) — read-only `getDealerStatement()`; ADR-029 | `src/lib/ledger/statement/` |
 | Dealer Statement UI | ✅ Complete (PHASE_07D2) — production `/ledger`; ADR-030 | `src/components/ledger/`, `/ledger` |
+| Dealer Statement Document | ✅ Complete (PHASE_07D3) — printable via Document Platform; ADR-031 | `src/components/documents/statement/` |
 | Due Reports | ❌ Not built | — |
 | Audit Log UI | ❌ Not built | — |
 | User Management | ❌ Not built | — |
@@ -151,6 +152,7 @@ See ADR-011 for fulfillment architecture.
 |----------|-----------|-------|
 | Invoice | `InvoicePrintable` | `/invoices/[id]/print` |
 | Money Receipt | `MoneyReceiptPrintable` | `/collections/[id]/receipt` |
+| Dealer Statement | `DealerStatementPrintable` | `/ledger` (print preview modal) |
 
 ### Pipeline
 
@@ -191,9 +193,11 @@ See ADR-017, ADR-023.
 
 **PHASE_07D1 (shipped):** `src/lib/ledger/statement/` — read-only Dealer Statement engine. `getDealerStatement()` / `getDealerStatementSummary()` project paginated rows from `LedgerEntry`; running balance copied verbatim from `LedgerEntry.balance`; ledger integrity validated via `validateDealerLedgerChain()`; server actions at `src/lib/actions/ledger-statement/`. No PDF, reports, exports, or ledger writes.
 
-**PHASE_07D2 (shipped):** Production Dealer Statement UI at `/ledger` — header, filters, summary cards, ledger table, integrity badge. Consumes `getDealerStatement()` only; no money math in React. ADR-030. Print/PDF/Excel deferred.
+**PHASE_07D2 (shipped):** Production Dealer Statement UI at `/ledger` — header, filters, summary cards, ledger table, integrity badge. Consumes `getDealerStatement()` only; no money math in React. ADR-030.
 
-**Future (PHASE_07E+):** Reconciliation job + backfill; statement document composer; PHASE_07F Chart of Accounts (optional).
+**PHASE_07D3 (shipped):** Printable Dealer Statement via Document Platform — `DealerStatementPrintable`, statement mapper, print preview from `/ledger`. Preview = Print = PDF. ADR-031. Excel/email export deferred.
+
+**Future (PHASE_07E+):** Reconciliation job + backfill; Excel/email statement export; PHASE_07F Chart of Accounts (optional).
 
 ---
 
@@ -399,6 +403,7 @@ postOpeningBalanceRecord()  [PHASE_07C]
 | PHASE_07C | Enterprise Financial Initialization Engine — Opening Balance (ADR-028) |
 | PHASE_07D1 | Enterprise Dealer Subledger Foundation — read-only statement engine (ADR-029) |
 | PHASE_07D2 | Enterprise Dealer Statement UI — production `/ledger` (ADR-030) |
+| PHASE_07D3 | Enterprise Dealer Statement Document Platform — printable via Document Platform (ADR-031) |
 
 ---
 
@@ -407,7 +412,8 @@ postOpeningBalanceRecord()  [PHASE_07C]
 | Phase | Description |
 |-------|-------------|
 | Invoice PDF Patch | Layout polish from client feedback (document platform only) |
-| Statement Document Composer | Printable / PDF / Excel from `DealerStatementDTO` |
+| Statement Document Composer | ~~Printable / PDF from `DealerStatementDTO`~~ ✅ PHASE_07D3 |
+| Statement Excel / Email | Excel export / email delivery from same DTO |
 | PHASE_07E | Reconciliation & backfill |
 | PHASE_07F | Chart of Accounts foundation (optional) |
 | PHASE_08 | Due reports |
@@ -463,11 +469,11 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 
 **Suitable for controlled production:** Order → Challan → Invoice → Collection → Money Receipt → Opening Balance pipeline.
 
-**Not yet production-ready:** Statement PDF/Excel/print composer, due reports, credit notes, dashboards, statutory financial statements, bulk opening balance import UI.
+**Not yet production-ready:** Statement Excel/email export, due reports, credit notes, dashboards, statutory financial statements, bulk opening balance import UI.
 
-**Blocking defects:** None for Order → Invoice → Collection → Ledger posting → Opening Balance → Dealer Statement read + production UI pipeline as of PHASE_07D2.
+**Blocking defects:** None for Order → Invoice → Collection → Ledger posting → Opening Balance → Dealer Statement read + UI + printable document pipeline as of PHASE_07D3.
 
-**PHASE_07E (Reconciliation & Backfill):** NEXT per ADR-030.
+**PHASE_07E (Reconciliation & Backfill):** NEXT per ADR-031.
 
 ---
 
@@ -489,6 +495,8 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 | Dealer statement read engine | `src/lib/ledger/statement/` — `getDealerStatement()` |
 | Dealer statement actions | `src/lib/actions/ledger-statement/` |
 | Dealer statement UI | `src/components/ledger/`, `/ledger` |
+| Dealer statement document | `src/components/documents/statement/` |
+| Statement print fetch | `src/lib/documents/fetch-dealer-statement-for-print.ts` |
 | Permissions | `src/lib/permissions.ts` |
 | RBAC guards | `src/lib/rbac/guards.ts` |
 | Schema | `prisma/schema.prisma` |
@@ -502,7 +510,7 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 | Bulk opening balance import / ERP migration | `postOpeningBalanceBatch()` + `OpeningBalanceSource.CsvImport/ExcelImport/ErpMigration` — shipped PHASE_07C, needs only a file parser + import UI |
 | Company / Branch / Fiscal Year Initialization | New orchestration module beside `opening-balance-service.ts`, same core-engine idiom |
 | Credit notes | `FinancialReferenceType.CreditNote` + `postCreditNote()` |
-| Dealer statement | `getDealerStatement()` read engine (PHASE_07D1) + production UI `/ledger` (PHASE_07D2); document platform composer later |
+| Dealer statement | `getDealerStatement()` read engine (PHASE_07D1) + production UI `/ledger` (PHASE_07D2) + printable document (PHASE_07D3) |
 | Challan PDF | `DocumentLayout` + challan sections (ADR-023) |
 | Company settings | Override `getCompanyBranding()` |
 | Multi-company | Tenant isolation on top of clean module boundaries |
@@ -531,6 +539,7 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 | ADR-028 | Enterprise Financial Initialization Engine (PHASE_07C) |
 | ADR-029 | Enterprise Dealer Subledger Foundation (PHASE_07D1) |
 | ADR-030 | Enterprise Dealer Statement UI (PHASE_07D2) |
+| ADR-031 | Enterprise Dealer Statement Document Platform (PHASE_07D3) |
 
 ---
 
