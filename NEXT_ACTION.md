@@ -2,24 +2,20 @@
 
 ## Current State
 
-PHASE_07D1_ENTERPRISE_DEALER_SUBLEDGER_FOUNDATION is **complete**
-(2026-07-09):
+PHASE_07D2_ENTERPRISE_DEALER_STATEMENT_UI is **complete** (2026-07-09):
 
-- Read-only Dealer Statement engine shipped at `src/lib/ledger/statement/`
-- `getDealerStatement()` / `getDealerStatementSummary()` — single source for
-  all future statement consumers (UI, PDF, Excel, Email, Reports)
-- Running balance copied verbatim from `LedgerEntry.balance` — never
-  recomputed; `LedgerEntry` is the sole authoritative row source
-- Server actions at `src/lib/actions/ledger-statement/` with `ledger:view`
-  RBAC and transport-safe DTOs
-- Dev verification page at `/ledger/demo` (not production UI)
-- 19 new unit tests; ADR-029 authored
-- **PHASE_07D2 (Production Ledger UI + Statement Composer) APPROVED**
+- Production Dealer Statement at `/ledger` — dense enterprise ERP layout
+- Consumes `getDealerStatement()` only — no duplicated query or money math
+- Header, filters, summary cards, ledger table, integrity badge, pagination
+- Future-ready posting type / reference type / text search controls
+- `/ledger/demo` removed (obsolete)
+- 13 presentation tests; ADR-030 authored
+- Full suite: **171 passed / 7 skipped**
 
-PHASE_07C and PHASE_07B.5 remain complete. Financial architecture
-certification score: **9.1 / 10**.
+PHASE_07D1 read engine, PHASE_07C Opening Balance, and PHASE_07B.5
+certification remain complete. Financial architecture score: **9.1 / 10**.
 
-**Not yet built:** Production Ledger UI, statement PDF/Excel, reconciliation
+**Not yet built:** Statement PDF/Excel/print composer, reconciliation
 scheduled job, backfill of pre-PHASE_07B data, credit notes, due reports,
 bulk opening balance import UI.
 
@@ -27,17 +23,9 @@ bulk opening balance import UI.
 
 ## Next Steps
 
-Roadmap after PHASE_07D1:
+Roadmap after PHASE_07D2:
 
-### 1. PHASE_07D2 — Production Ledger UI (APPROVED)
-
-- Ledger list / detail routes (`/ledger`)
-- Dealer subledger statement UI consuming `getDealerStatement()`
-- Document platform statement composer
-- Print / PDF via existing document pipeline
-- No duplicate query logic — same read service as PHASE_07D1
-
-### 2. PHASE_07E — Reconciliation & Backfill
+### 1. PHASE_07E — Reconciliation & Backfill (NEXT)
 
 - Backfill script: replay invoices + collections → ledger entries for
   existing data (idempotent via `postingKey`)
@@ -46,6 +34,12 @@ Roadmap after PHASE_07D1:
 - Tighten `assertDealerLedgerReconciled` — remove PHASE_07A
   empty-ledger short-circuit once backfill is complete
 - Optional DB-level immutability policy (TECH_DEBT C6)
+
+### 2. Statement Document Composer (presentation follow-on)
+
+- Document platform printable / PDF statement from `DealerStatementDTO`
+- Excel export / email delivery — same DTO, no second query path
+- Wire future filters into `getDealerStatementSchema` when needed
 
 ### 3. Bulk Opening Balance Import (architecture ready, UI not built)
 
@@ -103,6 +97,7 @@ Roadmap after PHASE_07D1:
   `posting-service.ts`
 - Dealer Statement reads flow through `getDealerStatement()` — called ONLY from
   server actions / future document mappers — never from posting code
+- Production UI at `/ledger` is presentation-only (ADR-030)
 - Collection allocation does not post balance and does not post ledger —
   cash + ledger posted on confirm only (by design)
 - Delivery Challan remains NON-FINANCIAL — no balance touch, no ledger row

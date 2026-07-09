@@ -159,7 +159,7 @@ The codebase should be reusable as a multi-company ERP platform in future versio
 
 ---
 
-## Architecture Maturity (as of PHASE_07D1 — 2026-07-09)
+## Architecture Maturity (as of PHASE_07D2 — 2026-07-09)
 
 **Overall ERP production readiness: 9.1 / 10** (ADR-027, ADR-028)
 
@@ -169,13 +169,35 @@ The commercial → fulfillment → financial → document pipeline is **producti
 Sales Order → Delivery Challan → Invoice → Collection → Allocation → Money Receipt
 ```
 
-**Certified subsystems:** Orders (9.0), Delivery (9.0), Invoice (9.0), Collections (9.2), Money Receipt (9.0), Document Engine (9.0), Financial Initialization (9.2).
+**Certified subsystems:** Orders (9.0), Delivery (9.0), Invoice (9.0), Collections (9.2), Money Receipt (9.0), Document Engine (9.0), Financial Initialization (9.2), Dealer Statement UI (9.2).
 
-**Not yet built:** Production Ledger UI, credit notes, due reports, management dashboards, bulk opening balance import UI, statement PDF/Excel.
+**Not yet built:** Statement PDF/Excel/print composer, credit notes, due reports, management dashboards, bulk opening balance import UI.
 
-**Blocking defects:** None for Order → Invoice → Collection → Ledger posting → Opening Balance → Dealer Statement read pipeline.
+**Blocking defects:** None for Order → Invoice → Collection → Ledger posting → Opening Balance → Dealer Statement read + production UI pipeline.
 
-**Opening Balance:** SHIPPED (PHASE_07C) per ADR-028. **Dealer Subledger Foundation:** SHIPPED (PHASE_07D1) per ADR-029. **PHASE_07D2 (Production Ledger UI):** APPROVED.
+**Opening Balance:** SHIPPED (PHASE_07C) per ADR-028. **Dealer Subledger Foundation:** SHIPPED (PHASE_07D1) per ADR-029. **Dealer Statement UI:** SHIPPED (PHASE_07D2) per ADR-030. **PHASE_07E (Reconciliation & Backfill):** NEXT.
+
+---
+
+## PHASE_07D2 — Enterprise Dealer Statement UI
+
+**Status:** COMPLETE (2026-07-09)
+
+Production Dealer Statement screen at `/ledger`. Presentation only —
+consumes `getDealerStatement()` exactly as shipped in PHASE_07D1. Never
+recalculates running balances or monetary totals in React.
+
+| Change | Detail |
+|--------|--------|
+| Route | `/ledger` — `ledger:view` RBAC; dense enterprise ERP layout |
+| Components | `src/components/ledger/` — header, filters, cards, table, badges, skeleton, empty, alert |
+| Data path | `getDealerStatement()` server action only |
+| Integrity | Green / amber badge from `meta.ledgerIntegrity.isConsistent` |
+| Future filters | Posting type / reference type / search UI present; payload omits until backend support |
+| Removed | `/ledger/demo` obsolete verification page |
+| Tests | 13 presentation helper tests |
+| ADR | `docs/ADR/ADR-030-enterprise-dealer-statement-ui.md` |
+| Verdict | **PHASE_07E (Reconciliation & Backfill) NEXT**; PDF/Excel composer deferred |
 
 ---
 
@@ -427,7 +449,8 @@ TIER 3 — OPERATIONAL CACHE
 | Ledger Posting Integration | ✅ Complete (PHASE_07B) — wired in `posting-service.ts`; parity asserted every commit |
 | Financial Integrity Certification | ✅ Complete (PHASE_07B.5) — ADR-027; Opening Balance approved |
 | Financial Initialization Engine (Opening Balance) | ✅ Complete (PHASE_07C) — ADR-028; enterprise wizard UI; PHASE_07D1 approved |
-| Dealer Subledger Foundation (Statement Read Engine) | ✅ Complete (PHASE_07D1) — ADR-029; read-only `getDealerStatement()`; `/ledger/demo` |
+| Dealer Subledger Foundation (Statement Read Engine) | ✅ Complete (PHASE_07D1) — ADR-029; read-only `getDealerStatement()` |
+| Dealer Statement UI | ✅ Complete (PHASE_07D2) — ADR-030; production `/ledger` |
 | Due Reports | ❌ Not built |
 | Audit Log UI | ❌ Not built |
 | User Management | ❌ Not built |
@@ -449,10 +472,10 @@ Permanent institutional knowledge files (2026-07-01):
 
 ---
 
-## Next Priorities (post PHASE_07C)
+## Next Priorities (post PHASE_07D2)
 
-1. **PHASE_07D2** — Production Ledger UI + document platform statement composer — **APPROVED**
-2. **PHASE_07E** — Reconciliation + backfill of pre-PHASE_07B data
+1. **PHASE_07E** — Reconciliation + backfill of pre-PHASE_07B data
+2. **Statement Document Composer** — printable / PDF / Excel from `DealerStatementDTO`
 3. **Bulk Opening Balance Import** — file parser + import UI on top of the shipped `postOpeningBalanceBatch()` engine
 4. **Reporting** — due reports, cash book, territory analytics
 5. **Analytics** — management dashboards

@@ -6,7 +6,7 @@ Current Phase:
 
 
 
-PHASE_07D1_ENTERPRISE_DEALER_SUBLEDGER_FOUNDATION
+PHASE_07D2_ENTERPRISE_DEALER_STATEMENT_UI
 
 
 
@@ -75,6 +75,7 @@ COMPLETE
 | **PHASE_07B.5_ENTERPRISE_FINANCIAL_INTEGRITY_CERTIFICATION** | Chief ERP architecture audit of full financial path; repository grep; reconciliation tests; `assertDealerLedgerReconciled` tightened; ADR-027; Opening Balance approved | **✅ COMPLETE** |
 | **PHASE_07C_ENTERPRISE_FINANCIAL_INITIALIZATION_ENGINE** | Financial Initialization Platform — Opening Balance workflow (state machine, `postOpeningBalance()`, enterprise wizard UI); reusable for future bulk import / ERP migration / company / branch / fiscal year initialization; ADR-028 | **✅ COMPLETE** |
 | **PHASE_07D1_ENTERPRISE_DEALER_SUBLEDGER_FOUNDATION** | Read-only Dealer Statement engine — `getDealerStatement()` / `getDealerStatementSummary()`; `LedgerEntry`-authoritative running balance; server actions; `/ledger/demo` dev verification; ADR-029 | **✅ COMPLETE** |
+| **PHASE_07D2_ENTERPRISE_DEALER_STATEMENT_UI** | Production Dealer Statement UI at `/ledger` — header, filters, summary cards, ledger table, integrity badge; consumes PHASE_07D1 read engine only; ADR-030 | **✅ COMPLETE** |
 
 
 
@@ -509,9 +510,52 @@ without redesign. Never mutate financial data; never call posting functions.
 
 ---
 
+---
+
+# PHASE_07D2_ENTERPRISE_DEALER_STATEMENT_UI
+
+Status: COMPLETE (2026-07-09)
+
+## Objectives
+
+Convert the PHASE_07D1 Dealer Statement engine into a production-grade
+enterprise screen. Presentation only — no accounting logic, financial
+mutations, posting changes, or LedgerEntry modifications.
+
+* Production route `/ledger` (not demo)
+* Header — dealer identity, current balance, period, ledger integrity badge
+* Filters — dealer, date range, quick presets; future-ready posting/reference/search
+* Summary cards — opening, debit, credit, closing, transaction count (DTO only)
+* Enterprise ledger table — running balance verbatim from DTO
+* Row accents, posting/reference badges, skeletons, empty states, alerts
+* EN/BN localization; accessibility; dense ERP layout
+* Remove obsolete `/ledger/demo`
+
+## Completion Criteria
+
+* UI consumes `getDealerStatement()` only: ✓
+* No duplicated business logic / no money calculations: ✓
+* Running balance untouched: ✓
+* Ledger integrity badge: ✓
+* Responsive dense ERP layout: ✓
+* `/ledger/demo` removed: ✓
+* ADR-030 authored: ✓
+* Governance docs updated: ✓
+* `npx tsc --noEmit` — 0 errors: ✓
+* `npx eslint` on new ledger UI files — 0 errors: ✓
+* `npx vitest run` — 171 passed / 7 skipped: ✓
+
+## Explicitly NOT Changed
+
+* PostingService, Invoice Engine, Collection Engine, Opening Balance Engine
+* Delivery, Order, Money Receipt, Document Platform
+* Financial calculations, LedgerEntry, Prisma schema, permissions
+* Print / PDF / Excel / exports / reports (deferred)
+
+---
+
 ## Next Phase
 
-**PHASE_07D2_PRODUCTION_LEDGER_UI** — Production Ledger list/detail routes,
-dealer subledger statement UI, document platform statement composer.
-Print/PDF via existing document pipeline. Consumes `getDealerStatement()` —
-no duplicate query logic. **Approved by ADR-029.**
+**PHASE_07E_RECONCILIATION_AND_BACKFILL** — Backfill pre-PHASE_07B data;
+scheduled reconciliation job. Document platform statement composer /
+print / PDF remain a later presentation phase.

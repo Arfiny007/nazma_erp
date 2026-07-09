@@ -4,6 +4,54 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_07D2_ENTERPRISE_DEALER_STATEMENT_UI] — 2026-07-09
+
+### Purpose
+
+Convert the PHASE_07D1 Dealer Statement read engine into a production-grade
+enterprise screen at `/ledger`. Presentation only — no accounting logic,
+financial mutations, posting changes, or LedgerEntry modifications.
+
+### Added
+
+- **Production route `/ledger`** — `enforcePermission("ledger:view")` +
+  enterprise Dealer Statement workspace
+- **UI components** (`src/components/ledger/`):
+  - Header — dealer name/code, current balance, period, integrity badge
+  - Filters — dealer combobox, date range, quick presets; future-ready
+    posting type / reference type / text search
+  - Summary cards — opening, debit, credit, closing, transaction count
+    (DTO fields only)
+  - Ledger table — Date, Posting Type, Reference No/Type, Description,
+    Debit, Credit, Running Balance, Created By
+  - Row accents, posting/reference badges, skeletons, empty states, alerts
+- **EN/BN localization** — full `ledgerStatement.*` production key set
+- **Presentation tests** — 13 Vitest cases (payload, accents, presets,
+  empty/populated/pagination/dealer-switch contracts)
+- **ADR-030** — Enterprise Dealer Statement UI
+
+### Removed
+
+- `/ledger/demo` — obsolete after production UI
+
+### Architecture
+
+- Single read path unchanged: `LedgerEntry` → statement service → DTO → UI
+- Running balance rendered verbatim from DTO — never recomputed in React
+- Future filters collected in UI but omitted from payload until backend support
+
+### Verification
+
+- `npx tsc --noEmit` — 0 errors
+- `npx eslint` on new ledger UI files — 0 errors
+- `npx vitest run` — 171 passed / 7 skipped (13 new presentation tests)
+
+### Next
+
+**PHASE_07E — Reconciliation & Backfill**; statement PDF/Excel composer later
+
+---
+
 ## [PHASE_07D1_ENTERPRISE_DEALER_SUBLEDGER_FOUNDATION] — 2026-07-09
 
 ### Purpose
