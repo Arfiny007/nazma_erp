@@ -6,7 +6,7 @@ Current Phase:
 
 
 
-PHASE_07C_ENTERPRISE_FINANCIAL_INITIALIZATION_ENGINE
+PHASE_07D1_ENTERPRISE_DEALER_SUBLEDGER_FOUNDATION
 
 
 
@@ -74,6 +74,7 @@ COMPLETE
 | **PHASE_07B_LEDGER_POSTING_INTEGRATION** | `createLedgerEntry` wired into `postReceivableIncrease` / `postReceivableDecrease` / `postReceivableDecreaseReversal`; `LedgerEntry.balance == Dealer.currentBalance` asserted every commit; append-only; compensating reversal; concurrency + idempotency tests | **✅ COMPLETE** |
 | **PHASE_07B.5_ENTERPRISE_FINANCIAL_INTEGRITY_CERTIFICATION** | Chief ERP architecture audit of full financial path; repository grep; reconciliation tests; `assertDealerLedgerReconciled` tightened; ADR-027; Opening Balance approved | **✅ COMPLETE** |
 | **PHASE_07C_ENTERPRISE_FINANCIAL_INITIALIZATION_ENGINE** | Financial Initialization Platform — Opening Balance workflow (state machine, `postOpeningBalance()`, enterprise wizard UI); reusable for future bulk import / ERP migration / company / branch / fiscal year initialization; ADR-028 | **✅ COMPLETE** |
+| **PHASE_07D1_ENTERPRISE_DEALER_SUBLEDGER_FOUNDATION** | Read-only Dealer Statement engine — `getDealerStatement()` / `getDealerStatementSummary()`; `LedgerEntry`-authoritative running balance; server actions; `/ledger/demo` dev verification; ADR-029 | **✅ COMPLETE** |
 
 
 
@@ -464,9 +465,53 @@ Initialization, and Fiscal Year Initialization workflows.
 
 ---
 
+# PHASE_07D1_ENTERPRISE_DEALER_SUBLEDGER_FOUNDATION
+
+Status: COMPLETE (2026-07-09)
+
+## Objectives
+
+Build the read-only Dealer Subledger Foundation — a reusable statement engine
+that every future UI, PDF, Excel, Email, and Reporting module consumes
+without redesign. Never mutate financial data; never call posting functions.
+
+* `src/lib/ledger/statement/` — `getDealerStatement()`, `getDealerStatementSummary()`
+* Running balance copied verbatim from `LedgerEntry.balance` — never recomputed
+* Opening Balance visible as first `LedgerEntry` when dealer is initialized
+* Ledger integrity validated read-only via `validateDealerLedgerChain()`
+* Server actions with `ledger:view` RBAC and transport-safe DTOs
+* Lightweight dev verification page at `/ledger/demo`
+* Unit tests for all required scenarios
+
+## Completion Criteria
+
+* Read-only architecture — no writes in statement module: ✓
+* No balance mutation / no `LedgerEntry` creation: ✓
+* Running balance from `LedgerEntry.balance`: ✓
+* Opening Balance row visible when initialized: ✓
+* Invoice + Collection row mapping from ledger: ✓
+* Date filtering + pagination + totals: ✓
+* Empty ledger / future dealer handled gracefully: ✓
+* Server actions `getDealerStatement` + `getDealerStatementSummary`: ✓
+* `/ledger/demo` dev verification page: ✓
+* ADR-029 authored: ✓
+* Governance docs updated: ✓
+* `npx tsc --noEmit` — 0 errors: ✓
+* `npx eslint .` — 0 errors: ✓
+* `npx vitest run` — 158 passed / 7 skipped: ✓
+
+## Explicitly NOT Changed
+
+* Invoice Engine, Collection Engine, PostingService, Delivery, Order
+* Document Platform (production statement composer deferred to PHASE_07D2)
+* RBAC matrix (`permissions.ts`)
+* Reconciliation jobs, PDF, Excel, exports, dashboards, reports
+
+---
+
 ## Next Phase
 
-**PHASE_07D_DEALER_SUBLEDGER_STATEMENT_ENGINE** — Ledger list/detail routes,
-dealer subledger statement (hybrid: ledger balance + document lines),
-document platform statement composer. Read-only projections of `LedgerEntry`
-— no ledger writes from UI. **Approved by ADR-028.**
+**PHASE_07D2_PRODUCTION_LEDGER_UI** — Production Ledger list/detail routes,
+dealer subledger statement UI, document platform statement composer.
+Print/PDF via existing document pipeline. Consumes `getDealerStatement()` —
+no duplicate query logic. **Approved by ADR-029.**

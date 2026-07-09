@@ -159,7 +159,7 @@ The codebase should be reusable as a multi-company ERP platform in future versio
 
 ---
 
-## Architecture Maturity (as of PHASE_07C — 2026-07-09)
+## Architecture Maturity (as of PHASE_07D1 — 2026-07-09)
 
 **Overall ERP production readiness: 9.1 / 10** (ADR-027, ADR-028)
 
@@ -171,11 +171,33 @@ Sales Order → Delivery Challan → Invoice → Collection → Allocation → M
 
 **Certified subsystems:** Orders (9.0), Delivery (9.0), Invoice (9.0), Collections (9.2), Money Receipt (9.0), Document Engine (9.0), Financial Initialization (9.2).
 
-**Not yet built:** Credit notes, dealer statements, due reports, management dashboards, bulk opening balance import UI.
+**Not yet built:** Production Ledger UI, credit notes, due reports, management dashboards, bulk opening balance import UI, statement PDF/Excel.
 
-**Blocking defects:** None for Order → Invoice → Collection → Ledger posting → Opening Balance pipeline.
+**Blocking defects:** None for Order → Invoice → Collection → Ledger posting → Opening Balance → Dealer Statement read pipeline.
 
-**Opening Balance:** SHIPPED (PHASE_07C) per ADR-028. **PHASE_07D (Dealer Subledger & Statement Engine):** APPROVED.
+**Opening Balance:** SHIPPED (PHASE_07C) per ADR-028. **Dealer Subledger Foundation:** SHIPPED (PHASE_07D1) per ADR-029. **PHASE_07D2 (Production Ledger UI):** APPROVED.
+
+---
+
+## PHASE_07D1 — Enterprise Dealer Subledger Foundation
+
+**Status:** COMPLETE (2026-07-09)
+
+Read-only Dealer Statement engine — the single source every future statement
+consumer (UI, PDF, Excel, Email, Reports) must call. Never mutates financial
+data; never calls posting functions.
+
+| Change | Detail |
+|--------|--------|
+| Read engine | `src/lib/ledger/statement/` — `getDealerStatement()`, `getDealerStatementSummary()` |
+| Data source | `LedgerEntry` authoritative; `Dealer` + `OpeningBalance` metadata only |
+| Running balance | Copied verbatim from `LedgerEntry.balance` — never recomputed |
+| Integrity | `validateDealerLedgerChain()` exposed in `meta.ledgerIntegrity` |
+| Server actions | `getDealerStatement`, `getDealerStatementSummary` — `ledger:view` RBAC |
+| Dev UI | `/ledger/demo` — lightweight verification page (not production UI) |
+| Tests | 19 new unit tests (statement service + validation) |
+| ADR | `docs/ADR/ADR-029-enterprise-dealer-subledger-foundation.md` |
+| Verdict | **PHASE_07D2 (Production Ledger UI) APPROVED** |
 
 ---
 
@@ -404,7 +426,8 @@ TIER 3 — OPERATIONAL CACHE
 | Ledger Foundation | ✅ Complete (PHASE_07A) |
 | Ledger Posting Integration | ✅ Complete (PHASE_07B) — wired in `posting-service.ts`; parity asserted every commit |
 | Financial Integrity Certification | ✅ Complete (PHASE_07B.5) — ADR-027; Opening Balance approved |
-| Financial Initialization Engine (Opening Balance) | ✅ Complete (PHASE_07C) — ADR-028; enterprise wizard UI; PHASE_07D approved |
+| Financial Initialization Engine (Opening Balance) | ✅ Complete (PHASE_07C) — ADR-028; enterprise wizard UI; PHASE_07D1 approved |
+| Dealer Subledger Foundation (Statement Read Engine) | ✅ Complete (PHASE_07D1) — ADR-029; read-only `getDealerStatement()`; `/ledger/demo` |
 | Due Reports | ❌ Not built |
 | Audit Log UI | ❌ Not built |
 | User Management | ❌ Not built |
@@ -428,7 +451,7 @@ Permanent institutional knowledge files (2026-07-01):
 
 ## Next Priorities (post PHASE_07C)
 
-1. **PHASE_07D** — Ledger UI (dealer subledger statement) — **APPROVED**
+1. **PHASE_07D2** — Production Ledger UI + document platform statement composer — **APPROVED**
 2. **PHASE_07E** — Reconciliation + backfill of pre-PHASE_07B data
 3. **Bulk Opening Balance Import** — file parser + import UI on top of the shipped `postOpeningBalanceBatch()` engine
 4. **Reporting** — due reports, cash book, territory analytics

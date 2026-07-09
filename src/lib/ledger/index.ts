@@ -72,3 +72,20 @@ export {
   buildOpeningBalancePostingKey,
   buildOpeningBalancePosting,
 } from "@/lib/ledger/opening-balance";
+
+export {
+  getDealerStatement,
+  getDealerStatementSummary,
+  DealerNotFoundError,
+  DealerStatementError,
+  InvalidDateRangeError,
+  InvalidPaginationError,
+} from "@/lib/ledger/statement";
+export type {
+  DealerStatementResult,
+  DealerStatementSummaryResult,
+  GetDealerStatementParams,
+  GetDealerStatementSummaryParams,
+  StatementRow,
+  StatementTotals,
+} from "@/lib/ledger/statement";

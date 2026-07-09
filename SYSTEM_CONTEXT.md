@@ -4,9 +4,9 @@ Definitive engineering context for AI sessions and new maintainers.
 
 Read this document first. Then consult `PROJECT_BRAIN.md`, `CURRENT_PHASE.md`, and relevant ADRs.
 
-**Last updated:** 2026-07-09 (PHASE_07C — Enterprise Financial Initialization Engine)  
-**Current phase:** PHASE_07C complete → Next: PHASE_07D Ledger UI + dealer subledger statement  
-**Production readiness:** 9.1 / 10 (ADR-027, ADR-028)
+**Last updated:** 2026-07-09 (PHASE_07D1 — Enterprise Dealer Subledger Foundation)  
+**Current phase:** PHASE_07D1 complete → Next: PHASE_07D2 production Ledger UI + statement composer  
+**Production readiness:** 9.1 / 10 (ADR-027, ADR-028, ADR-029)
 
 ---
 
@@ -129,6 +129,7 @@ See ADR-011 for fulfillment architecture.
 | Ledger Posting Integration | ✅ Complete (PHASE_07B) — wired into `posting-service.ts`; no UI/reports yet | `src/lib/finance/posting-service.ts` |
 | Financial Integrity Certification | ✅ Complete (PHASE_07B.5) — repository audit; reconciliation tests; ADR-027 | `src/lib/ledger/ledger-reconciliation.ts` |
 | Financial Initialization Engine (Opening Balance) | ✅ Complete (PHASE_07C) — state machine, `postOpeningBalance()`, enterprise wizard; ADR-028 | `src/lib/finance/initialization/`, `/opening-balances` |
+| Dealer Subledger Foundation (Statement Read Engine) | ✅ Complete (PHASE_07D1) — read-only `getDealerStatement()`; `/ledger/demo` verification; ADR-029 | `src/lib/ledger/statement/`, `/ledger/demo` |
 | Due Reports | ❌ Not built | — |
 | Audit Log UI | ❌ Not built | — |
 | User Management | ❌ Not built | — |
@@ -187,7 +188,9 @@ See ADR-017, ADR-023.
 
 **PHASE_07C (shipped):** `postOpeningBalance()` added — the Financial Initialization Engine's only entry point into the posting boundary. Reuses `createLedgerEntry`, dealer row lock, cache/ledger parity, and audit; asserts `previousBalance = 0.00` before posting (opening balance is a dealer's first-ever posting). No `LedgerEntry` for zero-amount opening balances (audit + status transition only).
 
-**Future (PHASE_07E onwards):** `postCreditNote()`, `postInvoiceReversal()`, `postJournalEntry()`, `postManualAdjustment()`; reconciliation job (PHASE_07E); Chart of Accounts (PHASE_07F+).
+**PHASE_07D1 (shipped):** `src/lib/ledger/statement/` — read-only Dealer Statement engine. `getDealerStatement()` / `getDealerStatementSummary()` project paginated rows from `LedgerEntry`; running balance copied verbatim from `LedgerEntry.balance`; ledger integrity validated via `validateDealerLedgerChain()`; server actions at `src/lib/actions/ledger-statement/`; dev verification at `/ledger/demo`. No PDF, reports, exports, or ledger writes.
+
+**Future (PHASE_07D2+):** Production Ledger UI + document platform statement composer; PHASE_07E reconciliation job; PHASE_07F Chart of Accounts (optional).
 
 ---
 
@@ -391,6 +394,7 @@ postOpeningBalanceRecord()  [PHASE_07C]
 | PHASE_07B | Enterprise Ledger Posting Engine (ADR-026) |
 | PHASE_07B.5 | Enterprise Financial Integrity Certification (ADR-027) |
 | PHASE_07C | Enterprise Financial Initialization Engine — Opening Balance (ADR-028) |
+| PHASE_07D1 | Enterprise Dealer Subledger Foundation — read-only statement engine (ADR-029) |
 
 ---
 
@@ -399,7 +403,7 @@ postOpeningBalanceRecord()  [PHASE_07C]
 | Phase | Description |
 |-------|-------------|
 | Invoice PDF Patch | Layout polish from client feedback (document platform only) |
-| PHASE_07D | Ledger UI + dealer subledger statement |
+| PHASE_07D2 | Production Ledger UI + dealer subledger statement composer |
 | PHASE_07E | Reconciliation & backfill |
 | PHASE_07F | Chart of Accounts foundation (optional) |
 | PHASE_08 | Due reports |
@@ -455,11 +459,11 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 
 **Suitable for controlled production:** Order → Challan → Invoice → Collection → Money Receipt → Opening Balance pipeline.
 
-**Not yet production-ready:** Ledger UI, due reports, credit notes, dashboards, statutory financial statements, bulk opening balance import UI.
+**Not yet production-ready:** Production Ledger UI, due reports, credit notes, dashboards, statutory financial statements, bulk opening balance import UI, statement PDF/Excel.
 
-**Blocking defects:** None for Order → Invoice → Collection → Ledger posting → Opening Balance pipeline as of PHASE_07C.
+**Blocking defects:** None for Order → Invoice → Collection → Ledger posting → Opening Balance → Dealer Statement read pipeline as of PHASE_07D1.
 
-**PHASE_07D (Dealer Subledger & Statement Engine):** APPROVED to proceed per ADR-028.
+**PHASE_07D2 (Production Ledger UI + Statement Composer):** APPROVED to proceed per ADR-029.
 
 ---
 
@@ -478,6 +482,8 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 | Invoice mapper | `src/lib/documents/map-invoice-document.ts` |
 | Receipt mapper | `src/lib/documents/map-collection-receipt.ts` |
 | Print CSS | `src/components/documents/styles/document-print.css` |
+| Dealer statement read engine | `src/lib/ledger/statement/` — `getDealerStatement()` |
+| Dealer statement actions | `src/lib/actions/ledger-statement/` |
 | Permissions | `src/lib/permissions.ts` |
 | RBAC guards | `src/lib/rbac/guards.ts` |
 | Schema | `prisma/schema.prisma` |
@@ -491,7 +497,7 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 | Bulk opening balance import / ERP migration | `postOpeningBalanceBatch()` + `OpeningBalanceSource.CsvImport/ExcelImport/ErpMigration` — shipped PHASE_07C, needs only a file parser + import UI |
 | Company / Branch / Fiscal Year Initialization | New orchestration module beside `opening-balance-service.ts`, same core-engine idiom |
 | Credit notes | `FinancialReferenceType.CreditNote` + `postCreditNote()` |
-| Dealer statement | Document platform + hybrid ledger/document composer; Opening Balance is the first `LedgerEntry` row in every initialized dealer's statement |
+| Dealer statement | `getDealerStatement()` read engine + document platform composer (PHASE_07D2) |
 | Challan PDF | `DocumentLayout` + challan sections (ADR-023) |
 | Company settings | Override `getCompanyBranding()` |
 | Multi-company | Tenant isolation on top of clean module boundaries |
@@ -518,6 +524,7 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 | ADR-026 | Enterprise Ledger Posting Engine (PHASE_07B) |
 | ADR-027 | Enterprise Financial Integrity Certification (PHASE_07B.5) |
 | ADR-028 | Enterprise Financial Initialization Engine (PHASE_07C) |
+| ADR-029 | Enterprise Dealer Subledger Foundation (PHASE_07D1) |
 
 ---
 

@@ -2,42 +2,40 @@
 
 ## Current State
 
-PHASE_07C_ENTERPRISE_FINANCIAL_INITIALIZATION_ENGINE is **complete**
+PHASE_07D1_ENTERPRISE_DEALER_SUBLEDGER_FOUNDATION is **complete**
 (2026-07-09):
 
-- Financial Initialization Platform shipped — Opening Balance is its first
-  workflow; reusable for future Bulk Import / ERP Migration / Company /
-  Branch / Fiscal Year Initialization
-- Permanent state machine: `NotInitialized → Draft → Validated →
-  Posted+Locked`; `OpeningBalance` model with `dealerCode @unique`
-- `postOpeningBalance()` shipped in `posting-service.ts` — reuses
-  `createLedgerEntry`, dealer row lock, cache/ledger parity, audit; zero new
-  mutation primitives
-- Enterprise wizard UI (`/opening-balances`, `/opening-balances/new`) —
-  6-step accountant workflow, not a Dealer Edit form
-- Live-database concurrency tests found and fixed a real race condition in
-  `postOpeningBalanceRecord()` before production (ADR-028 §6.2)
-- **PHASE_07D (Dealer Subledger & Statement Engine) APPROVED**
+- Read-only Dealer Statement engine shipped at `src/lib/ledger/statement/`
+- `getDealerStatement()` / `getDealerStatementSummary()` — single source for
+  all future statement consumers (UI, PDF, Excel, Email, Reports)
+- Running balance copied verbatim from `LedgerEntry.balance` — never
+  recomputed; `LedgerEntry` is the sole authoritative row source
+- Server actions at `src/lib/actions/ledger-statement/` with `ledger:view`
+  RBAC and transport-safe DTOs
+- Dev verification page at `/ledger/demo` (not production UI)
+- 19 new unit tests; ADR-029 authored
+- **PHASE_07D2 (Production Ledger UI + Statement Composer) APPROVED**
 
-PHASE_07B.5 remains complete. Financial architecture certification score: **9.1 / 10**.
+PHASE_07C and PHASE_07B.5 remain complete. Financial architecture
+certification score: **9.1 / 10**.
 
-**Not yet built:** Ledger UI + dealer statement, reconciliation scheduled job,
-backfill of pre-PHASE_07B data, credit notes, due reports, bulk opening
-balance import UI.
+**Not yet built:** Production Ledger UI, statement PDF/Excel, reconciliation
+scheduled job, backfill of pre-PHASE_07B data, credit notes, due reports,
+bulk opening balance import UI.
 
 ---
 
 ## Next Steps
 
-Roadmap after PHASE_07C:
+Roadmap after PHASE_07D1:
 
-### 1. PHASE_07D — Ledger UI (APPROVED)
+### 1. PHASE_07D2 — Production Ledger UI (APPROVED)
 
 - Ledger list / detail routes (`/ledger`)
-- Dealer subledger statement (hybrid: ledger balance + document lines)
+- Dealer subledger statement UI consuming `getDealerStatement()`
 - Document platform statement composer
 - Print / PDF via existing document pipeline
-- Read-only projections of `LedgerEntry` — no ledger writes from UI
+- No duplicate query logic — same read service as PHASE_07D1
 
 ### 2. PHASE_07E — Reconciliation & Backfill
 
@@ -103,6 +101,8 @@ Roadmap after PHASE_07C:
 - All balance mutations continue through `posting-service.ts` only
 - All ledger writes flow through `createLedgerEntry` — called ONLY from
   `posting-service.ts`
+- Dealer Statement reads flow through `getDealerStatement()` — called ONLY from
+  server actions / future document mappers — never from posting code
 - Collection allocation does not post balance and does not post ledger —
   cash + ledger posted on confirm only (by design)
 - Delivery Challan remains NON-FINANCIAL — no balance touch, no ledger row

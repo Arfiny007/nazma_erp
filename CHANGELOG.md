@@ -4,6 +4,58 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_07D1_ENTERPRISE_DEALER_SUBLEDGER_FOUNDATION] — 2026-07-09
+
+### Purpose
+
+Build the read-only Dealer Subledger Foundation — a reusable statement engine
+that every future UI, PDF, Excel, Email, and Reporting module consumes
+without redesign. `LedgerEntry` is the sole authoritative source; running
+balances are copied verbatim from `LedgerEntry.balance` and never
+recomputed. No PDF, reports, exports, dashboards, printing, or reconciliation
+jobs in this phase.
+
+### Added
+
+- **`src/lib/ledger/statement/`** — read engine module:
+  - `getDealerStatement()` — paginated statement with opening balance for
+    range, rows, totals, pagination, and ledger integrity metadata
+  - `getDealerStatementSummary()` — compact totals + date bounds
+  - `statement-query.ts` — Prisma read queries only (`Dealer`, `LedgerEntry`,
+    `OpeningBalance`)
+  - `statement-mapper.ts` — pure `LedgerEntry` → `StatementRow` projection
+  - `statement-validation.ts` — dealer, date range, pagination guards
+  - `statement-errors.ts` — typed error hierarchy
+- **Server actions** — `getDealerStatement`, `getDealerStatementSummary`
+  (`ledger:view` RBAC; Decimal → string DTO mappers)
+- **Transport DTOs** — `src/types/ledger-statement.ts`
+- **Zod schemas** — `src/lib/validators/ledger-statement.schema.ts`
+- **Dev verification UI** — `/ledger/demo` (dealer select, date range, statement
+  table — not production UI)
+- **EN/BN localization** — `ledgerStatement.*` keys
+- **Tests** — 13 statement service tests + 6 validation tests (in-memory stub)
+- **ADR-029** — Enterprise Dealer Subledger Foundation
+
+### Architecture
+
+- Single read path: `LedgerEntry` → statement service → DTO → consumers
+- Running balance = `LedgerEntry.balance` verbatim (never recomputed)
+- Opening Balance = first `LedgerEntry` when dealer initialized (no special math)
+- Ledger integrity validated via `validateDealerLedgerChain()` in statement meta
+- Invoice/Collection NOT queried for amounts — ledger is authoritative
+
+### Verification
+
+- `npx tsc --noEmit` — 0 errors
+- `npx eslint .` — 0 errors on new files
+- `npx vitest run` — 158 passed / 7 skipped (19 new tests)
+
+### Next
+
+**PHASE_07D2 — Production Ledger UI + document platform statement composer**
+
+---
+
 ## [PHASE_07C_ENTERPRISE_FINANCIAL_INITIALIZATION_ENGINE] — 2026-07-09
 
 ### Purpose
