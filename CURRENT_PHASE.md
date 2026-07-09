@@ -6,7 +6,7 @@ Current Phase:
 
 
 
-PHASE_07E2_HISTORICAL_REPLAY_ENGINE
+PHASE_07E3_ENTERPRISE_RECONCILIATION_ENGINE
 
 
 
@@ -79,6 +79,7 @@ COMPLETE
 | **PHASE_07D3_ENTERPRISE_DEALER_STATEMENT_DOCUMENT_PLATFORM** | Printable Dealer Statement via Document Platform — mapper, `DealerStatementPrintable`, print preview from `/ledger`; ADR-031 | **✅ COMPLETE** |
 | **PHASE_07E1_HISTORICAL_LEDGER_DISCOVERY_ENGINE** | Read-only `getLedgerBackfillCandidates()` — identifies dealers requiring historical ledger reconstruction; dev page `/ledger/backfill`; ADR-032 | **✅ COMPLETE** |
 | **PHASE_07E2_HISTORICAL_REPLAY_ENGINE** | Idempotent `replayDealerLedger()` — reconstructs missing `LedgerEntry` rows via `createLedgerEntry`; server actions; dev replay controls; ADR-033 | **✅ COMPLETE** |
+| **PHASE_07E3_ENTERPRISE_RECONCILIATION_ENGINE** | Read-only `reconcileDealer()` / `reconcileAllDealers()` — drift, missing ledger, corrupted chain detection; dev page `/ledger/reconciliation`; ADR-034 | **✅ COMPLETE** |
 
 
 
@@ -559,9 +560,40 @@ mutations, posting changes, or LedgerEntry modifications.
 
 ## Next Phase
 
-**PHASE_07E3_SCHEDULED_RECONCILIATION_JOB** — Scheduled job using
-`reconcileAllDealers`, `assertDealerLedgerReconciled`. No replay logic
-duplication.
+**Statement Excel / Email Export** or **PHASE_08 Due Reports** — presentation
+and reporting follow-ons. No repair tooling.
+
+---
+
+# PHASE_07E3_ENTERPRISE_RECONCILIATION_ENGINE
+
+Status: COMPLETE (2026-07-10)
+
+## Objectives
+
+Build read-only enterprise reconciliation engine. Detect integrity problems
+without modifying financial data.
+
+* `reconcileDealer()` — per-dealer integrity verification
+* `reconcileAllDealers()` — repository-wide summary
+* Rules A/B/C — cache parity, sum parity, chain integrity
+* Server actions + dev page `/ledger/reconciliation`
+* ADR-034
+
+## Completion Criteria
+
+* Read-only — no mutations: ✓
+* `reconcileDealer()` + `reconcileAllDealers()` + `getReconciliationSummary()`: ✓
+* Status classification — CONSISTENT / DRIFT / MISSING_LEDGER / CORRUPTED_CHAIN: ✓
+* Dev page with summary cards + dealer table: ✓
+* 10 unit tests: ✓
+* ADR-034 authored: ✓
+* `npx vitest run` — 211 passed / 7 skipped: ✓
+
+## Explicitly NOT Changed
+
+* posting-service, invoice/collection/opening balance engines, backfill replay
+* statement engine, document platform, Prisma schema, permissions
 
 ---
 

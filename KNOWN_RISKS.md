@@ -27,9 +27,9 @@ Operational risk register as of PHASE_06D completion. None are blocking for cont
 | Description | Reports trusting cache without reconciliation may be wrong |
 | Impact | Incorrect balances in ad-hoc reports |
 | Likelihood | Very low (sole writer + dealer lock + `LedgerEntry.balance` parity assertion on every commit — PHASE_07B) |
-| Mitigation | Cache asserted equal to ledger on every commit; `reconcileAllDealers` + chain validation (PHASE_07B.5); historical replay (PHASE_07E2); scheduled job (PHASE_07E3) |
-| Status | **Mitigated** (parity on every commit + replay engine); **Open** for scheduled offline job |
-| Future Phase | PHASE_07E3 |
+| Mitigation | Cache asserted equal to ledger on every commit; `reconcileAllDealers` + chain validation (PHASE_07B.5); historical replay (PHASE_07E2); enterprise reconciliation engine (PHASE_07E3) |
+| Status | **Mitigated** (parity on every commit + replay + read-only reconciliation engine) |
+| Future Phase | Reconciliation dashboard / scheduled cron (optional) |
 
 ### F3. Allocation Rows Deleted on Reversal
 

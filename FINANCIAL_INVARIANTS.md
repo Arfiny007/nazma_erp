@@ -3,7 +3,7 @@
 Authoritative engineering rulebook. Every rule below is mandatory. Violation constitutes a production defect and potential accounting corruption.
 
 **Certification basis:** ADR-015, ADR-021, ADR-024, ADR-025, ADR-026, ADR-027, ADR-028  
-**Last updated:** 2026-07-10 (PHASE_07E2 — Enterprise Historical Ledger Replay Engine)
+**Last updated:** 2026-07-10 (PHASE_07E3 — Enterprise Reconciliation Engine)
 
 ---
 
@@ -340,6 +340,20 @@ Reports and statements must not trust Tier 3 alone without reconciliation to Tie
 | Parity gate | After replay, `LedgerEntry.balance` MUST equal `Dealer.currentBalance`; mismatch rolls back transaction |
 | Discovery reuse | Eligibility consumes PHASE_07E1 `classifyBackfillReason()` — no duplicate classification |
 | Forbidden | Direct SQL inserts; `posting-service.ts` calls during replay; auto-correcting cache drift |
+
+---
+
+## 23. Enterprise Reconciliation Engine Invariants (PHASE_07E3 — shipped)
+
+| Rule | Detail |
+|------|--------|
+| Read only | Reconciliation NEVER creates, updates, or deletes `LedgerEntry` or `Dealer.currentBalance` |
+| No repair | Never calls `posting-service.ts`, replay engine, or backfill mutation |
+| Rule A | `latest LedgerEntry.balance == Dealer.currentBalance` |
+| Rule B | `SUM(debit) - SUM(credit) == latest LedgerEntry.balance` |
+| Rule C | Running balance chain: `balance[i] = balance[i-1] + debit - credit` |
+| Status | `CONSISTENT`, `DRIFT`, `MISSING_LEDGER`, `CORRUPTED_CHAIN` — detection only |
+| Forbidden | Auto-correcting drift; replaying invoices; repair actions |
 
 ---
 

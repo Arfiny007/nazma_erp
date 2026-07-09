@@ -4,6 +4,24 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_07E3] — 2026-07-10 — Enterprise Reconciliation Engine
+
+### Added
+
+- `reconcileDealer()` / `reconcileAllDealers()` — read-only integrity verification
+- `getReconciliationSummary()` — full report with per-dealer rows
+- Dev page `/ledger/reconciliation` — summary cards + dealer table
+- ADR-034 — Enterprise Reconciliation Engine
+- 10 unit tests in `ledger-reconciliation.test.ts`
+
+### Architecture
+
+- Read-only — never mutates `LedgerEntry` or `Dealer.currentBalance`
+- Detects CONSISTENT, DRIFT, MISSING_LEDGER, CORRUPTED_CHAIN
+- Reuses PHASE_07A chain validation helpers
+
+---
+
 ## [PHASE_07E2] — 2026-07-10 — Enterprise Historical Ledger Replay Engine
 
 ### Added

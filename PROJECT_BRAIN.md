@@ -159,7 +159,7 @@ The codebase should be reusable as a multi-company ERP platform in future versio
 
 ---
 
-## Architecture Maturity (as of PHASE_07E2 — 2026-07-10)
+## Architecture Maturity (as of PHASE_07E3 — 2026-07-10)
 
 **Overall ERP production readiness: 9.1 / 10** (ADR-027, ADR-028, ADR-032)
 
@@ -175,9 +175,30 @@ Sales Order → Delivery Challan → Invoice → Collection → Allocation → M
 
 **Blocking defects:** None for Order → Invoice → Collection → Ledger posting → Opening Balance → Dealer Statement read + UI + printable document pipeline.
 
-**Opening Balance:** SHIPPED (PHASE_07C) per ADR-028. **Dealer Subledger Foundation:** SHIPPED (PHASE_07D1) per ADR-029. **Dealer Statement UI:** SHIPPED (PHASE_07D2) per ADR-030. **Dealer Statement Document:** SHIPPED (PHASE_07D3) per ADR-031. **Ledger Backfill Discovery:** SHIPPED (PHASE_07E1) per ADR-032. **Historical Replay Engine:** SHIPPED (PHASE_07E2) per ADR-033. **PHASE_07E3 (Scheduled Reconciliation):** NEXT.
+**Opening Balance:** SHIPPED (PHASE_07C) per ADR-028. **Dealer Subledger Foundation:** SHIPPED (PHASE_07D1) per ADR-029. **Dealer Statement UI:** SHIPPED (PHASE_07D2) per ADR-030. **Dealer Statement Document:** SHIPPED (PHASE_07D3) per ADR-031. **Ledger Backfill Discovery:** SHIPPED (PHASE_07E1) per ADR-032. **Historical Replay Engine:** SHIPPED (PHASE_07E2) per ADR-033. **Reconciliation Engine:** SHIPPED (PHASE_07E3) per ADR-034.
 
 ---
+
+---
+
+---
+
+## PHASE_07E3 — Enterprise Reconciliation Engine
+
+**Status:** COMPLETE (2026-07-10)
+
+Read-only integrity verification for every dealer subledger. Detects drift,
+missing ledger history, and corrupted chains. Never mutates financial data.
+
+| Change | Detail |
+|--------|--------|
+| Reconciliation engine | `reconcileDealer()` / `reconcileAllDealers()` in `src/lib/ledger/reconciliation/` |
+| Rules | Cache parity, sum parity, chain integrity |
+| Status | `CONSISTENT`, `DRIFT`, `MISSING_LEDGER`, `CORRUPTED_CHAIN` |
+| Server actions | `reconcileDealer`, `reconcileAllDealers`, `getReconciliationSummary` |
+| Dev UI | `/ledger/reconciliation` — summary cards + dealer table |
+| Tests | 10 unit tests |
+| ADR | `docs/ADR/ADR-034-enterprise-reconciliation-engine.md` |
 
 ---
 
@@ -518,6 +539,7 @@ TIER 3 — OPERATIONAL CACHE
 | Dealer Statement Document | ✅ Complete (PHASE_07D3) — ADR-031; printable via Document Platform |
 | Ledger Backfill Discovery | ✅ Complete (PHASE_07E1) — ADR-032; read-only `getLedgerBackfillCandidates()` |
 | Ledger Historical Replay | ✅ Complete (PHASE_07E2) — ADR-033; `replayDealerLedger()` |
+| Ledger Reconciliation Engine | ✅ Complete (PHASE_07E3) — ADR-034; read-only `reconcileDealer()` |
 | Due Reports | ❌ Not built |
 | Audit Log UI | ❌ Not built |
 | User Management | ❌ Not built |
@@ -541,8 +563,8 @@ Permanent institutional knowledge files (2026-07-01):
 
 ## Next Priorities (post PHASE_07E1)
 
-1. **PHASE_07E3** — Scheduled reconciliation job
-2. **Statement Excel / Email Export** — same `DealerStatementDTO`, toolbar actions only
+1. **Statement Excel / Email Export** — same `DealerStatementDTO`, toolbar actions only
+2. **PHASE_08** — Due reports and aging
 3. **Bulk Opening Balance Import** — file parser + import UI on top of the shipped `postOpeningBalanceBatch()` engine
 4. **Reporting** — due reports, cash book, territory analytics
 5. **Analytics** — management dashboards

@@ -2,33 +2,25 @@
 
 ## Current State
 
-PHASE_07E2_HISTORICAL_REPLAY_ENGINE is **complete** (2026-07-10):
+PHASE_07E3_ENTERPRISE_RECONCILIATION_ENGINE is **complete** (2026-07-10):
 
-- `replayDealerLedger()` reconstructs missing `LedgerEntry` rows idempotently
-- Uses `createLedgerEntry()` + `buildLedgerPostingKey()` — no posting duplication
-- Server actions: `executeLedgerBackfill`, `previewLedgerReplay`, `getReplayStatus`
-- Dev page `/ledger/backfill` extended with Replay / Preview / Status controls
-- 15 new unit tests; ADR-033 authored
-- Full suite: **201 passed / 7 skipped**
+- `reconcileDealer()` / `reconcileAllDealers()` — read-only integrity verification
+- Rules A/B/C — cache parity, sum parity, chain integrity
+- Status: `CONSISTENT`, `DRIFT`, `MISSING_LEDGER`, `CORRUPTED_CHAIN`
+- Dev page `/ledger/reconciliation` with summary cards + dealer table
+- 10 new unit tests; ADR-034 authored
+- Full suite: **211 passed / 7 skipped**
 
-PHASE_07E1 discovery, PHASE_07D3 printable statement, and prior phases remain
-complete. Financial architecture score: **9.1 / 10**.
+PHASE_07E1 discovery, PHASE_07E2 replay, and prior phases remain complete.
 
-**Not yet built:** Scheduled reconciliation job, Excel/email statement export,
-credit notes, due reports, bulk opening balance import UI.
+**Not yet built:** Reconciliation dashboard, scheduled cron job, repair tools,
+Excel/email statement export, due reports.
 
 ---
 
 ## Next Steps
 
-Roadmap after PHASE_07E2:
-
-### 1. PHASE_07E3 — Scheduled Reconciliation Job (NEXT)
-
-- Cron/scheduled job using `reconcileAllDealers`, `assertDealerLedgerReconciled`
-- Optional DB-level immutability policy (TECH_DEBT C6)
-
-### 2. Statement Excel / Email Export (presentation follow-on)
+### 1. Statement Excel / Email Export (presentation follow-on)
 
 - Excel export / email delivery — same `DealerStatementDTO`, no second query path
 
