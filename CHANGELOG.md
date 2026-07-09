@@ -4,6 +4,95 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_07C_ENTERPRISE_FINANCIAL_INITIALIZATION_ENGINE] — 2026-07-09
+
+### Purpose
+
+Build the Financial Initialization Platform, with Opening Balance as its
+first workflow — a permanent, reusable ERP platform (not a one-off CRUD
+feature) designed to also host future Bulk Opening Balance Import, ERP
+Migration, Company Initialization, Branch Initialization, and Fiscal Year
+Initialization. `PostingService` is never bypassed.
+
+### Added
+
+- **`OpeningBalance` model** — `dealerCode @unique` (every dealer
+  initialized exactly once), `OpeningBalanceStatus` (`Draft` → `Validated` →
+  `Posted` → `Locked`), `OpeningBalanceSource` (`Manual` / `CsvImport` /
+  `ExcelImport` / `ErpMigration`)
+- **`postOpeningBalance()`** — new function in `posting-service.ts`, the
+  Financial Initialization Engine's only entry point into the posting
+  boundary. Reuses `createLedgerEntry`, `lockDealerForFinancialUpdate`,
+  `assertLedgerBalanceMatchesCache`, and `AuditLog` — zero new mutation
+  primitives. Asserts `previousBalance = 0.00` before posting. Skips
+  `LedgerEntry` creation for zero-amount opening balances (audit + status
+  transition only).
+- **Producer-agnostic core engine** (`src/lib/finance/initialization/`) —
+  `createOpeningBalanceRecord`, `validateOpeningBalanceRecord`,
+  `postOpeningBalanceRecord`, `postOpeningBalanceBatch` (shipped now,
+  reserved for future bulk import — zero engine changes anticipated)
+- **Orchestration layer** (`opening-balance-service.ts`,
+  `initialization-status.ts`) — wraps the core in `prisma.$transaction`,
+  dealer existence/uniqueness checks, DTO mapping
+- **5 server actions** — `createOpeningBalanceDraft`,
+  `validateOpeningBalance`, `postOpeningBalance`, `getInitializationStatus`,
+  `listUninitializedDealers`
+- **Enterprise 6-step wizard UI** — `/opening-balances` (dealer selection) →
+  `/opening-balances/new` (Dealer Selection → Entry → Validation →
+  Confirmation → Posting → Success), with resume support for in-progress
+  drafts
+- **RBAC** — reuses `invoices:create` (Super_Admin, Accounts);
+  `permissions.ts` NOT modified
+- **EN/BN localization** — full opening balance UI key set
+- **Tests** — 11 new workflow unit tests, 31 new validation-guard unit
+  tests, 6 new `postOpeningBalance` posting-service unit tests, 2 new
+  live-database concurrency integration tests
+- **ADR-028** — Enterprise Financial Initialization Engine
+
+### Fixed
+
+- **Concurrent posting race** — `postOpeningBalanceRecord()` checked
+  `Locked` status only at function entry, before acquiring the dealer lock.
+  A losing concurrent poster could observe the winner's committed non-zero
+  balance after acquiring the lock and fail loudly with `INTERNAL_ERROR`
+  instead of replaying idempotently. Fixed by re-checking `Locked` status
+  immediately after `lockDealerForFinancialUpdate()` — same idiom as
+  `issue-invoice-transaction.ts`'s post-lock idempotent challan check. Found
+  and fixed via this phase's own live-database concurrency test before
+  reaching production.
+
+### Verification
+
+- Live end-to-end smoke test against real PostgreSQL: draft → validate →
+  post → idempotent replay → duplicate-initialization correctly rejected →
+  dealer removed from uninitialized list
+- Live concurrency integration tests: duplicate draft race (exactly one
+  survives), duplicate post race (exactly one `LedgerEntry`, idempotent
+  outcome on both callers)
+- `npx tsc --noEmit` — 0 errors
+- `npx eslint .` — 0 errors (pre-existing warnings unrelated)
+- `npx vitest run` — 141 passed / 5 skipped (pre-existing, unrelated —
+  logged as TECH_DEBT C8)
+- `npx next build` — succeeds; `/opening-balances*` compile as dynamic routes
+
+### Related Finding (logged, not fixed — outside scope)
+
+- `issue-invoice-concurrency.test.ts` and
+  `ledger-reconciliation.integration.test.ts` use `it.skipIf(!integrationReady)`
+  where `integrationReady` is set inside an async `beforeAll` — Vitest
+  evaluates the condition at describe-time, before `beforeAll` runs, so
+  these tests always skip regardless of database availability. This
+  phase's own integration test uses the correct runtime `ctx.skip()`
+  pattern. Logged as TECH_DEBT C8; pre-existing files not modified
+  (outside PHASE_07C's forbidden-files / scope boundaries).
+
+### Next
+
+**PHASE_07D — Dealer Subledger & Statement Engine** (ledger list/detail
+routes, dealer subledger statement, document platform statement composer)
+
+---
+
 ## [PHASE_07B.5_ENTERPRISE_FINANCIAL_INTEGRITY_CERTIFICATION] — 2026-07-09
 
 ### Purpose

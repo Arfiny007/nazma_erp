@@ -6,7 +6,7 @@ Current Phase:
 
 
 
-PHASE_07B.5_ENTERPRISE_FINANCIAL_INTEGRITY_CERTIFICATION
+PHASE_07C_ENTERPRISE_FINANCIAL_INITIALIZATION_ENGINE
 
 
 
@@ -73,6 +73,7 @@ COMPLETE
 | **PHASE_07A_ENTERPRISE_LEDGER_FOUNDATION** | Ledger schema hardening + strongly typed posting-key abstraction + immutable ledger service + reconciliation + opening-balance builders (foundation only — no UI, no reports, no wired posting) | **✅ COMPLETE** |
 | **PHASE_07B_LEDGER_POSTING_INTEGRATION** | `createLedgerEntry` wired into `postReceivableIncrease` / `postReceivableDecrease` / `postReceivableDecreaseReversal`; `LedgerEntry.balance == Dealer.currentBalance` asserted every commit; append-only; compensating reversal; concurrency + idempotency tests | **✅ COMPLETE** |
 | **PHASE_07B.5_ENTERPRISE_FINANCIAL_INTEGRITY_CERTIFICATION** | Chief ERP architecture audit of full financial path; repository grep; reconciliation tests; `assertDealerLedgerReconciled` tightened; ADR-027; Opening Balance approved | **✅ COMPLETE** |
+| **PHASE_07C_ENTERPRISE_FINANCIAL_INITIALIZATION_ENGINE** | Financial Initialization Platform — Opening Balance workflow (state machine, `postOpeningBalance()`, enterprise wizard UI); reusable for future bulk import / ERP migration / company / branch / fiscal year initialization; ADR-028 | **✅ COMPLETE** |
 
 
 
@@ -397,4 +398,75 @@ and Audit. No feature work.
 
 ## Next Phase (superseded header retained for history)
 
-**PHASE_07C_OPENING_BALANCE** — see above.
+**PHASE_07C_OPENING_BALANCE** — see below.
+
+---
+
+# PHASE_07C_ENTERPRISE_FINANCIAL_INITIALIZATION_ENGINE
+
+Status: COMPLETE (2026-07-09)
+
+## Objectives
+
+Build the Financial Initialization Platform, with Opening Balance as its
+first workflow. Never bypass `PostingService`. Design for reuse by future
+Bulk Opening Balance Import, ERP Migration, Company Initialization, Branch
+Initialization, and Fiscal Year Initialization workflows.
+
+* Permanent state machine: `NotInitialized → Draft → Validated →
+  Posted+Locked`
+* `OpeningBalance` model (`dealerCode @unique` — every dealer initialized
+  exactly once); `OpeningBalanceStatus` / `OpeningBalanceSource` enums
+* `postOpeningBalance()` in `posting-service.ts` — reuses `createLedgerEntry`,
+  `assertLedgerBalanceMatchesCache`, dealer row lock, and audit logging;
+  zero new mutation primitives
+* Producer-agnostic core engine (`src/lib/finance/initialization/`) —
+  `source: Manual | CsvImport | ExcelImport | ErpMigration` designed in from
+  day one; `postOpeningBalanceBatch()` shipped for future bulk import
+* Idempotency via `postingKey`; initialization lock via `dealerCode @unique`
+  + `assertDealerNotInitialized`
+* Five server actions: `createOpeningBalanceDraft`, `validateOpeningBalance`,
+  `postOpeningBalance`, `getInitializationStatus`, `listUninitializedDealers`
+* Enterprise wizard UI (`/opening-balances`, `/opening-balances/new`) — Dealer
+  Selection → Entry → Validation → Confirmation → Posting → Success
+* Live-database concurrency tests found and fixed a real race condition in
+  `postOpeningBalanceRecord()` (see ADR-028 §6.2) before production
+
+## Completion Criteria
+
+* `OpeningBalance` model + enums + migration: ✓
+* `postOpeningBalance()` posts exactly one `LedgerEntry` (or none for
+  amount = 0): ✓
+* `PostingService` remains sole mutation boundary: ✓
+* `Dealer.currentBalance` matches Ledger on every commit: ✓
+* Initialization occurs only once (app + DB level, proven under
+  concurrency): ✓
+* PostingKey prevents duplicates (proven under concurrency): ✓
+* Draft / Validation never touch balance or ledger: ✓
+* Audit created on every post, including zero-amount: ✓
+* Enterprise wizard UI — 6-step accountant workflow: ✓
+* RBAC reuses `invoices:create` (no `permissions.ts` change): ✓
+* EN/BN localization: ✓
+* `npx tsc --noEmit` — 0 errors: ✓
+* `npx eslint .` — 0 errors: ✓
+* `npx vitest run` — 141 passed / 5 skipped (pre-existing, unrelated): ✓
+* `npx next build` — succeeds; `/opening-balances*` routes compile: ✓
+* Live end-to-end smoke test against real PostgreSQL: ✓
+* ADR-028 authored: ✓
+* Governance docs updated: ✓
+
+## Explicitly NOT Changed
+
+* Invoice Engine, Collection Engine, Order Engine, Delivery Engine
+* `posting-service.ts`'s three existing functions (byte-for-byte unchanged)
+* `src/lib/ledger/` posting/validation functions
+* Document Platform, RBAC matrix (`permissions.ts`), Reporting, Dashboard
+
+---
+
+## Next Phase
+
+**PHASE_07D_DEALER_SUBLEDGER_STATEMENT_ENGINE** — Ledger list/detail routes,
+dealer subledger statement (hybrid: ledger balance + document lines),
+document platform statement composer. Read-only projections of `LedgerEntry`
+— no ledger writes from UI. **Approved by ADR-028.**

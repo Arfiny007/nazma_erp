@@ -3,6 +3,7 @@ import { LedgerPostingType, Prisma } from "@prisma/client";
 import {
   assertLedgerBalanceMatchesCache,
   buildLedgerPostingKey,
+  buildOpeningBalancePosting,
   createLedgerEntry,
   type LedgerPostingInput,
   type LedgerPostingResult,
@@ -10,7 +11,10 @@ import {
 import {
   DEALER_BALANCE_UPDATED_ACTION,
   DEALER_BALANCE_DECREASED_ACTION,
+  DEALER_OPENING_BALANCE_POSTED_ACTION,
   FINANCIAL_REFERENCE_COLLECTION,
+  type OpeningBalancePostingInput,
+  type OpeningBalancePostingResult,
   type ReceivableDecreasePostingInput,
   type ReceivableDecreasePostingResult,
   type ReceivablePostingInput,
@@ -45,6 +49,7 @@ import {
  */
 
 const DEALER_ENTITY_TYPE = "Dealer";
+const ZERO = new Prisma.Decimal(0);
 
 export async function postReceivableIncrease(
   input: ReceivablePostingInput,
@@ -317,7 +322,147 @@ export async function postReceivableDecreaseReversal(
   return { previousBalance, newBalance };
 }
 
-const ZERO = new Prisma.Decimal(0);
+/**
+ * Posts a dealer's Opening Balance — PHASE_07C Financial Initialization Engine.
+ *
+ * This is the ONLY function the initialization engine
+ * (`src/lib/finance/initialization/`) may call to mutate `Dealer.currentBalance`
+ * or the ledger. It never bypasses `createLedgerEntry`, exactly mirroring
+ * `postReceivableIncrease` / `postReceivableDecrease` above.
+ *
+ * Sign convention matches `Dealer.currentBalance`: positive `amount` = dealer
+ * owes company (debit), negative = advance credit (credit), zero = no-op.
+ *
+ * Zero amount is a valid opening balance (a dealer going live with nothing
+ * outstanding) but produces NO `LedgerEntry` — `buildOpeningBalancePosting`
+ * rejects zero as a no-op ledger line, so this function short-circuits the
+ * ledger write while still updating the audit trail. `previousBalance` MUST
+ * be `0.00`; this is asserted here AND inside `buildOpeningBalancePosting`.
+ *
+ * Idempotency: the derived `postingKey` (`ledger:OpeningBalance:OB-<dealerCode>:OpeningBalance`)
+ * is unique per dealer, so a retried post for the same dealer replays the
+ * existing ledger row instead of creating a duplicate (see `createLedgerEntry`).
+ *
+ * @see ADR-028, FINANCIAL_INVARIANTS.md §18
+ */
+export async function postOpeningBalance(
+  input: OpeningBalancePostingInput,
+): Promise<OpeningBalancePostingResult> {
+  const {
+    tx,
+    dealerCode,
+    amount,
+    previousBalance,
+    userId,
+    effectiveDate,
+    referenceNo,
+    openingBalanceId,
+    remarks,
+  } = input;
+
+  if (!previousBalance.equals(ZERO)) {
+    throw new RangeError(
+      `Opening balance requires previousBalance = 0.00 for ${dealerCode}, got ${previousBalance.toFixed(2)}`,
+    );
+  }
+
+  if (amount.equals(ZERO)) {
+    const auditPayload: Prisma.JsonObject = {
+      openingBalanceId,
+      referenceNo,
+      amount: "0.00",
+      previousBalance: "0.00",
+      newBalance: "0.00",
+      ledgerEntryCreated: "false",
+      ...(input.metadata ?? {}),
+    };
+
+    await tx.auditLog.create({
+      data: {
+        userId,
+        entityType: DEALER_ENTITY_TYPE,
+        entityId: dealerCode,
+        action: DEALER_OPENING_BALANCE_POSTED_ACTION,
+        oldValue: { currentBalance: "0.00" },
+        newValue: auditPayload,
+      },
+    });
+
+    return {
+      previousBalance: ZERO,
+      newBalance: ZERO,
+      ledgerEntryId: null,
+      ledgerPostingKey: null,
+    };
+  }
+
+  const isIncrease = amount.greaterThan(ZERO);
+  const updated = await tx.dealer.update({
+    where: { dealerCode },
+    data: isIncrease
+      ? { currentBalance: { increment: amount } }
+      : { currentBalance: { decrement: amount.abs() } },
+    select: { currentBalance: true },
+  });
+
+  const newBalance = updated.currentBalance;
+  const expectedNew = previousBalance.plus(amount);
+
+  if (!newBalance.equals(expectedNew)) {
+    throw new Error(
+      `Dealer balance opening-balance mismatch for ${dealerCode}: expected ${expectedNew.toFixed(2)}, got ${newBalance.toFixed(2)}`,
+    );
+  }
+
+  const ledgerEntry = await createLedgerEntry(
+    buildOpeningBalancePosting({
+      tx,
+      previousBalance,
+      input: {
+        dealerCode,
+        amount,
+        effectiveDate,
+        referenceNo,
+        createdById: userId,
+        remarks: remarks ?? null,
+      },
+    }),
+  );
+
+  assertLedgerBalanceMatchesCache(dealerCode, ledgerEntry.balance, newBalance);
+
+  const auditPayload: Prisma.JsonObject = {
+    openingBalanceId,
+    referenceNo,
+    amount: amount.toFixed(2),
+    previousBalance: previousBalance.toFixed(2),
+    newBalance: newBalance.toFixed(2),
+    ledgerEntryCreated: "true",
+    ledgerEntryId: ledgerEntry.id,
+    ledgerPostingKey: ledgerEntry.postingKey,
+    ledgerPostingType: ledgerEntry.postingType,
+    ledgerIsNew: String(ledgerEntry.isNew),
+    ...(input.metadata ?? {}),
+  };
+
+  await tx.auditLog.create({
+    data: {
+      userId,
+      entityType: DEALER_ENTITY_TYPE,
+      entityId: dealerCode,
+      action: DEALER_OPENING_BALANCE_POSTED_ACTION,
+      oldValue: { currentBalance: previousBalance.toFixed(2) },
+      newValue: auditPayload,
+    },
+  });
+
+  return {
+    previousBalance,
+    newBalance,
+    ledgerEntryId: ledgerEntry.id,
+    ledgerPostingKey: ledgerEntry.postingKey,
+  };
+}
 
 /**
  * Build the `LedgerPostingInput` for a receivable-increase (invoice issue,

@@ -159,9 +159,9 @@ The codebase should be reusable as a multi-company ERP platform in future versio
 
 ---
 
-## Architecture Maturity (as of PHASE_07B.5 — 2026-07-09)
+## Architecture Maturity (as of PHASE_07C — 2026-07-09)
 
-**Overall ERP production readiness: 9.1 / 10** (ADR-027)
+**Overall ERP production readiness: 9.1 / 10** (ADR-027, ADR-028)
 
 The commercial → fulfillment → financial → document pipeline is **production-certified** for controlled deployment:
 
@@ -169,13 +169,37 @@ The commercial → fulfillment → financial → document pipeline is **producti
 Sales Order → Delivery Challan → Invoice → Collection → Allocation → Money Receipt
 ```
 
-**Certified subsystems:** Orders (9.0), Delivery (9.0), Invoice (9.0), Collections (9.2), Money Receipt (9.0), Document Engine (9.0).
+**Certified subsystems:** Orders (9.0), Delivery (9.0), Invoice (9.0), Collections (9.2), Money Receipt (9.0), Document Engine (9.0), Financial Initialization (9.2).
 
-**Not yet built:** Opening balance implementation, credit notes, dealer statements, due reports, management dashboards.
+**Not yet built:** Credit notes, dealer statements, due reports, management dashboards, bulk opening balance import UI.
 
-**Blocking defects:** None for Order → Invoice → Collection → Ledger posting pipeline.
+**Blocking defects:** None for Order → Invoice → Collection → Ledger posting → Opening Balance pipeline.
 
-**Opening Balance:** APPROVED (PHASE_07C) per ADR-027.
+**Opening Balance:** SHIPPED (PHASE_07C) per ADR-028. **PHASE_07D (Dealer Subledger & Statement Engine):** APPROVED.
+
+---
+
+## PHASE_07C — Enterprise Financial Initialization Engine
+
+**Status:** COMPLETE (2026-07-09)
+
+Financial Initialization Platform — Opening Balance is its first workflow,
+designed for reuse by future Bulk Opening Balance Import, ERP Migration,
+Company Initialization, Branch Initialization, and Fiscal Year
+Initialization. `PostingService` is never bypassed.
+
+| Change | Detail |
+|--------|--------|
+| State machine | `NotInitialized → Draft → Validated → Posted+Locked`; `OpeningBalance` model, `dealerCode @unique` (every dealer initialized exactly once) |
+| `postOpeningBalance()` | New function in `posting-service.ts` — reuses `createLedgerEntry`, dealer row lock, cache/ledger parity, audit; zero new mutation primitives |
+| Producer-agnostic core | `src/lib/finance/initialization/` — `source: Manual \| CsvImport \| ExcelImport \| ErpMigration`; `postOpeningBalanceBatch()` shipped for future bulk import |
+| Server actions | `createOpeningBalanceDraft`, `validateOpeningBalance`, `postOpeningBalance`, `getInitializationStatus`, `listUninitializedDealers` |
+| Enterprise wizard | `/opening-balances` → `/opening-balances/new` — Dealer Selection → Entry → Validation → Confirmation → Posting → Success |
+| RBAC | Reuses `invoices:create` (Super_Admin, Accounts) — `permissions.ts` unmodified |
+| Concurrency defect found + fixed | Losing concurrent poster now re-checks `Locked` status AFTER acquiring the dealer lock (same idiom as `issue-invoice-transaction.ts`) — closes a real race proven live before the fix and proven fixed after |
+| Tests | 44 new unit tests + 2 live-database concurrency integration tests (actually execute — see TECH_DEBT C8) |
+| ADR | `docs/ADR/ADR-028-enterprise-financial-initialization-engine.md` |
+| Verdict | **PHASE_07D (Dealer Subledger & Statement Engine) APPROVED** |
 
 ---
 
@@ -258,12 +282,13 @@ See ADR-023.
 | `postReceivableIncrease()` | Invoice issue | Dealer balance ↑ + LedgerEntry (Issue, Debit) + parity assertion + audit |
 | `postReceivableDecrease()` | Collection confirm | Dealer balance ↓ + LedgerEntry (Collection, Credit) + parity assertion + audit |
 | `postReceivableDecreaseReversal()` | Collection reverse | Dealer balance ↑ + LedgerEntry (Reversal, Debit, `reversesEntryId`) + parity assertion + audit |
+| `postOpeningBalance()` (PHASE_07C) | Opening balance posting | Dealer balance ± amount + LedgerEntry (OpeningBalance, Debit/Credit by sign) + parity assertion + audit; no LedgerEntry when amount = 0 |
 
 **Concurrency:** `lockDealerForFinancialUpdate()` — `SELECT … FOR UPDATE` before every financial mutation.
 
 **Idempotency:** `postingKey @unique` collapses P2002 replays into a no-op when the payload matches; raises `LedgerDuplicatePostingError` on drift.
 
-**Future:** `postOpeningBalance()` (PHASE_07C), `postCreditNote()`, `postInvoiceReversal()` — all plug into `createLedgerEntry` without redesign.
+**Future:** `postCreditNote()`, `postInvoiceReversal()`, `postJournalEntry()`, `postManualAdjustment()` — all plug into `createLedgerEntry` without redesign.
 
 See ADR-014, ADR-015, ADR-024.
 
@@ -287,7 +312,7 @@ receivedAmount = allocatedAmount + unallocatedAmount
 | Type | Handler status |
 |------|----------------|
 | `Invoice` | ✅ Implemented |
-| `OpeningBalance` | Reserved (PHASE_07C) |
+| `OpeningBalance` | ✅ Implemented (PHASE_07C) — via `postOpeningBalance()`, not allocation |
 | `CreditNote` | Reserved |
 | `DebitNote` | Reserved |
 | `ManualAdjustment` | Reserved |
@@ -340,7 +365,7 @@ TIER 3 — OPERATIONAL CACHE
 |-------|-------|
 | 07A | Ledger schema hardening (`postingKey`, enum alignment) |
 | 07B | Ledger posting in `posting-service.ts` |
-| 07C | Opening balance |
+| 07C | Opening balance — ✅ COMPLETE (ADR-028) |
 | 07D | Ledger UI + dealer subledger statement |
 | 07E | Reconciliation & backfill |
 | 07F | Chart of Accounts foundation (optional) |
@@ -379,6 +404,7 @@ TIER 3 — OPERATIONAL CACHE
 | Ledger Foundation | ✅ Complete (PHASE_07A) |
 | Ledger Posting Integration | ✅ Complete (PHASE_07B) — wired in `posting-service.ts`; parity asserted every commit |
 | Financial Integrity Certification | ✅ Complete (PHASE_07B.5) — ADR-027; Opening Balance approved |
+| Financial Initialization Engine (Opening Balance) | ✅ Complete (PHASE_07C) — ADR-028; enterprise wizard UI; PHASE_07D approved |
 | Due Reports | ❌ Not built |
 | Audit Log UI | ❌ Not built |
 | User Management | ❌ Not built |
@@ -400,11 +426,11 @@ Permanent institutional knowledge files (2026-07-01):
 
 ---
 
-## Next Priorities (post PHASE_07B.5)
+## Next Priorities (post PHASE_07C)
 
-1. **PHASE_07C** — Opening balance (`postOpeningBalance()` + server action) — **APPROVED**
-2. **PHASE_07D** — Ledger UI (dealer subledger statement)
-3. **PHASE_07E** — Reconciliation + backfill of pre-PHASE_07B data
+1. **PHASE_07D** — Ledger UI (dealer subledger statement) — **APPROVED**
+2. **PHASE_07E** — Reconciliation + backfill of pre-PHASE_07B data
+3. **Bulk Opening Balance Import** — file parser + import UI on top of the shipped `postOpeningBalanceBatch()` engine
 4. **Reporting** — due reports, cash book, territory analytics
 5. **Analytics** — management dashboards
 6. **Final Production Hardening** — collection concurrency tests, DB-level ledger immutability (optional), deployment checklist

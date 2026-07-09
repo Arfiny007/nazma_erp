@@ -6,6 +6,7 @@ import {
 } from "@prisma/client";
 
 import {
+  postOpeningBalance,
   postReceivableDecrease,
   postReceivableDecreaseReversal,
   postReceivableIncrease,
@@ -660,6 +661,135 @@ describe("Concurrent posting simulation", () => {
     const runningBalances = ledger.map((row) => row.balance.toFixed(2));
     expect(runningBalances).toEqual(["100.00", "350.00", "425.00"]);
     expect(dealerFor("DLR-C")?.currentBalance.toFixed(2)).toBe("425.00");
+  });
+});
+
+describe("postOpeningBalance — PHASE_07C Financial Initialization Engine posting", () => {
+  it("posts a positive amount as a Debit OpeningBalance ledger entry", async () => {
+    const { tx, ledger, audit, dealerFor } = makeStubTx({
+      dealers: [{ dealerCode: "DLR-OB1", currentBalance: new Prisma.Decimal("0.00") }],
+    });
+
+    const result = await postOpeningBalance({
+      tx: tx as Prisma.TransactionClient,
+      dealerCode: "DLR-OB1",
+      amount: new Prisma.Decimal("5000.00"),
+      previousBalance: new Prisma.Decimal("0.00"),
+      userId: "user-1",
+      effectiveDate: new Date("2026-01-01"),
+      referenceNo: "OB-DLR-OB1",
+      openingBalanceId: "ob-1",
+    });
+
+    expect(result.newBalance.toFixed(2)).toBe("5000.00");
+    expect(result.ledgerEntryId).not.toBeNull();
+    expect(dealerFor("DLR-OB1")?.currentBalance.toFixed(2)).toBe("5000.00");
+
+    expect(ledger).toHaveLength(1);
+    expect(ledger[0].debit.toFixed(2)).toBe("5000.00");
+    expect(ledger[0].credit.toFixed(2)).toBe("0.00");
+    expect(ledger[0].postingType).toBe(LedgerPostingType.OpeningBalance);
+    expect(ledger[0].referenceType).toBe(FinancialReferenceType.OpeningBalance);
+    expect(ledger[0].postingKey).toBe(
+      buildLedgerPostingKey({
+        referenceType: FinancialReferenceType.OpeningBalance,
+        referenceId: "OB-DLR-OB1",
+        postingType: LedgerPostingType.OpeningBalance,
+      }),
+    );
+
+    expect(audit).toHaveLength(1);
+    expect(audit[0].action).toBe("DEALER_OPENING_BALANCE_POSTED");
+  });
+
+  it("posts a negative amount as a Credit OpeningBalance ledger entry (advance)", async () => {
+    const { tx, ledger, dealerFor } = makeStubTx({
+      dealers: [{ dealerCode: "DLR-OB2", currentBalance: new Prisma.Decimal("0.00") }],
+    });
+
+    await postOpeningBalance({
+      tx: tx as Prisma.TransactionClient,
+      dealerCode: "DLR-OB2",
+      amount: new Prisma.Decimal("-1200.00"),
+      previousBalance: new Prisma.Decimal("0.00"),
+      userId: "user-1",
+      effectiveDate: new Date(),
+      referenceNo: "OB-DLR-OB2",
+      openingBalanceId: "ob-2",
+    });
+
+    expect(ledger[0].debit.toFixed(2)).toBe("0.00");
+    expect(ledger[0].credit.toFixed(2)).toBe("1200.00");
+    expect(dealerFor("DLR-OB2")?.currentBalance.toFixed(2)).toBe("-1200.00");
+  });
+
+  it("posts a zero amount with NO ledger entry, only an audit trail", async () => {
+    const { tx, ledger, audit, dealerFor } = makeStubTx({
+      dealers: [{ dealerCode: "DLR-OB3", currentBalance: new Prisma.Decimal("0.00") }],
+    });
+
+    const result = await postOpeningBalance({
+      tx: tx as Prisma.TransactionClient,
+      dealerCode: "DLR-OB3",
+      amount: new Prisma.Decimal("0.00"),
+      previousBalance: new Prisma.Decimal("0.00"),
+      userId: "user-1",
+      effectiveDate: new Date(),
+      referenceNo: "OB-DLR-OB3",
+      openingBalanceId: "ob-3",
+    });
+
+    expect(result.ledgerEntryId).toBeNull();
+    expect(result.ledgerPostingKey).toBeNull();
+    expect(ledger).toHaveLength(0);
+    expect(audit).toHaveLength(1);
+    expect(dealerFor("DLR-OB3")?.currentBalance.toFixed(2)).toBe("0.00");
+  });
+
+  it("rejects a non-zero previousBalance — opening balance must be the dealer's first posting", async () => {
+    const { tx } = makeStubTx({
+      dealers: [{ dealerCode: "DLR-OB4", currentBalance: new Prisma.Decimal("42.00") }],
+    });
+
+    await expect(
+      postOpeningBalance({
+        tx: tx as Prisma.TransactionClient,
+        dealerCode: "DLR-OB4",
+        amount: new Prisma.Decimal("100.00"),
+        previousBalance: new Prisma.Decimal("42.00"),
+        userId: "user-1",
+        effectiveDate: new Date(),
+        referenceNo: "OB-DLR-OB4",
+        openingBalanceId: "ob-4",
+      }),
+    ).rejects.toThrow(RangeError);
+  });
+
+  it("never silently double-applies: a stale second call with previousBalance=0 fails loudly instead of duplicating the balance", async () => {
+    // Real idempotent replay protection lives at the workflow layer
+    // (`postOpeningBalanceRecord` short-circuits on an already-Locked record —
+    // see `opening-balance.test.ts`). At the posting-service boundary, calling
+    // this twice with a stale `previousBalance` must never silently apply the
+    // amount a second time; the balance-parity assertion must catch it.
+    const { tx, ledger } = makeStubTx({
+      dealers: [{ dealerCode: "DLR-OB5", currentBalance: new Prisma.Decimal("0.00") }],
+    });
+
+    const input = {
+      tx: tx as Prisma.TransactionClient,
+      dealerCode: "DLR-OB5",
+      amount: new Prisma.Decimal("777.00"),
+      previousBalance: new Prisma.Decimal("0.00"),
+      userId: "user-1",
+      effectiveDate: new Date(),
+      referenceNo: "OB-DLR-OB5",
+      openingBalanceId: "ob-5",
+    };
+
+    await postOpeningBalance(input);
+    await expect(postOpeningBalance(input)).rejects.toThrow(/mismatch/);
+
+    expect(ledger).toHaveLength(1);
   });
 });
 

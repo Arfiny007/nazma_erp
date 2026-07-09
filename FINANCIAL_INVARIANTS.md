@@ -2,8 +2,8 @@
 
 Authoritative engineering rulebook. Every rule below is mandatory. Violation constitutes a production defect and potential accounting corruption.
 
-**Certification basis:** ADR-015, ADR-021, ADR-024, ADR-025, ADR-026, ADR-027  
-**Last updated:** 2026-07-09 (PHASE_07B.5 — Enterprise Financial Integrity Certification)
+**Certification basis:** ADR-015, ADR-021, ADR-024, ADR-025, ADR-026, ADR-027, ADR-028  
+**Last updated:** 2026-07-09 (PHASE_07C — Enterprise Financial Initialization Engine)
 
 ---
 
@@ -60,8 +60,8 @@ Authoritative engineering rulebook. Every rule below is mandatory. Violation con
 |------|--------|
 | Location | `src/lib/finance/posting-service.ts` |
 | Mandate | ALL financial operations MUST pass through this module |
-| Current functions | `postReceivableIncrease()`, `postReceivableDecrease()`, `postReceivableDecreaseReversal()` |
-| Future functions | `postOpeningBalance()`, `postCreditNote()`, `postDebitNote()`, `postInvoiceReversal()`, `postJournalEntry()` |
+| Current functions | `postReceivableIncrease()`, `postReceivableDecrease()`, `postReceivableDecreaseReversal()`, `postOpeningBalance()` (PHASE_07C) |
+| Future functions | `postCreditNote()`, `postDebitNote()`, `postInvoiceReversal()`, `postJournalEntry()`, `postManualAdjustment()` |
 | Side effects | Balance update + `LedgerEntry` append + cache/ledger parity assertion + audit log (all in one transaction) |
 | Sole ledger writer | `createLedgerEntry` (from `@/lib/ledger`) is imported ONLY by `posting-service.ts` |
 | Forbidden | Feature-level balance mutations bypassing posting service; direct `LedgerEntry` inserts from anywhere else |
@@ -309,6 +309,25 @@ Reports and statements must not trust Tier 3 alone without reconciliation to Tie
 
 ---
 
+## 21. Financial Initialization Engine Invariants (PHASE_07C — shipped)
+
+| Rule | Detail |
+|------|--------|
+| Exactly-once initialization | `OpeningBalance.dealerCode @unique` + `assertDealerNotInitialized` — enforced at both application and database level |
+| Immutability | Opening Balance is NEVER edited or deleted once `Locked`; corrections happen via future Journal Entry / Manual Adjustment / Credit Note / Debit Note, never in-place |
+| State machine | `NotInitialized → Draft → Validated → Posted+Locked`; `Posted` and `Locked` set atomically in the same transaction |
+| Draft / Validated never post | `createOpeningBalanceRecord` and `validateOpeningBalanceRecord` NEVER touch `Dealer.currentBalance` or `LedgerEntry` — pure status transitions only |
+| Sole posting path | `postOpeningBalanceRecord` calls ONLY `posting-service.ts`'s `postOpeningBalance()` — never inserts `LedgerEntry` directly |
+| First-posting precondition | `postOpeningBalance()` asserts `previousBalance = 0.00` (read under dealer row lock) before posting; throws rather than compounding a non-zero cache |
+| Sign convention | Positive = dealer owes (Debit); negative = advance (Credit); zero = no `LedgerEntry`, audit + `Locked` transition still occur |
+| Idempotent replay | `postOpeningBalanceRecord` short-circuits on `Locked` status BOTH at entry AND immediately after acquiring the dealer lock (closes the race where a concurrent poster's commit changes `previousBalance` mid-flight — ADR-028 §6.2) |
+| Ledger idempotency | `postingKey = ledger:OpeningBalance:OB-<dealerCode>:OpeningBalance` — same `@unique` backstop as Invoice/Collection postings |
+| Producer-agnostic core | `OpeningBalanceRecordInput.source: Manual \| CsvImport \| ExcelImport \| ErpMigration` — future bulk import/migration reuses `opening-balance.ts` unchanged |
+| RBAC | Reuses `invoices:create` (Super_Admin, Accounts) — `permissions.ts` not modified for this phase |
+| Forbidden | Direct `dealer.update({ currentBalance })` or `LedgerEntry` insert from the initialization engine; editing/deleting a `Locked` `OpeningBalance`; posting an amount without the `previousBalance = 0` precondition |
+
+---
+
 ## Enforcement Checklist for New Code
 
 Before merging any financial feature:
@@ -336,3 +355,4 @@ Before merging any financial feature:
 - ADR-025 — Enterprise Ledger Foundation (PHASE_07A)
 - ADR-026 — Enterprise Ledger Posting Engine (PHASE_07B)
 - ADR-027 — Enterprise Financial Integrity Certification (PHASE_07B.5)
+- ADR-028 — Enterprise Financial Initialization Engine (PHASE_07C)

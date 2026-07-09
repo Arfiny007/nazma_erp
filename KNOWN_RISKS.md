@@ -3,7 +3,7 @@
 Operational risk register as of PHASE_06D completion. None are blocking for controlled production use of the Order → Invoice → Collection pipeline.
 
 **Overall readiness:** 9.1 / 10 (ADR-027)  
-**Last updated:** 2026-07-09 (PHASE_07B.5 — Enterprise Financial Integrity Certification)
+**Last updated:** 2026-07-09 (PHASE_07C — Enterprise Financial Initialization Engine)
 
 ---
 
@@ -46,12 +46,12 @@ Operational risk register as of PHASE_06D completion. None are blocking for cont
 
 | Attribute | Value |
 |-----------|-------|
-| Description | Cannot onboard dealers with pre-existing AR at go-live |
-| Impact | Production migration requires manual balance setup |
-| Likelihood | High at production cutover |
-| Mitigation | `postOpeningBalance()` + PHASE_07C migration script; **PHASE_07C approved by ADR-027** |
-| Status | **Open** (implementation) — **Unblocked** |
-| Future Phase | PHASE_07C |
+| Description | ~~Cannot onboard dealers with pre-existing AR at go-live~~ |
+| Impact | ~~Production migration requires manual balance setup~~ |
+| Likelihood | ~~High at production cutover~~ |
+| Mitigation | `postOpeningBalance()` shipped in `posting-service.ts`; enterprise wizard UI at `/opening-balances`; exactly-once initialization enforced at app + DB level; proven safe under concurrency (ADR-028) |
+| Status | **Resolved** (PHASE_07C) |
+| Future Phase | ~~PHASE_07C~~ ✅ DONE — bulk import UI (CSV/Excel/ERP migration) remains a future enhancement on the same engine |
 
 ### F5. Advance Payment GL Treatment
 
@@ -275,6 +275,17 @@ Operational risk register as of PHASE_06D completion. None are blocking for cont
 | Likelihood | Medium during document changes |
 | Mitigation | Invoice PDF patch includes manual QA checklist |
 | Status | **Open** |
+
+### T3. `it.skipIf` Registration-Time Evaluation Gap (found PHASE_07C)
+
+| Attribute | Value |
+|-----------|-------|
+| Description | `issue-invoice-concurrency.test.ts` and `ledger-reconciliation.integration.test.ts` pass `it.skipIf(!integrationReady)` where `integrationReady` is only set inside an async `beforeAll` — Vitest evaluates the condition at describe-time, before `beforeAll` runs, so these tests always skip regardless of database availability |
+| Impact | These specific "integration" tests never actually execute, even in a Docker CI with a live database |
+| Likelihood | Certain (structural, not environmental) |
+| Mitigation | PHASE_07C's own integration test (`opening-balance-concurrency.integration.test.ts`) uses the correct runtime `ctx.skip()` pattern and was verified to run and pass live. Pre-existing files not modified — outside PHASE_07C scope (TECH_DEBT C8) |
+| Status | **Open** (pre-existing files) |
+| Future Phase | Test-infrastructure pass |
 
 ---
 

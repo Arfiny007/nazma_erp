@@ -2,39 +2,36 @@
 
 ## Current State
 
-PHASE_07B.5_ENTERPRISE_FINANCIAL_INTEGRITY_CERTIFICATION is **complete**
+PHASE_07C_ENTERPRISE_FINANCIAL_INITIALIZATION_ENGINE is **complete**
 (2026-07-09):
 
-- Chief ERP architecture audit of full financial path certified (ADR-027)
-- Repository grep: no balance or ledger bypass; no ledger UPDATE/DELETE in app code
-- `validateDealerLedgerChain`, `assertDealerLedgerIntegrity`, `reconcileAllDealers` shipped
-- `assertDealerLedgerReconciled` tightened — empty ledger reconciled only when cache = 0
-- 9 new reconciliation unit tests + 1 integration test (DB optional)
-- **Opening Balance (PHASE_07C) APPROVED** — accounting engine production-safe
+- Financial Initialization Platform shipped — Opening Balance is its first
+  workflow; reusable for future Bulk Import / ERP Migration / Company /
+  Branch / Fiscal Year Initialization
+- Permanent state machine: `NotInitialized → Draft → Validated →
+  Posted+Locked`; `OpeningBalance` model with `dealerCode @unique`
+- `postOpeningBalance()` shipped in `posting-service.ts` — reuses
+  `createLedgerEntry`, dealer row lock, cache/ledger parity, audit; zero new
+  mutation primitives
+- Enterprise wizard UI (`/opening-balances`, `/opening-balances/new`) —
+  6-step accountant workflow, not a Dealer Edit form
+- Live-database concurrency tests found and fixed a real race condition in
+  `postOpeningBalanceRecord()` before production (ADR-028 §6.2)
+- **PHASE_07D (Dealer Subledger & Statement Engine) APPROVED**
 
-PHASE_07B remains complete. Financial architecture certification score: **9.1 / 10**.
+PHASE_07B.5 remains complete. Financial architecture certification score: **9.1 / 10**.
 
-**Not yet built:** Opening balance implementation, ledger UI + dealer statement,
-reconciliation scheduled job, backfill of pre-PHASE_07B data, credit notes, due reports.
+**Not yet built:** Ledger UI + dealer statement, reconciliation scheduled job,
+backfill of pre-PHASE_07B data, credit notes, due reports, bulk opening
+balance import UI.
 
 ---
 
 ## Next Steps
 
-Roadmap after PHASE_07B.5:
+Roadmap after PHASE_07C:
 
-### 1. PHASE_07C — Opening Balance (APPROVED)
-
-- `openDealerBalance()` server action + Zod validator
-- `postOpeningBalance()` in `posting-service.ts` using
-  `buildOpeningBalancePosting` from `@/lib/ledger`
-- `FinancialReferenceType.OpeningBalance` handler
-- Migration path for existing dealers with non-zero `currentBalance`
-- Assert `previousBalance = 0.00` and `Dealer.currentBalance = 0.00`
-  before posting the opening entry
-- RBAC — Super_Admin / Manager only
-
-### 2. PHASE_07D — Ledger UI
+### 1. PHASE_07D — Ledger UI (APPROVED)
 
 - Ledger list / detail routes (`/ledger`)
 - Dealer subledger statement (hybrid: ledger balance + document lines)
@@ -42,7 +39,7 @@ Roadmap after PHASE_07B.5:
 - Print / PDF via existing document pipeline
 - Read-only projections of `LedgerEntry` — no ledger writes from UI
 
-### 3. PHASE_07E — Reconciliation & Backfill
+### 2. PHASE_07E — Reconciliation & Backfill
 
 - Backfill script: replay invoices + collections → ledger entries for
   existing data (idempotent via `postingKey`)
@@ -51,6 +48,12 @@ Roadmap after PHASE_07B.5:
 - Tighten `assertDealerLedgerReconciled` — remove PHASE_07A
   empty-ledger short-circuit once backfill is complete
 - Optional DB-level immutability policy (TECH_DEBT C6)
+
+### 3. Bulk Opening Balance Import (architecture ready, UI not built)
+
+- `postOpeningBalanceBatch()` and `OpeningBalanceSource.CsvImport` /
+  `ExcelImport` / `ErpMigration` already shipped (PHASE_07C, ADR-028 §7)
+- Needs only a file parser + import UI; zero engine changes anticipated
 
 ### 4. Reporting (PHASE_08)
 
@@ -73,6 +76,8 @@ Roadmap after PHASE_07B.5:
 - Optional: credit note / invoice void workflow — plugs into
   `postCreditNote()` and `postInvoiceReversal()`
 - Optional: DB-level `REVOKE UPDATE, DELETE` on `LedgerEntry`
+- Fix `it.skipIf` registration-time evaluation gap in pre-existing
+  integration test files (TECH_DEBT C8)
 
 ### Explicitly Out of Scope (until respective phase)
 

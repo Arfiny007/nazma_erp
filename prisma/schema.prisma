@@ -86,6 +86,32 @@ enum LedgerPostingType {
   Adjustment
 }
 
+/// Permanent lifecycle for a dealer's Opening Balance initialization record.
+///
+/// NotInitialized is not persisted — it is the absence of an `OpeningBalance`
+/// row for a dealer. Draft is editable; Validated is ready for posting;
+/// Posted means a `LedgerEntry` exists (or, for a zero amount, that no entry
+/// was required); Locked is the permanent, immutable terminal state. Posting
+/// and locking happen atomically in the same transaction — there is no
+/// separate correction step between them. See ADR-028.
+enum OpeningBalanceStatus {
+  Draft
+  Validated
+  Posted
+  Locked
+}
+
+/// Provenance of an Opening Balance record. `Manual` is the only producer
+/// wired to a UI in PHASE_07C; the remaining values fix the contract for
+/// future bulk import / ERP migration tooling that reuses the same service
+/// without redesign (ADR-028 §7).
+enum OpeningBalanceSource {
+  Manual
+  CsvImport
+  ExcelImport
+  ErpMigration
+}
+
 enum DeliveryMode {
   Truck
   Courier
@@ -111,14 +137,17 @@ model User {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  ordersCreated        SalesOrder[]      @relation("OrderCreatedBy")
-  ordersApproved       SalesOrder[]      @relation("OrderApprovedBy")
-  challansCreated      DeliveryChallan[] @relation("ChallanCreatedBy")
-  challansConfirmed    DeliveryChallan[] @relation("ChallanConfirmedBy")
-  collectionsCreated   Collection[]      @relation("CollectionCreatedBy")
-  collectionsConfirmed Collection[]      @relation("CollectionConfirmedBy")
-  ledgerEntriesCreated LedgerEntry[]     @relation("LedgerEntryCreatedBy")
-  auditLogs            AuditLog[]
+  ordersCreated            SalesOrder[]      @relation("OrderCreatedBy")
+  ordersApproved           SalesOrder[]      @relation("OrderApprovedBy")
+  challansCreated          DeliveryChallan[] @relation("ChallanCreatedBy")
+  challansConfirmed        DeliveryChallan[] @relation("ChallanConfirmedBy")
+  collectionsCreated       Collection[]      @relation("CollectionCreatedBy")
+  collectionsConfirmed     Collection[]      @relation("CollectionConfirmedBy")
+  ledgerEntriesCreated     LedgerEntry[]     @relation("LedgerEntryCreatedBy")
+  openingBalancesCreated   OpeningBalance[]  @relation("OpeningBalanceCreatedBy")
+  openingBalancesValidated OpeningBalance[]  @relation("OpeningBalanceValidatedBy")
+  openingBalancesPosted    OpeningBalance[]  @relation("OpeningBalancePostedBy")
+  auditLogs                AuditLog[]
 }
 
 model Dealer {
@@ -162,6 +191,9 @@ model Dealer {
   collections      Collection[]
   ledgerEntries    LedgerEntry[]
   dueReports       DueReport[]
+  /// At most one Opening Balance record per dealer, ever — enforced by the
+  /// `@unique` constraint on `OpeningBalance.dealerCode`. See ADR-028.
+  openingBalance   OpeningBalance?
 }
 
 model Project {
@@ -527,12 +559,12 @@ model LedgerEntry {
   /// Business/value date used for statement ordering.
   transactionDate DateTime
   /// System timestamp when the entry was posted (append-only).
-  postingDate DateTime @default(now())
+  postingDate     DateTime @default(now())
 
   referenceType FinancialReferenceType
   referenceId   String
   /// Human-readable reference (e.g., `INV-000123`, `COL-000045`).
-  referenceNo String
+  referenceNo   String
 
   postingType LedgerPostingType
 
@@ -562,6 +594,66 @@ model LedgerEntry {
   @@index([dealerCode, transactionDate])
   @@index([dealerCode, postingDate])
   @@index([reversesEntryId])
+  @@index([createdById])
+}
+
+/// Financial Initialization Engine — one dealer's Opening Balance record.
+///
+/// Permanent lifecycle: Draft (editable) → Validated (ready) → Posted
+/// (`LedgerEntry` created, or none required for a zero amount) → Locked
+/// (immutable forever). A dealer may be initialized AT MOST ONCE — enforced
+/// by the `@unique` constraint on `dealerCode`. Corrections after Locked
+/// happen through Journal Entry / Manual Adjustment / Credit Note / Debit
+/// Note — never by editing or deleting this row. See ADR-028.
+model OpeningBalance {
+  id String @id @default(uuid())
+
+  dealerCode String @unique
+  dealer     Dealer @relation(fields: [dealerCode], references: [dealerCode])
+
+  /// Signed opening amount. Positive = dealer owes company; negative =
+  /// advance credit; zero is a valid "no receivable at go-live" record.
+  amount Decimal @db.Decimal(18, 2)
+
+  /// Business/value date the opening balance takes effect.
+  effectiveDate DateTime
+
+  status OpeningBalanceStatus @default(Draft)
+
+  /// Provenance — fixes the contract for future bulk import / migration
+  /// tooling reusing this same engine. Only `Manual` is wired to a UI today.
+  source OpeningBalanceSource @default(Manual)
+
+  /// Canonical human-readable reference (`OB-<dealerCode>`).
+  referenceNo String?
+
+  remarks String?
+
+  createdById String
+  createdBy   User   @relation("OpeningBalanceCreatedBy", fields: [createdById], references: [id])
+
+  validatedAt   DateTime?
+  validatedById String?
+  validatedBy   User?     @relation("OpeningBalanceValidatedBy", fields: [validatedById], references: [id])
+
+  postedAt   DateTime?
+  postedById String?
+  postedBy   User?     @relation("OpeningBalancePostedBy", fields: [postedById], references: [id])
+
+  /// Set together with `postedAt` — Posted and Locked are the same instant;
+  /// there is no reviewable state between them (ADR-028 §4).
+  lockedAt DateTime?
+
+  /// Populated only when `amount != 0` — a zero opening balance never
+  /// produces a `LedgerEntry` (there is nothing to post).
+  ledgerEntryId String?
+  postingKey    String? @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dealerCode])
+  @@index([status])
   @@index([createdById])
 }
 

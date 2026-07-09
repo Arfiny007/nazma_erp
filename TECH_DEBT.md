@@ -2,7 +2,7 @@
 
 Known deferred improvements categorized by priority. Each item includes rationale for deferral.
 
-**Last updated:** 2026-07-09 (PHASE_07B.5 — Enterprise Financial Integrity Certification)
+**Last updated:** 2026-07-09 (PHASE_07C — Enterprise Financial Initialization Engine)
 
 ---
 
@@ -17,6 +17,7 @@ Known deferred improvements categorized by priority. Each item includes rational
 | C5 | ~~`postingKey` idempotency~~ | ~~Ledger lacks unique posting key~~ | **Resolved in PHASE_07A** — `postingKey String @unique` | ~~Duplicate ledger lines on retry~~ | ✅ DONE |
 | C6 | DB-level ledger immutability | Application-level `assertLedgerAppendOnly` guard only | Runtime guard sufficient for PHASE_07B; DB policy adds defense in depth | Rogue SQL could still UPDATE/DELETE historical rows | Optional |
 | C7 | Ledger backfill for pre-PHASE_07B data | Existing invoices/collections before PHASE_07B lack `LedgerEntry` rows | Backfill script deferred to PHASE_07E | Dealer statement / reconciliation on legacy data incomplete | PHASE_07E |
+| C8 | `it.skipIf` evaluated at registration time in pre-existing integration tests | `issue-invoice-concurrency.test.ts` and `ledger-reconciliation.integration.test.ts` compute `integrationReady` inside `beforeAll` but pass it to `it.skipIf` synchronously at describe-time — always `false` at that point, so these tests always skip even when `DATABASE_URL` is reachable | Discovered while building PHASE_07C's own integration test (which uses the correct `ctx.skip()` runtime pattern instead); fixing the pre-existing files is outside PHASE_07C's forbidden-files scope (Invoice) / out of scope (ledger reconciliation) | CI never actually exercises these "integration" tests even with a live database configured | Test-infrastructure pass |
 
 ---
 
@@ -38,7 +39,7 @@ Known deferred improvements categorized by priority. Each item includes rational
 | M12 | Delivery challan PDF | Basic print only; not document platform | Invoice/receipt prioritized | No enterprise gate pass | Post-06C |
 | M13 | Chart of Accounts / full GL | No TB, P&L, BS | AR subledger first | No statutory statements | PHASE_07F+ |
 | M14 | Logistics fields on Invoice | Legacy columns may duplicate challan data | Application treats as challan attrs | Schema ambiguity | Cleanup |
-| M15 | Opening balance document | Enum reserved; no handler | Needs ledger + onboarding | Cannot migrate existing AR | PHASE_07C |
+| M15 | ~~Opening balance document~~ | ~~Enum reserved; no handler~~ | **Resolved in PHASE_07C** (ADR-028) | ~~Cannot migrate existing AR~~ | ✅ DONE |
 
 ---
 
@@ -84,6 +85,7 @@ Known deferred improvements categorized by priority. Each item includes rational
 | Collection concurrency integration tests | Medium | Mirror `issue-invoice-concurrency.test.ts` |
 | Ledger posting integration tests | ✅ Delivered (PHASE_07B) | `posting-service.test.ts` (12 unit tests) + concurrency suite extended with ledger assertions |
 | Reconciliation job tests | ✅ Delivered (PHASE_07B.5) | `ledger-reconciliation.test.ts` (9) + integration scan |
+| Opening balance workflow + validation + concurrency tests | ✅ Delivered (PHASE_07C) | `opening-balance.test.ts` (11), `opening-balance-validation.test.ts` (31), `opening-balance-concurrency.integration.test.ts` (2, live DB — actually runs, see C8) |
 | E2E print layout tests | Low | Manual QA + browser matrix |
 
 ---

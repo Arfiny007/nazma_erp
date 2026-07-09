@@ -4,9 +4,9 @@ Definitive engineering context for AI sessions and new maintainers.
 
 Read this document first. Then consult `PROJECT_BRAIN.md`, `CURRENT_PHASE.md`, and relevant ADRs.
 
-**Last updated:** 2026-07-09 (PHASE_07B.5 — Enterprise Financial Integrity Certification)  
-**Current phase:** PHASE_07B.5 complete → Next: PHASE_07C opening balance  
-**Production readiness:** 9.1 / 10 (ADR-027)
+**Last updated:** 2026-07-09 (PHASE_07C — Enterprise Financial Initialization Engine)  
+**Current phase:** PHASE_07C complete → Next: PHASE_07D Ledger UI + dealer subledger statement  
+**Production readiness:** 9.1 / 10 (ADR-027, ADR-028)
 
 ---
 
@@ -128,6 +128,7 @@ See ADR-011 for fulfillment architecture.
 | Ledger Foundation | ✅ Complete (PHASE_07A) | `src/lib/ledger/*` |
 | Ledger Posting Integration | ✅ Complete (PHASE_07B) — wired into `posting-service.ts`; no UI/reports yet | `src/lib/finance/posting-service.ts` |
 | Financial Integrity Certification | ✅ Complete (PHASE_07B.5) — repository audit; reconciliation tests; ADR-027 | `src/lib/ledger/ledger-reconciliation.ts` |
+| Financial Initialization Engine (Opening Balance) | ✅ Complete (PHASE_07C) — state machine, `postOpeningBalance()`, enterprise wizard; ADR-028 | `src/lib/finance/initialization/`, `/opening-balances` |
 | Due Reports | ❌ Not built | — |
 | Audit Log UI | ❌ Not built | — |
 | User Management | ❌ Not built | — |
@@ -184,7 +185,9 @@ See ADR-017, ADR-023.
 
 **PHASE_07B (shipped):** `createLedgerEntry` wired inside all three receivable functions. Every posting now inserts an immutable `LedgerEntry` and asserts `LedgerEntry.balance == Dealer.currentBalance` via `assertLedgerBalanceMatchesCache`. Compensating reversal via `postingType = Reversal` + `reversesEntryId`. Idempotent under retry via `postingKey @unique`. Collection cash-receipt `referenceType` corrected to `Collection` (ADR-024 §10).
 
-**Future (PHASE_07C onwards):** `postOpeningBalance()`, `postCreditNote()`, `postInvoiceReversal()`; reconciliation job (PHASE_07E); Chart of Accounts (PHASE_07F+).
+**PHASE_07C (shipped):** `postOpeningBalance()` added — the Financial Initialization Engine's only entry point into the posting boundary. Reuses `createLedgerEntry`, dealer row lock, cache/ledger parity, and audit; asserts `previousBalance = 0.00` before posting (opening balance is a dealer's first-ever posting). No `LedgerEntry` for zero-amount opening balances (audit + status transition only).
+
+**Future (PHASE_07E onwards):** `postCreditNote()`, `postInvoiceReversal()`, `postJournalEntry()`, `postManualAdjustment()`; reconciliation job (PHASE_07E); Chart of Accounts (PHASE_07F+).
 
 ---
 
@@ -193,7 +196,7 @@ See ADR-017, ADR-023.
 **Location:** `src/lib/collections/allocation-engine.ts`, `reference-resolver.ts`
 
 - Polymorphic `CollectionAllocation(referenceType, referenceId)`
-- `FinancialReferenceType`: Invoice (implemented); OpeningBalance, CreditNote, DebitNote, ManualAdjustment, JournalEntry (reserved)
+- `FinancialReferenceType`: Invoice, OpeningBalance (implemented); CreditNote, DebitNote, ManualAdjustment, JournalEntry (reserved). Opening Balance never posts via allocation — only via `postOpeningBalance()`.
 - Pool invariant: `receivedAmount = allocatedAmount + unallocatedAmount`
 - Allocatable cap: `grandTotal − collectionReceived` per invoice
 - **No balance posting on allocation** (cash posted on confirm only)
@@ -231,7 +234,8 @@ See ADR-019, ADR-020, ADR-024.
 | `Invoice` / `InvoiceItem` | Receivable document + immutable line snapshots |
 | `Collection` / `CollectionAllocation` | Cash receipt + polymorphic application |
 | `Dealer` | Customer master + AR cache |
-| `LedgerEntry` | Append-only journal subledger (populated on every receivable event as of PHASE_07B) |
+| `LedgerEntry` | Append-only journal subledger (populated on every receivable event as of PHASE_07B; opening balance as of PHASE_07C) |
+| `OpeningBalance` | Financial Initialization record — `Draft → Validated → Posted+Locked`; `dealerCode @unique` (PHASE_07C) |
 | `AuditLog` | Append-only event trail |
 
 ---
@@ -349,6 +353,19 @@ allocateCollection()
   → NO posting service balance call
   → NO ledger entry (cash already posted on confirm)
   → commit
+
+postOpeningBalanceRecord()  [PHASE_07C]
+  → assertValidatedForPosting() / assertNotLocked()
+  → lockDealerForFinancialUpdate()
+  → re-check Locked status AFTER lock (idempotent replay — ADR-028 §6.2)
+  → assertPreviousBalanceZero(lockedDealer.currentBalance)
+  → postOpeningBalance()  [posting-service.ts]
+      ├── Dealer.currentBalance += amount (atomic; skipped if amount = 0)
+      ├── createLedgerEntry(postingType=OpeningBalance, sign-aware) — skipped if amount = 0
+      └── assertLedgerBalanceMatchesCache
+  → OpeningBalance.status → Posted + Locked (same transaction)
+  → AuditLog (DEALER_OPENING_BALANCE_POSTED + ledgerEntryId)
+  → commit
 ```
 
 ---
@@ -373,6 +390,7 @@ allocateCollection()
 | PHASE_07A | Enterprise Ledger Foundation (ADR-025) |
 | PHASE_07B | Enterprise Ledger Posting Engine (ADR-026) |
 | PHASE_07B.5 | Enterprise Financial Integrity Certification (ADR-027) |
+| PHASE_07C | Enterprise Financial Initialization Engine — Opening Balance (ADR-028) |
 
 ---
 
@@ -381,7 +399,6 @@ allocateCollection()
 | Phase | Description |
 |-------|-------------|
 | Invoice PDF Patch | Layout polish from client feedback (document platform only) |
-| PHASE_07C | Opening balance |
 | PHASE_07D | Ledger UI + dealer subledger statement |
 | PHASE_07E | Reconciliation & backfill |
 | PHASE_07F | Chart of Accounts foundation (optional) |
@@ -433,15 +450,16 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 | Document Engine | 9.0 |
 | Financial Posting | 9.3 |
 | Ledger | 9.3 |
+| Financial Initialization | 9.2 |
 | Reporting Readiness | 7.0 |
 
-**Suitable for controlled production:** Order → Challan → Invoice → Collection → Money Receipt pipeline.
+**Suitable for controlled production:** Order → Challan → Invoice → Collection → Money Receipt → Opening Balance pipeline.
 
-**Not yet production-ready:** Ledger UI, due reports, credit notes, opening balance, dashboards, statutory financial statements.
+**Not yet production-ready:** Ledger UI, due reports, credit notes, dashboards, statutory financial statements, bulk opening balance import UI.
 
-**Blocking defects:** None for Order → Invoice → Collection → Ledger posting pipeline as of PHASE_07B.5.
+**Blocking defects:** None for Order → Invoice → Collection → Ledger posting → Opening Balance pipeline as of PHASE_07C.
 
-**Opening Balance (PHASE_07C):** APPROVED to proceed per ADR-027.
+**PHASE_07D (Dealer Subledger & Statement Engine):** APPROVED to proceed per ADR-028.
 
 ---
 
@@ -470,10 +488,10 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 
 | Extension | Hook |
 |-----------|------|
-| Opening balance | `postOpeningBalance()` — uses `buildOpeningBalancePosting` from `@/lib/ledger` (PHASE_07C) |
+| Bulk opening balance import / ERP migration | `postOpeningBalanceBatch()` + `OpeningBalanceSource.CsvImport/ExcelImport/ErpMigration` — shipped PHASE_07C, needs only a file parser + import UI |
+| Company / Branch / Fiscal Year Initialization | New orchestration module beside `opening-balance-service.ts`, same core-engine idiom |
 | Credit notes | `FinancialReferenceType.CreditNote` + `postCreditNote()` |
-| Opening balance | `FinancialReferenceType.OpeningBalance` + `postOpeningBalance()` |
-| Dealer statement | Document platform + hybrid ledger/document composer |
+| Dealer statement | Document platform + hybrid ledger/document composer; Opening Balance is the first `LedgerEntry` row in every initialized dealer's statement |
 | Challan PDF | `DocumentLayout` + challan sections (ADR-023) |
 | Company settings | Override `getCompanyBranding()` |
 | Multi-company | Tenant isolation on top of clean module boundaries |
@@ -499,6 +517,7 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 | ADR-025 | Enterprise Ledger Foundation (PHASE_07A) |
 | ADR-026 | Enterprise Ledger Posting Engine (PHASE_07B) |
 | ADR-027 | Enterprise Financial Integrity Certification (PHASE_07B.5) |
+| ADR-028 | Enterprise Financial Initialization Engine (PHASE_07C) |
 
 ---
 
