@@ -2,7 +2,28 @@
 
 ## Current State
 
-PHASE_06D.2_ENTERPRISE_DOCUMENT_PLATFORM_DESIGN_FREEZE is **complete**:
+PHASE_07A_ENTERPRISE_LEDGER_FOUNDATION is **complete** (2026-07-09):
+
+- `LedgerEntry` model hardened — `referenceType` enum, `postingType`,
+  `postingDate`, `postingKey @unique`, `referenceNo`, `reversesEntryId`,
+  `createdById`, composite indexes
+- `LedgerPostingType` enum introduced; `FinancialReferenceType` extended
+  with `Collection`
+- `src/lib/ledger/` foundation module: posting-key builder, immutable
+  posting contracts, `createLedgerEntry` (idempotent, balance-asserting,
+  append-only), reconciliation helpers, opening-balance builders
+- `posting-service.ts` inputs extended with optional ledger metadata
+  (bodies unchanged — PHASE_07B consumes)
+- 35 new unit tests; 64 total pass, 4 skipped (pre-existing DB integration
+  tests)
+- Prisma migration `20260709000000_phase_07a_ledger_foundation/migration.sql`
+  authored (apply via `npx prisma migrate deploy`)
+- ADR-025 authored; governance docs updated
+
+Financial architecture (ADR-024) is unchanged. Foundation is production-ready
+for PHASE_07B wiring.
+
+PHASE_06D.2_ENTERPRISE_DOCUMENT_PLATFORM_DESIGN_FREEZE remains complete:
 
 - Enterprise Document Platform has reached **Production Design Freeze** status
 - Design tokens (`src/lib/documents/design-tokens.ts`) introduced — single source of truth for all document visual constants
@@ -28,33 +49,55 @@ PHASE_06D financial architecture certification remains valid (8.7 / 10).
 
 ## Next Steps
 
-Roadmap after PHASE_06D.1:
+Roadmap after PHASE_07A:
 
-### 1. PHASE_07A — Ledger Schema Hardening
+### 1. Apply the PHASE_07A Migration
 
-Prepare immutable ledger architecture:
+Before starting PHASE_07B, apply the schema hardening in every environment:
 
-- Extend `LedgerEntry`: `postingKey`, `referenceNo`, `postingType`, `postingDate`, `reversesEntryId`, `createdById`
-- Align `referenceType` to `FinancialReferenceType` enum
-- Add `@@unique([postingKey])` for idempotency
-- Opening balance document type preparation
-- Reference abstraction alignment with `CollectionAllocation`
-- Journal architecture design (append-only, compensating reversals)
-- Prisma migration only — no posting logic yet
+```
+npx prisma migrate deploy
+npx prisma generate
+```
 
-### 2. PHASE_07B — Ledger Engine
+The migration is additive for the `LedgerEntry` table (no historical rows
+exist yet) and additive for the `FinancialReferenceType` enum. Zero
+downtime.
 
-- `createLedgerEntry()` inside `posting-service.ts`
-- Wire into `postReceivableIncrease`, `postReceivableDecrease`, `postReceivableDecreaseReversal`
-- Running balance per dealer; assert `LedgerEntry.balance === Dealer.currentBalance`
-- Integration tests
+### 2. PHASE_07B — Ledger Posting Integration
 
-### 3. PHASE_07C — Ledger UI
+- Wire `createLedgerEntry` inside `postReceivableIncrease`,
+  `postReceivableDecrease`, `postReceivableDecreaseReversal`
+- Compute `previousBalance` from last `LedgerEntry` (or `Dealer.currentBalance`
+  during migration)
+- Assert `LedgerEntry.balance === Dealer.currentBalance` via
+  `assertLedgerBalanceMatchesCache`
+- Concurrency integration tests mirroring PHASE_05C2A
+- Semantic correction: `postReceivableDecrease` referenceType →
+  `Collection` (ADR-024 §10 low-priority item)
+
+### 3. PHASE_07C — Opening Balance
+
+- `openDealerBalance()` server action + Zod validator
+- `postOpeningBalance()` in `posting-service.ts` (uses
+  `buildOpeningBalancePosting` from `@/lib/ledger`)
+- `FinancialReferenceType.OpeningBalance` handler in allocation engine
+- Migration path for existing dealers with non-zero `currentBalance`
+
+### 4. PHASE_07D — Ledger UI
 
 - Ledger list / detail routes
 - Dealer subledger statement (hybrid: ledger balance + document lines)
 - Document platform statement composer
 - Print / PDF via existing document pipeline
+
+### 5. PHASE_07E — Reconciliation & Backfill
+
+- Backfill script: replay invoices + collections → ledger entries for
+  existing data
+- Reconciliation job using `reconcileDealerLedger` /
+  `replayDealerLedgerBalance` / `assertDealerLedgerReconciled`
+- Optional scheduled integrity check
 
 ### 4. Reporting
 

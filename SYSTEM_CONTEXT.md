@@ -4,8 +4,8 @@ Definitive engineering context for AI sessions and new maintainers.
 
 Read this document first. Then consult `PROJECT_BRAIN.md`, `CURRENT_PHASE.md`, and relevant ADRs.
 
-**Last updated:** 2026-07-01 (REPOSITORY_MIGRATION_AND_METADATA_DUMP)  
-**Current phase:** PHASE_06D complete → Next: Invoice PDF Patch Upgrade, then PHASE_07A  
+**Last updated:** 2026-07-09 (PHASE_07A — Enterprise Ledger Foundation)  
+**Current phase:** PHASE_07A complete → Next: PHASE_07B ledger posting integration  
 **Production readiness:** 8.7 / 10 (ADR-024)
 
 ---
@@ -125,7 +125,8 @@ See ADR-011 for fulfillment architecture.
 | Invoices | ✅ Complete | `/invoices`, `/invoices/issue`, `/invoices/[id]/print` |
 | Collections | ✅ Complete | `/collections`, `/collections/[id]/allocate` |
 | Money Receipt | ✅ Complete | `/collections/[id]/receipt` |
-| Ledger | ❌ Not built | — |
+| Ledger Foundation | ✅ Complete (PHASE_07A) — no UI/reports/posting yet | `src/lib/ledger/*` |
+| Ledger Posting Integration | ❌ Not built (PHASE_07B) | — |
 | Due Reports | ❌ Not built | — |
 | Audit Log UI | ❌ Not built | — |
 | User Management | ❌ Not built | — |
@@ -178,7 +179,9 @@ See ADR-017, ADR-023.
 
 **Concurrency:** `lockDealerForFinancialUpdate()` — `SELECT … FOR UPDATE` in `dealer-lock.ts`
 
-**Future (PHASE_07):** `createLedgerEntry()` inside posting callbacks; `postOpeningBalance()`, `postCreditNote()`, `postInvoiceReversal()`
+**PHASE_07A (shipped):** ledger foundation module `src/lib/ledger/` — posting-key builder, immutable posting contracts, `createLedgerEntry` service, reconciliation helpers, opening-balance builders. Posting service inputs extended with optional ledger metadata; bodies unchanged.
+
+**Future (PHASE_07B onwards):** wire `createLedgerEntry()` inside posting service callbacks; `postOpeningBalance()`, `postCreditNote()`, `postInvoiceReversal()`
 
 ---
 
@@ -442,7 +445,7 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 
 | Extension | Hook |
 |-----------|------|
-| Ledger posting | `posting-service.ts` callbacks + `LedgerEntry` |
+| Ledger posting | `createLedgerEntry()` in `@/lib/ledger` — call from `posting-service.ts` (PHASE_07B) |
 | Credit notes | `FinancialReferenceType.CreditNote` + `postCreditNote()` |
 | Opening balance | `FinancialReferenceType.OpeningBalance` + `postOpeningBalance()` |
 | Dealer statement | Document platform + hybrid ledger/document composer |
@@ -468,6 +471,7 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 | ADR-021 | Collection financial certification |
 | ADR-023 | Money receipt engine |
 | ADR-024 | Financial architecture certification |
+| ADR-025 | Enterprise Ledger Foundation (PHASE_07A) |
 
 ---
 

@@ -1,6 +1,79 @@
 # IMPLEMENTATION STATUS
 
-Last updated: 2026-07-09 (PHASE_06D.2 — Enterprise Document Platform Design Freeze)
+Last updated: 2026-07-09 (PHASE_07A — Enterprise Ledger Foundation)
+
+---
+
+## Enterprise Ledger Foundation — Verification (PHASE_07A)
+
+| Criterion | Status |
+|-----------|--------|
+| `LedgerEntry` schema hardened per ADR-024 §11 | ✅ |
+| `referenceType` → `FinancialReferenceType` enum | ✅ |
+| `FinancialReferenceType.Collection` added | ✅ |
+| `LedgerPostingType` enum introduced | ✅ |
+| `postingKey String @unique` idempotency guard | ✅ |
+| `postingType`, `postingDate`, `referenceNo`, `reversesEntryId`, `createdById` added | ✅ |
+| Composite indexes `(dealerCode, transactionDate)` / `(dealerCode, postingDate)` | ✅ |
+| Prisma migration authored (`20260709000000_phase_07a_ledger_foundation/migration.sql`) | ✅ |
+| `src/lib/ledger/posting-key.ts` — deterministic builder/parser | ✅ |
+| `src/lib/ledger/ledger-types.ts` — immutable posting contract types | ✅ |
+| `src/lib/ledger/ledger-errors.ts` — typed error hierarchy | ✅ |
+| `src/lib/ledger/ledger-validation.ts` — structural + sign guards + append-only guard | ✅ |
+| `src/lib/ledger/ledger-posting.ts` — `buildLedgerEntryCreateData` + `buildReversalPosting` | ✅ |
+| `src/lib/ledger/ledger-service.ts` — `createLedgerEntry` idempotent write path | ✅ |
+| `src/lib/ledger/ledger-reconciliation.ts` — reconciliation helpers | ✅ |
+| `src/lib/ledger/opening-balance.ts` — PHASE_07C-ready builders | ✅ |
+| `src/lib/ledger/index.ts` — public surface | ✅ |
+| `posting-service.ts` inputs extended with optional ledger metadata | ✅ |
+| `posting-service.ts` bodies unchanged | ✅ |
+| `Dealer.currentBalance` remains sole write-path (posting-service only) | ✅ |
+| No ledger UI, reports, statements, dashboards | ✅ |
+| No data migration; existing LedgerEntry rows unaffected (table empty) | ✅ |
+| Unit tests: `posting-key.test.ts` (12) | ✅ |
+| Unit tests: `ledger-validation.test.ts` (14) | ✅ |
+| Unit tests: `ledger-posting.test.ts` (9) | ✅ |
+| `npx tsc --noEmit` — 0 errors | ✅ |
+| `npx eslint` — 0 errors (7 pre-existing TanStack Table warnings) | ✅ |
+| `npx vitest run` — 64 passed / 4 skipped (pre-existing DB integration tests) | ✅ |
+| ADR-025 authored | ✅ |
+| Governance docs updated | ✅ |
+
+### Files Delivered — PHASE_07A
+
+**New:**
+- `src/lib/ledger/posting-key.ts`
+- `src/lib/ledger/ledger-types.ts`
+- `src/lib/ledger/ledger-errors.ts`
+- `src/lib/ledger/ledger-validation.ts`
+- `src/lib/ledger/ledger-posting.ts`
+- `src/lib/ledger/ledger-service.ts`
+- `src/lib/ledger/ledger-reconciliation.ts`
+- `src/lib/ledger/opening-balance.ts`
+- `src/lib/ledger/index.ts`
+- `src/lib/ledger/posting-key.test.ts`
+- `src/lib/ledger/ledger-validation.test.ts`
+- `src/lib/ledger/ledger-posting.test.ts`
+- `prisma/migrations/20260709000000_phase_07a_ledger_foundation/migration.sql`
+- `docs/ADR/ADR-025-enterprise-ledger-foundation.md`
+
+**Modified:**
+- `prisma/schema.prisma` (enum + `LedgerEntry` hardening + `User.ledgerEntriesCreated`)
+- `src/lib/finance/types.ts` (`FINANCIAL_REFERENCE_COLLECTION`; optional ledger metadata fields)
+- `src/lib/finance/posting-service.ts` (documentation only; bodies unchanged)
+- `PROJECT_BRAIN.md`, `CURRENT_PHASE.md`, `IMPLEMENTATION_STATUS.md`, `NEXT_ACTION.md`, `CHANGELOG.md`, `SYSTEM_CONTEXT.md`, `TECH_DEBT.md`, `KNOWN_RISKS.md`, `FINANCIAL_INVARIANTS.md`, `CLIENT_FEEDBACK_LOG.md`
+
+### Regression Verification — PHASE_07A
+
+| Suite | Result |
+|-------|--------|
+| `src/lib/delivery/workflow.test.ts` | ✅ 9 pass |
+| `src/lib/invoices/workflow.test.ts` | ✅ 9 pass |
+| `src/lib/collections/workflow.test.ts` | ✅ 11 pass |
+| `src/lib/ledger/posting-key.test.ts` | ✅ 12 pass (new) |
+| `src/lib/ledger/ledger-validation.test.ts` | ✅ 14 pass (new) |
+| `src/lib/ledger/ledger-posting.test.ts` | ✅ 9 pass (new) |
+| `src/lib/invoices/issue-invoice-concurrency.test.ts` | ⏭ 4 skipped (DATABASE_URL not set — pre-existing behavior) |
 
 ---
 

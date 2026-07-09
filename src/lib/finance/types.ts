@@ -1,15 +1,25 @@
-import type { FinancialReferenceType, Prisma } from "@prisma/client";
+import type {
+  FinancialReferenceType,
+  LedgerPostingType,
+  Prisma,
+} from "@prisma/client";
 
 /**
  * Financial posting boundary types.
  *
  * All balance mutations flow through the posting service so future Ledger,
  * Collection, Credit Note, and Return modules extend the same abstraction.
+ *
+ * PHASE_07A extends every posting input with optional ledger metadata
+ * (`postingType`, `postingKey`, `transactionDate`). The current posting
+ * service does not yet consume these fields — PHASE_07B wires them into
+ * `createLedgerEntry` without further signature changes.
  */
 
-export type { FinancialReferenceType };
+export type { FinancialReferenceType, LedgerPostingType };
 
 export const FINANCIAL_REFERENCE_INVOICE: FinancialReferenceType = "Invoice";
+export const FINANCIAL_REFERENCE_COLLECTION: FinancialReferenceType = "Collection";
 
 /** AuditLog action recorded when dealer receivable balance increases. */
 export const DEALER_BALANCE_UPDATED_ACTION = "DEALER_BALANCE_UPDATED" as const;
@@ -35,6 +45,20 @@ export interface ReceivablePostingInput {
   referenceType: FinancialReferenceType;
   referenceId: string;
   referenceNo: string;
+  /**
+   * Ledger posting metadata (PHASE_07A extension point).
+   *
+   * When omitted, the posting service derives sensible defaults
+   * (`postingType = Issue` for `postReceivableIncrease`,
+   * `transactionDate = now()`). PHASE_07B consumes these fields inside
+   * `createLedgerEntry` — no further caller changes required.
+   */
+  postingType?: LedgerPostingType;
+  transactionDate?: Date;
+  /** Optional idempotency override — see `buildLedgerPostingKey`. */
+  postingKey?: string;
+  /** Optional link to an existing entry that this posting compensates. */
+  reversesEntryId?: string;
   metadata?: Record<string, string>;
 }
 
@@ -57,6 +81,14 @@ export interface ReceivableDecreasePostingInput {
   collectionNo: string;
   /** When false, only invoice/collection pool updates — cash already posted on confirm. */
   applyDealerBalance?: boolean;
+  /**
+   * Ledger posting metadata (PHASE_07A extension point). Same semantics as
+   * `ReceivablePostingInput` — PHASE_07B consumes.
+   */
+  postingType?: LedgerPostingType;
+  transactionDate?: Date;
+  postingKey?: string;
+  reversesEntryId?: string;
   metadata?: Record<string, string>;
 }
 

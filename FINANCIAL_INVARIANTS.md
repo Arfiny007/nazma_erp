@@ -2,8 +2,8 @@
 
 Authoritative engineering rulebook. Every rule below is mandatory. Violation constitutes a production defect and potential accounting corruption.
 
-**Certification basis:** ADR-015, ADR-021, ADR-024  
-**Last updated:** 2026-07-01 (REPOSITORY_MIGRATION_AND_METADATA_DUMP)
+**Certification basis:** ADR-015, ADR-021, ADR-024, ADR-025  
+**Last updated:** 2026-07-09 (PHASE_07A — Enterprise Ledger Foundation)
 
 ---
 
@@ -258,15 +258,22 @@ Reports and statements must not trust Tier 3 alone without reconciliation to Tie
 
 ---
 
-## 18. Ledger Extension Points (PHASE_07)
+## 18. Ledger Foundation Invariants (PHASE_07A — shipped)
 
 | Rule | Detail |
 |------|--------|
-| Write path | `LedgerEntry` created only inside `posting-service.ts` |
-| Append-only | Ledger entries never updated or deleted |
-| Reversals | Compensating entries with `reversesEntryId` |
-| Running balance | `LedgerEntry.balance` must equal `Dealer.currentBalance` after each post |
-| Idempotency | `postingKey` unique constraint prevents duplicate entries on retry |
+| Write path | `LedgerEntry` inserted only via `createLedgerEntry` in `@/lib/ledger` |
+| Caller | `createLedgerEntry` is invoked only from `posting-service.ts` (PHASE_07B onwards) |
+| Append-only | Ledger entries never updated or deleted; runtime guard `assertLedgerAppendOnly` |
+| Reversals | Compensating entries with `reversesEntryId` and `postingType = Reversal`; `buildReversalPosting` helper |
+| Running balance | `LedgerEntry.balance = previousBalance + debit − credit`; MUST equal `Dealer.currentBalance` after each post (`assertLedgerBalanceMatchesCache`) |
+| Sign convention | Debit increases dealer obligation; credit decreases. Advance credit ⇒ negative balance |
+| Idempotency | `postingKey String @unique` derived from `(referenceType, referenceId, postingType[, sequence])` |
+| Amount rules | `debit ≥ 0`, `credit ≥ 0`, exactly one > 0 (`assertLedgerPostingInputValid`) |
+| Enum discipline | `referenceType: FinancialReferenceType`, `postingType: LedgerPostingType` — no strings |
+| Actor audit | `createdById` on every entry (nullable for system backfills) |
+| Reconciliation | `reconcileDealerLedger` + `replayDealerLedgerBalance` — drift never silently corrected |
+| Opening balance | `buildOpeningBalancePosting` sign-aware; `previousBalance = 0.00` mandatory |
 
 ---
 
@@ -294,3 +301,4 @@ Before merging any financial feature:
 - ADR-020 — Collection engine
 - ADR-021 — Collection financial certification
 - ADR-024 — Financial architecture certification
+- ADR-025 — Enterprise Ledger Foundation (PHASE_07A)

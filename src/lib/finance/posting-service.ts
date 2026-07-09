@@ -21,6 +21,11 @@ import {
  * `previousBalance` from the locked snapshot.
  * PHASE_06A2: `postReceivableDecrease()` for collection cash receipt and
  * allocation accounting.
+ *
+ * PHASE_07A: input contracts extended with optional ledger metadata
+ * (`postingType`, `postingKey`, `transactionDate`, `reversesEntryId`) so
+ * PHASE_07B can wire `createLedgerEntry` (from `@/lib/ledger`) inside these
+ * function bodies without any caller-side changes. See ADR-025.
  */
 
 const DEALER_ENTITY_TYPE = "Dealer";

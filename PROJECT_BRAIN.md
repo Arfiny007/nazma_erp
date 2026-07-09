@@ -353,7 +353,8 @@ TIER 3 — OPERATIONAL CACHE
 | Money Receipt | ✅ Complete |
 | Document Platform | ✅ Complete |
 | Financial Architecture Certification | ✅ Complete (PHASE_06D) |
-| Ledger | ❌ Not built |
+| Ledger Foundation | ✅ Complete (PHASE_07A) — foundation only; posting deferred to PHASE_07B |
+| Ledger Posting Integration | ❌ Not built (PHASE_07B) |
 | Due Reports | ❌ Not built |
 | Audit Log UI | ❌ Not built |
 | User Management | ❌ Not built |
@@ -375,11 +376,12 @@ Permanent institutional knowledge files (2026-07-01):
 
 ---
 
-## Next Priorities (post PHASE_06D)
+## Next Priorities (post PHASE_07A)
 
-1. **PHASE_07A** — Ledger schema hardening
-2. **PHASE_07B** — Ledger engine (posting integration)
-3. **PHASE_07C** — Ledger UI (dealer subledger statement)
+1. **PHASE_07B** — Ledger posting integration (`createLedgerEntry` in
+   `posting-service.ts`; balance assertion; concurrency tests)
+2. **PHASE_07C** — Opening balance (server action + `postOpeningBalance()`)
+3. **PHASE_07D** — Ledger UI (dealer subledger statement)
 4. **Reporting** — due reports, cash book, territory analytics
 5. **Analytics** — management dashboards
 6. **Final Production Hardening** — reconciliation, concurrency tests, deployment checklist
@@ -404,6 +406,36 @@ Client-approved presentation-only invoice layout revision. No financial, posting
 | Pipeline | Preview = Print = PDF via single `InvoicePrintable` |
 
 Supersedes fixed 20-row invoice requirement (ADR-017, ADR-018). See ADR-017 amendment and ADR-018 revision.
+
+---
+
+## PHASE_07A — Enterprise Ledger Foundation
+
+**Status:** COMPLETE (2026-07-09)
+
+Ledger accounting foundation on top of the PHASE_06D-certified financial
+architecture. Foundation only — no UI, no reports, no posting wiring, no data
+migration.
+
+| Change | Detail |
+|--------|--------|
+| `LedgerEntry` model hardened | `referenceType` → `FinancialReferenceType` enum; `postingType`, `postingDate`, `postingKey @unique`, `referenceNo`, `reversesEntryId`, `createdById` added; composite indexes on `(dealerCode, transactionDate)` and `(dealerCode, postingDate)` |
+| `LedgerPostingType` enum | `Issue`, `Collection`, `Reversal`, `OpeningBalance`, `CreditNote`, `DebitNote`, `ManualAdjustment`, `JournalEntry`, `Adjustment` |
+| `FinancialReferenceType` | Extended with `Collection`; allocation runtime guards unchanged |
+| `src/lib/ledger/` | 9 files — posting-key, types, errors, validation, posting contracts, service, reconciliation, opening-balance, index |
+| PostingKey abstraction | `ledger:<referenceType>:<referenceId>:<postingType>[:<sequence>]` — deterministic, idempotent |
+| `createLedgerEntry` | Single ledger write path — validates input, builds row, inserts, handles `P2002` idempotently |
+| Reconciliation helpers | `reconcileDealerLedger`, `replayDealerLedgerBalance`, `assertDealerLedgerReconciled` |
+| Opening balance builders | `buildOpeningBalancePosting`, `buildOpeningBalancePostingKey` (PHASE_07C-ready) |
+| PostingService extension | Optional `postingType`, `transactionDate`, `postingKey`, `reversesEntryId` on `ReceivablePostingInput`/`ReceivableDecreasePostingInput`; bodies unchanged (PHASE_07B consumes) |
+| Tests | 35 new unit tests (posting-key, validation, posting/reversal, opening balance) |
+| Prisma migration | `20260709000000_phase_07a_ledger_foundation/migration.sql` |
+| ADR | `docs/ADR/ADR-025-enterprise-ledger-foundation.md` |
+
+**Design freeze:** every future financial module (opening balance, credit
+notes, debit notes, journal entries, dealer statements, trial balance, chart
+of accounts) plugs into `createLedgerEntry` via `posting-service.ts` without
+redesigning existing boundaries.
 
 ---
 

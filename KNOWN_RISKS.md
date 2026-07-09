@@ -3,7 +3,7 @@
 Operational risk register as of PHASE_06D completion. None are blocking for controlled production use of the Order → Invoice → Collection pipeline.
 
 **Overall readiness:** 8.7 / 10 (ADR-024)  
-**Last updated:** 2026-07-01 (REPOSITORY_MIGRATION_AND_METADATA_DUMP)
+**Last updated:** 2026-07-09 (PHASE_07A — Enterprise Ledger Foundation)
 
 ---
 
@@ -72,12 +72,12 @@ Operational risk register as of PHASE_06D completion. None are blocking for cont
 
 | Attribute | Value |
 |-----------|-------|
-| Description | `referenceType` String; no `postingKey`; weak reversal linkage |
-| Impact | Type drift, duplicate entries, weak audit chain |
-| Likelihood | Certain if ledger built without hardening |
-| Mitigation | PHASE_07A migration before posting logic |
-| Status | **Open** |
-| Future Phase | PHASE_07A |
+| Description | ~~`referenceType` String; no `postingKey`; weak reversal linkage~~ |
+| Impact | ~~Type drift, duplicate entries, weak audit chain~~ |
+| Likelihood | ~~Certain if ledger built without hardening~~ |
+| Mitigation | PHASE_07A schema hardening + `createLedgerEntry` idempotency (ADR-025) |
+| Status | **Mitigated** (schema hardened; posting integration pending PHASE_07B) |
+| Future Phase | ~~PHASE_07A~~ → PHASE_07B for posting wiring |
 
 ### A2. Full GL Not Architected
 

@@ -2,7 +2,7 @@
 
 Known deferred improvements categorized by priority. Each item includes rationale for deferral.
 
-**Last updated:** 2026-07-01 (REPOSITORY_MIGRATION_AND_METADATA_DUMP)
+**Last updated:** 2026-07-09 (PHASE_07A — Enterprise Ledger Foundation)
 
 ---
 
@@ -10,11 +10,12 @@ Known deferred improvements categorized by priority. Each item includes rational
 
 | ID | Item | Description | Why deferred | Risk if ignored | Target |
 |----|------|-------------|--------------|-----------------|--------|
-| C1 | Ledger posting not implemented | `LedgerEntry` model exists; no rows created | Pipeline required first; ADR-024 certified architecture | No authoritative journal | PHASE_07B |
-| C2 | Ledger schema hardening | `referenceType` is String; missing `postingKey`, `postingType`, `reversesEntryId` | Isolated migration before posting logic | Type drift, duplicate entries on retry | PHASE_07A |
-| C3 | Invoice void / credit note | Cannot reverse issued invoices | Collections prioritized; compensating model in ADR-024 | Cannot correct receivables in-system | PHASE_07B |
-| C4 | Balance reconciliation job | No automated `currentBalance` vs ledger check | Requires ledger posting first | Silent balance drift undetected | PHASE_07E |
-| C5 | `postingKey` idempotency | Ledger lacks unique posting key | Ledger not yet posting | Duplicate ledger lines on retry | PHASE_07A–07B |
+| C1 | Ledger posting not integrated | `createLedgerEntry` shipped in PHASE_07A but not yet called from `posting-service.ts` | Foundation must be certified independently before wiring | No authoritative journal until PHASE_07B | PHASE_07B |
+| C2 | ~~Ledger schema hardening~~ | ~~`referenceType` is String; missing `postingKey`, `postingType`, `reversesEntryId`~~ | **Resolved in PHASE_07A** (ADR-025) | ~~Type drift, duplicate entries on retry~~ | ✅ DONE |
+| C3 | Invoice void / credit note | Cannot reverse issued invoices | Collections prioritized; compensating model in ADR-024 | Cannot correct receivables in-system | PHASE_07B or dedicated |
+| C4 | Balance reconciliation job | Reconciliation helpers shipped (PHASE_07A) but no scheduled job | Requires ledger posting first (PHASE_07B) | Silent balance drift undetected | PHASE_07E |
+| C5 | ~~`postingKey` idempotency~~ | ~~Ledger lacks unique posting key~~ | **Resolved in PHASE_07A** — `postingKey String @unique` | ~~Duplicate ledger lines on retry~~ | ✅ DONE |
+| C6 | DB-level ledger immutability | Application-level `assertLedgerAppendOnly` guard only | Runtime guard sufficient for PHASE_07A; DB policy adds defense in depth | Rogue SQL could still UPDATE/DELETE historical rows | Optional |
 
 ---
 
@@ -90,7 +91,7 @@ Known deferred improvements categorized by priority. Each item includes rational
 
 | Location | Temporary aspect | Replacement |
 |----------|------------------|-------------|
-| `posting-service.ts` | Balance + audit only; no `LedgerEntry` | PHASE_07B ledger wiring |
+| `posting-service.ts` | Balance + audit only; ledger metadata fields accepted but ignored (PHASE_07A) | PHASE_07B calls `createLedgerEntry` inside each function body |
 | `getCompanyBranding()` | Hardcoded defaults | Company settings module |
 | `salesPerson` on invoice | Maps to `Dealer.territory` | SR user denormalization |
 | `/reports`, `/ledger` nav | Placeholder routes may 404 | PHASE_07–08 modules |

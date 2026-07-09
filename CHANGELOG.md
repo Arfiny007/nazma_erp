@@ -4,6 +4,125 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_07A_ENTERPRISE_LEDGER_FOUNDATION] — 2026-07-09
+
+### Purpose
+
+Deliver a permanent accounting foundation on top of the PHASE_06D-certified
+financial architecture. Foundation only — no ledger UI, no reports, no
+statements, no dashboards, no data migration, no wired posting. Every future
+financial module (opening balance, credit notes, debit notes, journal
+entries, dealer statements, trial balance, chart of accounts) can now be
+implemented without redesigning the existing financial architecture.
+
+### Added
+
+- **Prisma schema — `LedgerEntry` hardening:**
+  - `referenceType` changed from `String` to `FinancialReferenceType` enum
+  - `referenceNo String` (required human-readable reference)
+  - `postingType LedgerPostingType` (new enum — accounting event)
+  - `postingDate DateTime @default(now())` (system-side timestamp)
+  - `postingKey String @unique` (idempotency guard)
+  - `reversesEntryId String?` self-relation (`reverses` / `reversedBy`)
+  - `createdById String?` FK to `User`
+  - Composite indexes on `(dealerCode, transactionDate)` and
+    `(dealerCode, postingDate)`
+  - Additional indexes on `postingDate`, `reversesEntryId`, `createdById`
+- **New enum `LedgerPostingType`** — `Issue`, `Collection`, `Reversal`,
+  `OpeningBalance`, `CreditNote`, `DebitNote`, `ManualAdjustment`,
+  `JournalEntry`, `Adjustment`
+- **`FinancialReferenceType.Collection`** added (allocation runtime guards
+  unchanged)
+- **`User.ledgerEntriesCreated`** reverse relation
+- **`src/lib/ledger/` module** (9 files):
+  - `posting-key.ts` — `buildLedgerPostingKey`, `parseLedgerPostingKey`,
+    `isLedgerPostingKey`; canonical format
+    `ledger:<referenceType>:<referenceId>:<postingType>[:<sequence>]`
+  - `ledger-types.ts` — `LedgerPostingInput`, `LedgerPostingResult`,
+    `LedgerEntrySnapshot`, `DealerLedgerReconciliation`,
+    `OpeningBalanceInput`, `LEDGER_ENTITY_TYPE`
+  - `ledger-errors.ts` — `LedgerError`, `LedgerPostingValidationError`,
+    `LedgerDuplicatePostingError`, `LedgerBalanceMismatchError`,
+    `LedgerImmutabilityError`, `LedgerReconciliationError`
+  - `ledger-validation.ts` — `assertLedgerPostingInputValid`,
+    `applyPostingToBalance`, `assertLedgerAppendOnly`
+  - `ledger-posting.ts` — `buildLedgerEntryCreateData`,
+    `buildReversalPosting`, `LedgerEntryCreateData`
+  - `ledger-service.ts` — `createLedgerEntry` (single write path,
+    idempotent via `postingKey`, replay-safe),
+    `assertLedgerBalanceMatchesCache`
+  - `ledger-reconciliation.ts` — `getLastLedgerEntryForDealer`,
+    `reconcileDealerLedger`, `assertDealerLedgerReconciled`,
+    `replayDealerLedgerBalance`
+  - `opening-balance.ts` — `buildOpeningBalanceReferenceId`,
+    `buildOpeningBalancePostingKey`, `buildOpeningBalancePosting`,
+    `OPENING_BALANCE_REFERENCE_PREFIX`
+  - `index.ts` — public surface
+- **`src/lib/finance/types.ts`** — `FINANCIAL_REFERENCE_COLLECTION`
+  constant; optional `postingType`, `transactionDate`, `postingKey`,
+  `reversesEntryId` on `ReceivablePostingInput` and
+  `ReceivableDecreasePostingInput` (extension points for PHASE_07B)
+- **Prisma migration** —
+  `prisma/migrations/20260709000000_phase_07a_ledger_foundation/migration.sql`
+- **ADR-025** — Enterprise Ledger Foundation
+- **Unit tests** — 35 new tests: `posting-key.test.ts` (12),
+  `ledger-validation.test.ts` (14), `ledger-posting.test.ts` (9)
+
+### Changed
+
+- `src/lib/finance/posting-service.ts` — documentation only (PHASE_07A
+  extension-point note); function bodies unchanged
+- `PROJECT_BRAIN.md`, `CURRENT_PHASE.md`, `IMPLEMENTATION_STATUS.md`,
+  `NEXT_ACTION.md` — reflect PHASE_07A completion
+- `TECH_DEBT.md`, `KNOWN_RISKS.md`, `FINANCIAL_INVARIANTS.md`,
+  `SYSTEM_CONTEXT.md`, `CLIENT_FEEDBACK_LOG.md` — updated ledger references
+
+### Architecture
+
+- `LedgerEntry` is the future Tier 1 accounting source of truth
+  (ADR-024 §2). `Dealer.currentBalance` remains a Tier 3 denormalized
+  operational cache.
+- `createLedgerEntry` is the SINGLE ledger write path. Only
+  `posting-service.ts` may invoke it (from PHASE_07B onwards).
+- Append-only invariant enforced by (1) the `postingKey @unique` schema
+  constraint, (2) the `assertLedgerAppendOnly` runtime guard, and (3) code
+  review discipline. Compensating reversals only — never in-place edits.
+- Idempotent posting: retried business actions collapse to the same
+  ledger row via deterministic `postingKey`.
+- Balance derivation: `balance = previousBalance + debit − credit`.
+  Signed to preserve advance credit semantics.
+- Extension-ready: opening balance, credit notes, debit notes, journal
+  entries, and multi-account GL plug into the same abstraction.
+
+### Verification
+
+- `npx tsc --noEmit` — 0 errors
+- `npx eslint` — 0 errors (7 pre-existing TanStack Table warnings — TECH_DEBT L12)
+- `npx vitest run` — 64 pass / 4 skipped (pre-existing DB integration tests
+  requiring `DATABASE_URL`)
+
+### Scope
+
+Foundation layer only. Zero changes to Invoice Engine, Collection Engine,
+Order Engine, Delivery Engine, Document Platform, UI, RBAC, localization,
+or any feature-level business logic. `posting-service.ts` runtime behavior
+is byte-for-byte identical to PHASE_06D.
+
+### Migration
+
+Run the following against every environment (dev, staging, production)
+before starting PHASE_07B:
+
+```
+npx prisma migrate deploy
+npx prisma generate
+```
+
+The migration is additive for `LedgerEntry` (no historical rows exist) and
+additive for `FinancialReferenceType`. No downtime.
+
+---
+
 ## [PHASE_06D.2_ENTERPRISE_DOCUMENT_PLATFORM_DESIGN_FREEZE] — 2026-07-09
 
 ### Purpose

@@ -58,11 +58,32 @@ enum CollectionPaymentMethod {
 
 enum FinancialReferenceType {
   Invoice
+  Collection
   OpeningBalance
   CreditNote
   DebitNote
   ManualAdjustment
   JournalEntry
+}
+
+/// Discrete accounting event for a `LedgerEntry`.
+///
+/// `referenceType` identifies the source *document*; `postingType` identifies
+/// the *event*. A single Invoice document may generate `Issue` and later
+/// `Reversal` entries; a Collection generates `Collection` and, on reverse,
+/// `Reversal`.
+///
+/// See ADR-024 §4 and ADR-025 for the append-only ledger contract.
+enum LedgerPostingType {
+  Issue
+  Collection
+  Reversal
+  OpeningBalance
+  CreditNote
+  DebitNote
+  ManualAdjustment
+  JournalEntry
+  Adjustment
 }
 
 enum DeliveryMode {
@@ -96,6 +117,7 @@ model User {
   challansConfirmed    DeliveryChallan[] @relation("ChallanConfirmedBy")
   collectionsCreated   Collection[]      @relation("CollectionCreatedBy")
   collectionsConfirmed Collection[]      @relation("CollectionConfirmedBy")
+  ledgerEntriesCreated LedgerEntry[]     @relation("LedgerEntryCreatedBy")
   auditLogs            AuditLog[]
 }
 
@@ -486,6 +508,15 @@ model CollectionAllocation {
   @@index([referenceType, referenceId])
 }
 
+/// Append-only accounting subledger for dealer receivables.
+///
+/// - Rows are IMMUTABLE after insert. Corrections MUST create compensating
+///   entries linked via `reversesEntryId`.
+/// - Only `posting-service.ts` (via `src/lib/ledger/`) may insert rows.
+/// - `postingKey` is the idempotency guard for retried postings.
+/// - `LedgerEntry.balance` == `Dealer.currentBalance` after each commit.
+///
+/// See ADR-024 §4 and ADR-025.
 model LedgerEntry {
   id String @id @default(uuid())
 
@@ -493,14 +524,32 @@ model LedgerEntry {
 
   dealer Dealer @relation(fields: [dealerCode], references: [dealerCode])
 
+  /// Business/value date used for statement ordering.
   transactionDate DateTime
+  /// System timestamp when the entry was posted (append-only).
+  postingDate DateTime @default(now())
 
-  referenceType String
+  referenceType FinancialReferenceType
   referenceId   String
+  /// Human-readable reference (e.g., `INV-000123`, `COL-000045`).
+  referenceNo String
+
+  postingType LedgerPostingType
+
+  /// Idempotency key derived from `(referenceType, referenceId, postingType[, sequence])`.
+  postingKey String @unique
 
   debit   Decimal @db.Decimal(18, 2)
   credit  Decimal @db.Decimal(18, 2)
   balance Decimal @db.Decimal(18, 2)
+
+  /// Compensating reversal link. When set, this entry reverses `reverses`.
+  reversesEntryId String?
+  reverses        LedgerEntry?  @relation("LedgerReversal", fields: [reversesEntryId], references: [id])
+  reversedBy      LedgerEntry[] @relation("LedgerReversal")
+
+  createdById String?
+  createdBy   User?   @relation("LedgerEntryCreatedBy", fields: [createdById], references: [id])
 
   remarks String?
 
@@ -508,7 +557,12 @@ model LedgerEntry {
 
   @@index([dealerCode])
   @@index([transactionDate])
+  @@index([postingDate])
   @@index([referenceType, referenceId])
+  @@index([dealerCode, transactionDate])
+  @@index([dealerCode, postingDate])
+  @@index([reversesEntryId])
+  @@index([createdById])
 }
 
 model DueReport {

@@ -6,7 +6,7 @@ Current Phase:
 
 
 
-PHASE_06D.2_ENTERPRISE_DOCUMENT_PLATFORM_DESIGN_FREEZE
+PHASE_07A_ENTERPRISE_LEDGER_FOUNDATION
 
 
 
@@ -70,6 +70,7 @@ COMPLETE
 
 | **PHASE_06D.1_INVOICE_PDF_CLIENT_REVISION** | Client-approved invoice layout revision 2 (presentation only) | **✅ COMPLETE** |
 | **PHASE_06D.2_ENTERPRISE_DOCUMENT_PLATFORM_DESIGN_FREEZE** | Enterprise design system freeze — design tokens, header, title, financial summary grouping, single signature, professional notes, enterprise footer, rebalanced table, single dealer section | **✅ COMPLETE** |
+| **PHASE_07A_ENTERPRISE_LEDGER_FOUNDATION** | Ledger schema hardening + strongly typed posting-key abstraction + immutable ledger service + reconciliation + opening-balance builders (foundation only — no UI, no reports, no wired posting) | **✅ COMPLETE** |
 
 
 
@@ -209,9 +210,72 @@ Presentation-layer changes only — no accounting, posting, workflow, or schema 
 
 
 
+---
+
+# PHASE_07A_ENTERPRISE_LEDGER_FOUNDATION
+
+Status: COMPLETE (2026-07-09)
+
+## Objectives
+
+Deliver a permanent, extension-ready accounting foundation on top of the
+certified PHASE_06D pipeline. Foundation only — no posting wiring, no UI,
+no reports, no data migration.
+
+* Harden `LedgerEntry` model per ADR-024 §11 (enums, `postingKey`,
+  `postingType`, `postingDate`, `referenceNo`, `reversesEntryId`,
+  `createdById`, composite indexes)
+* Introduce strongly typed `PostingKey` abstraction with deterministic,
+  idempotent builder
+* Replace loose `String referenceType` with `FinancialReferenceType` enum;
+  extend enum with `Collection`
+* Introduce `LedgerPostingType` enum for accounting events
+* Prepare `posting-service.ts` inputs for ledger hooks (types extended;
+  bodies unchanged)
+* Ship immutable ledger posting contracts (`LedgerPostingInput`,
+  `LedgerEntryCreateData`, `buildReversalPosting`)
+* Ship `createLedgerEntry` — the SINGLE ledger write path (idempotent,
+  balance-asserting, append-only)
+* Ship reconciliation helpers (`reconcileDealerLedger`,
+  `replayDealerLedgerBalance`, `assertDealerLedgerReconciled`)
+* Ship opening-balance infrastructure (`buildOpeningBalancePosting`,
+  `buildOpeningBalancePostingKey`)
+* Document architecture, posting strategy, append-only policy, and future
+  extension points in ADR-025
+
+## Completion Criteria
+
+* `LedgerEntry` schema hardened + Prisma migration authored: ✓
+* `LedgerPostingType` enum + `FinancialReferenceType.Collection` added: ✓
+* `PostingKey` builder/parser/predicate: ✓
+* `createLedgerEntry` with `postingKey` idempotency + balance derivation: ✓
+* Compensating reversal contract (`buildReversalPosting`,
+  `reversesEntryId`): ✓
+* Reconciliation helpers (single-dealer scope): ✓
+* Opening balance builders (sign-aware, deterministic key): ✓
+* `posting-service.ts` inputs extended with optional ledger metadata: ✓
+* ADR-025 authored: ✓
+* Governance docs updated: ✓
+* `npx tsc --noEmit` — 0 errors: ✓
+* `npx eslint` — 0 errors: ✓
+* `npx vitest run` — 64 passed, 4 skipped (pre-existing DB integration
+  tests requiring `DATABASE_URL`): ✓
+
+## Explicitly NOT Changed
+
+* `posting-service.ts` function bodies — PHASE_07B wires
+  `createLedgerEntry`
+* Invoice Engine, Collection Engine, Delivery Engine, Order Engine
+* Document platform, UI, RBAC, localization
+* Financial calculations, dealer balance semantics
+* Existing enum members and allocation runtime guards
+
+---
+
 ## Next Phase
 
-
-
-**PHASE_07A_LEDGER_SCHEMA_HARDENING** — Extend `LedgerEntry` model, idempotency
-keys, enum alignment; then PHASE_07B ledger posting integration.
+**PHASE_07B_LEDGER_POSTING_INTEGRATION** — Call `createLedgerEntry` inside
+`postReceivableIncrease`, `postReceivableDecrease`, and
+`postReceivableDecreaseReversal`; assert `LedgerEntry.balance =
+Dealer.currentBalance` after each post. Integration tests mirror the
+PHASE_05C2A invoice concurrency suite.
