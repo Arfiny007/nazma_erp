@@ -3,9 +3,6 @@ import type { CollectionPaymentMethod, CollectionStatus, FinancialReferenceType 
 
 import type { InvoiceItemDTO } from "@/types/invoice";
 
-/** Maximum product rows on a single A4 invoice page. */
-export const DOCUMENT_MAX_PRODUCT_ROWS = 20;
-
 /** Party block for Bill To / Ship To sections. */
 export interface DocumentPartyDTO {
   name: string;
@@ -52,6 +49,8 @@ export interface InvoiceDocumentDTO {
 
 export interface DocumentLabels {
   invoiceTitle: string;
+  /** Single-section dealer label — replaces the old Bill To / Ship To split. */
+  dealerInfo: string;
   billTo: string;
   shipTo: string;
   invoiceNo: string;
@@ -76,11 +75,19 @@ export interface DocumentLabels {
   status: string;
   pleaseNote: string;
   pleaseNoteText: string;
+  /** @deprecated Removed from invoice print in PHASE_06D.2 */
   paymentTerms: string;
+  /** @deprecated Removed from invoice print in PHASE_06D.2 */
   paymentTermsText: string;
-  accountsSignature: string;
+  /** @deprecated Use authorizedBy instead. Kept for backwards compatibility. */
+  preparedBy: string;
+  /** @deprecated Use authorizedBy instead. Kept for backwards compatibility. */
+  checkedBy: string;
+  /** @deprecated Use authorizedBy instead. Kept for backwards compatibility. */
+  authorizedSignature: string;
+  /** Single authorized signature label — replaces three-signature block. */
+  authorizedBy: string;
   footerThanks: string;
-  lineTruncationWarning: string;
   productTableCaption: string;
 }
 

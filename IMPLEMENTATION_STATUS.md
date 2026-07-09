@@ -1,6 +1,86 @@
 # IMPLEMENTATION STATUS
 
-Last updated: 2026-06-30 (PHASE_06D — Financial Architecture Certification)
+Last updated: 2026-07-09 (PHASE_06D.2 — Enterprise Document Platform Design Freeze)
+
+---
+
+## Enterprise Document Platform Design Freeze — Verification (PHASE_06D.2)
+
+| Criterion | Status |
+|-----------|--------|
+| Design tokens file created (`src/lib/documents/design-tokens.ts`) | ✅ |
+| Enterprise header — 32pt font-black company name, vertical rule, T/E/W address | ✅ |
+| Stronger document title — 17pt font-black, 0.12em tracking | ✅ |
+| Dealer section simplified — single "Dealer Information" block | ✅ |
+| Product table col-name width increased to 42% | ✅ |
+| Tabular numerals on qty / price / amount / financial summary columns | ✅ |
+| Financial summary grouped — divider between Invoice Amount / Due Summary | ✅ |
+| Payment terms removed from invoice printable | ✅ |
+| Professional notes — "Terms & Conditions" business language | ✅ |
+| Single Authorized By signature (one blank line) | ✅ |
+| Enterprise footer — blue bar + Confidential label + thank-you message | ✅ |
+| DocumentLabels type updated (authorizedBy, dealerInfo fields added) | ✅ |
+| EN localization updated with new keys | ✅ |
+| BN localization updated with new keys | ✅ |
+| Preview equals print equals PDF (single pipeline) | ✅ |
+| No business logic changes | ✅ |
+| No financial logic changes | ✅ |
+| No duplicate components introduced | ✅ |
+| No invoice-specific CSS hacks | ✅ |
+| Money Receipt pipeline unaffected | ✅ |
+| `npx tsc --noEmit` — 0 errors | ✅ |
+| `npx eslint` — 0 errors | ✅ |
+
+### Files Modified — PHASE_06D.2
+
+**New file:** `src/lib/documents/design-tokens.ts`
+
+**Document platform components:**
+- `src/components/documents/branding/company-header.tsx`
+- `src/components/documents/branding/company-footer.tsx`
+- `src/components/documents/sections/document-title.tsx`
+- `src/components/documents/sections/document-financial-summary.tsx`
+- `src/components/documents/sections/financial-summary.tsx`
+- `src/components/documents/sections/invoice-metadata.tsx`
+- `src/components/documents/styles/document-print.css`
+- `src/components/documents/invoice/invoice-printable.tsx`
+
+**Types / localization:**
+- `src/types/document.ts` (DocumentLabels extended: authorizedBy, dealerInfo)
+- `public/locales/en/common.json`
+- `public/locales/bn/common.json`
+
+**Governance:** `PROJECT_BRAIN.md`, `CURRENT_PHASE.md`, `IMPLEMENTATION_STATUS.md`, `NEXT_ACTION.md`, `CHANGELOG.md`, `CLIENT_FEEDBACK_LOG.md`
+
+---
+
+## Invoice PDF Client Revision — Verification (PHASE_06D.1)
+
+| Criterion | Status |
+|-----------|--------|
+| Company name enlarged (Nazma); WATER TAPS subtitle | ✅ |
+| Dynamic product rows — no placeholder padding | ✅ |
+| Discount column removed from printable invoice | ✅ |
+| VAT row removed from printable financial summary | ✅ |
+| Due Date removed from printable metadata | ✅ |
+| Sales person = Sales Order `createdBy.name` | ✅ |
+| Blank signature areas (Prepared / Checked / Authorized) | ✅ |
+| Preview equals print equals PDF (single pipeline) | ✅ |
+| No business logic changes | ✅ |
+| No financial logic changes | ✅ |
+| ADR-017 / ADR-018 updated | ✅ |
+| `npx tsc --noEmit` — 0 errors | ✅ |
+| `npx eslint` — 0 errors | ✅ |
+
+### Files Modified — PHASE_06D.1
+
+**Document platform:** `company-header.tsx`, `product-table.tsx`, `financial-summary.tsx`, `invoice-metadata.tsx`, `document-signature.tsx`, `document-table.tsx`, `invoice-printable.tsx`, `document-print.css`
+
+**Document loader:** `src/lib/actions/invoices/helpers.ts` (order `createdBy` for sales person)
+
+**Types / localization:** `src/types/document.ts`, `src/types/invoice.ts`, `public/locales/en/common.json`, `public/locales/bn/common.json`
+
+**Governance:** `PROJECT_BRAIN.md`, `CURRENT_PHASE.md`, `IMPLEMENTATION_STATUS.md`, `NEXT_ACTION.md`, `CHANGELOG.md`, `CLIENT_FEEDBACK_LOG.md`, ADR-017, ADR-018
 
 ---
 

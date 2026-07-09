@@ -107,7 +107,13 @@ export const invoiceDetailInclude = {
       territory: true,
     },
   },
-  order: { select: { id: true, orderNo: true } },
+  order: {
+    select: {
+      id: true,
+      orderNo: true,
+      createdBy: { select: { name: true } },
+    },
+  },
   deliveryChallan: { select: { id: true, challanNo: true } },
   items: { orderBy: { id: "asc" } },
 } satisfies Prisma.InvoiceInclude;
@@ -203,7 +209,7 @@ export function toInvoiceDetailDTO(
     dealerAddress: invoice.dealer.address,
     dealerMobile: invoice.dealer.mobile,
     dealerEmail: invoice.dealer.email,
-    salesPerson: invoice.dealer.territory,
+    salesPerson: invoice.order.createdBy?.name ?? null,
     auditHistory,
   };
 }

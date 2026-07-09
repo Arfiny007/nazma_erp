@@ -1,15 +1,15 @@
-/* Enterprise Document Engine — production print styles (ADR-017) */
+/* Enterprise Document Engine — production print styles (ADR-017, PHASE_06D.2) */
 
 :root {
   --doc-enterprise-blue: #1a5dad;
   --doc-enterprise-blue-dark: #164a8f;
   --doc-border: #d1d5db;
+  --doc-section-divider: #e5e7eb;
   --doc-text: #111827;
   --doc-muted: #4b5563;
   --doc-a4-width: 210mm;
   --doc-a4-height: 297mm;
   --doc-page-padding: 8mm;
-  --doc-table-rows: 20;
 }
 
 @page {
@@ -62,10 +62,8 @@
     margin: 0 !important;
     width: var(--doc-a4-width) !important;
     min-height: var(--doc-a4-height) !important;
-    max-height: var(--doc-a4-height) !important;
-    overflow: hidden !important;
-    page-break-after: avoid;
-    break-after: avoid;
+    page-break-after: auto;
+    break-after: auto;
   }
 
   .document-avoid-break {
@@ -81,6 +79,8 @@
     color: #fff !important;
   }
 }
+
+/* ─── Document root ─────────────────────────────────────────────────────────── */
 
 .document-print-root {
   width: var(--doc-a4-width);
@@ -102,6 +102,8 @@
   box-sizing: border-box;
 }
 
+/* ─── Color utilities ────────────────────────────────────────────────────────── */
+
 .doc-blue {
   color: var(--doc-enterprise-blue);
 }
@@ -111,11 +113,23 @@
   color: #fff;
 }
 
+/* ─── Rule ───────────────────────────────────────────────────────────────────── */
+
 .doc-hr {
   border: none;
   border-top: 1px solid var(--doc-enterprise-blue);
   margin: 0;
 }
+
+/* ─── Numeric alignment ──────────────────────────────────────────────────────── */
+
+.doc-numeric {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+  text-align: right;
+}
+
+/* ─── Tables ─────────────────────────────────────────────────────────────────── */
 
 .doc-table {
   width: 100%;
@@ -126,7 +140,7 @@
 .doc-table th,
 .doc-table td {
   border: 0.5px solid var(--doc-border);
-  padding: 1.5px 3px;
+  padding: 2px 4px;
   vertical-align: middle;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -146,49 +160,55 @@
   text-align: center;
 }
 
+/* ─── Product table ──────────────────────────────────────────────────────────── */
+
 .doc-product-table tbody tr {
-  height: 4.6mm;
-  max-height: 4.6mm;
+  min-height: 4.6mm;
 }
 
 .doc-product-table tbody td {
   font-size: 7.5pt;
-  line-height: 1.2;
+  line-height: 1.25;
   white-space: normal;
   word-break: break-word;
 }
 
+/* 7 columns — no Discount column. Sum = 100% */
 .doc-product-table .col-sl {
   width: 4%;
 }
 
 .doc-product-table .col-code {
-  width: 10%;
+  width: 9%;
 }
 
 .doc-product-table .col-name {
-  width: 28%;
+  width: 42%;
 }
 
 .doc-product-table .col-unit {
-  width: 7%;
+  width: 8%;
 }
 
 .doc-product-table .col-qty {
   width: 8%;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 
 .doc-product-table .col-price {
-  width: 12%;
-}
-
-.doc-product-table .col-discount {
-  width: 11%;
+  width: 14%;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
 
 .doc-product-table .col-amount {
-  width: 12%;
+  width: 15%;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
+
+/* ─── Data table (Money Receipt allocation) ──────────────────────────────────── */
 
 .doc-data-table tbody td {
   font-size: 8pt;
@@ -207,7 +227,22 @@
 
 .doc-data-table .col-ref-amount {
   width: 28%;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
 }
+
+/* ─── Financial summary ──────────────────────────────────────────────────────── */
+
+.doc-summary-row {
+  min-height: 4.2mm;
+}
+
+.doc-grand-total-row {
+  background-color: var(--doc-enterprise-blue);
+  color: #fff;
+}
+
+/* ─── Preview scaling ────────────────────────────────────────────────────────── */
 
 .doc-preview-scale {
   transform-origin: top center;

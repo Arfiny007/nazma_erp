@@ -2,7 +2,7 @@
 
 Date: 2026-06-27
 
-Status: ACCEPTED
+Status: ACCEPTED (amended 2026-07-09 — PHASE_06D.1)
 
 Phase: PHASE_05D2_ENTERPRISE_DOCUMENT_ENGINE
 
@@ -43,8 +43,8 @@ DocumentLayout
 ├── InvoiceMetadata
 │   ├── BillToSection
 │   └── ShipToSection
-├── ProductTable           ← fixed 20-row A4 grid
-├── FinancialSummary       ← backend DTO only
+├── ProductTable           ← dynamic rows (actual line items only)
+├── FinancialSummary       ← backend DTO only (print subset)
 ├── NotesSection
 ├── PaymentTerms
 ├── SignatureSection
@@ -111,28 +111,42 @@ print CSS resets to native A4 dimensions.
 * `@media print` visibility isolation — only `.document-print-root` prints
 * `print-color-adjust: exact` on enterprise blue bars
 * `page-break-inside: avoid` on totals, notes, signature, footer
-* Fixed **20 product rows** at `4.6mm` row height — no overflow page
+* Product rows use `min-height: 4.6mm`; table grows naturally with line count
+* Multi-page print allowed when line count exceeds single-page capacity
 * Screen preview scales at tablet/mobile breakpoints
 
-### 6. Product table strategy
+### 6. Product table strategy (amended PHASE_06D.1)
 
-* `DOCUMENT_MAX_PRODUCT_ROWS = 20`
-* Real lines rendered first; empty placeholder rows pad to 20
-* Columns: SL, Product Code, Product Name, Unit, Qty, Unit Price, Discount, Amount
+* Render **only actual invoice line items** — no placeholder padding rows
+* Columns: SL, Product Code, Product Name, Unit, Qty, Unit Price, Amount
+* Discount column removed from printable layout (DTO unchanged)
 * `table-layout: fixed` with widened Product Name column
 * Values formatted with shared `format-money.ts` (display only)
+
+**Supersedes:** Fixed 20-row grid (`DOCUMENT_MAX_PRODUCT_ROWS = 20`) from original ADR.
 
 ### 7. Financial rendering strategy
 
 `FinancialSummary` receives `DocumentFinancialDTO` from server:
 
-* subtotal, discount, vat (0), grandTotal
-* previousDue, currentDue, outstanding, status
+* Printable lines: subtotal, grandTotal, previousDue, currentDue, outstanding, status
+* Discount and VAT omitted from print (values remain in DTO and calculations)
+* Due Date omitted from metadata (value remains in DTO)
 
 `createMoneyFormatter()` in `src/lib/utils/format-money.ts` is the centralized
 locale formatter. React never sums or subtracts monetary fields.
 
-### 8. Future extensibility
+### 8. Sales person (PHASE_06D.1)
+
+Printable invoice metadata displays the **Sales Order creator** (`order.createdBy.name`),
+not dealer territory or invoice issuer.
+
+### 9. Signature strategy (PHASE_06D.1)
+
+Invoice uses three blank signature lines: Prepared By, Checked By, Authorized Signature.
+No printed names or designations. Money Receipt retains single decorative signature.
+
+### 10. Future extensibility
 
 | Extension | Hook |
 |-----------|------|
@@ -143,7 +157,7 @@ locale formatter. React never sums or subtracts monetary fields.
 | Challan PDF | Reuse `DocumentLayout` + challan sections |
 | Company settings | Override `getCompanyBranding()` |
 
-### 9. Localization
+### 11. Localization
 
 Document labels use `document.*` keys (EN + BN). Invoice status reuses
 `invoice.status.*`.
@@ -173,7 +187,8 @@ Document labels use `document.*` keys (EN + BN). Invoice status reuses
 - [x] Reusable document engine components
 - [x] `InvoicePrintable` single pipeline
 - [x] Preview modal + `/invoices/[id]/print`
-- [x] Print CSS — A4, 20 rows, color-adjust
+- [x] Print CSS — A4, dynamic rows, color-adjust
+- [x] PHASE_06D.1 — dynamic rows, print removals, SR mapping, blank signatures
 - [x] Company branding configuration
 - [x] Backend financial values only
 - [x] ADR-017

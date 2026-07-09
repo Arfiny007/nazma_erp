@@ -10,35 +10,36 @@ interface FinancialSummaryProps {
   labels: Pick<
     DocumentLabels,
     | "subtotal"
-    | "discount"
-    | "vat"
     | "grandTotal"
     | "previousDue"
     | "currentDue"
     | "outstanding"
-    | "status"
   >;
-  statusLabel: string;
   formatMoney: (value: string) => string;
 }
 
-/** Invoice financial block — composes shared DocumentFinancialSummary. */
+/**
+ * Invoice financial block — groups lines visually into Invoice Amount and
+ * Due Summary sections. Composes shared DocumentFinancialSummary.
+ * No financial logic — all values are server-sourced strings.
+ */
 export function FinancialSummary({
   financial,
   labels,
-  statusLabel,
   formatMoney,
 }: FinancialSummaryProps) {
   const lines: DocumentFinancialLine[] = [
     { label: labels.subtotal, value: formatMoney(financial.subtotal) },
-    { label: labels.discount, value: formatMoney(financial.discount) },
-    { label: labels.vat, value: formatMoney(financial.vat) },
     {
       label: labels.grandTotal,
       value: formatMoney(financial.grandTotal),
       highlight: true,
     },
-    { label: labels.previousDue, value: formatMoney(financial.previousDue) },
+    {
+      label: labels.previousDue,
+      value: formatMoney(financial.previousDue),
+      divider: true,
+    },
     {
       label: labels.currentDue,
       value: formatMoney(financial.currentDue),
@@ -49,7 +50,6 @@ export function FinancialSummary({
       value: formatMoney(financial.outstanding),
       emphasis: true,
     },
-    { label: labels.status, value: statusLabel },
   ];
 
   return <DocumentFinancialSummary lines={lines} />;

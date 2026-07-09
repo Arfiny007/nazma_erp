@@ -6,7 +6,7 @@ Current Phase:
 
 
 
-PHASE_06D_FINANCIAL_ARCHITECTURE_CERTIFICATION
+PHASE_06D.2_ENTERPRISE_DOCUMENT_PLATFORM_DESIGN_FREEZE
 
 
 
@@ -66,7 +66,10 @@ COMPLETE
 
 | PHASE_06C_ENTERPRISE_MONEY_RECEIPT_ENGINE | Document platform upgrade + Money Receipt printable | ✅ COMPLETE |
 
-| **PHASE_06D_FINANCIAL_ARCHITECTURE_CERTIFICATION** | Pre-ledger ERP financial architecture review; ADR-024 | **✅ COMPLETE** |
+| PHASE_06D_FINANCIAL_ARCHITECTURE_CERTIFICATION | Pre-ledger ERP financial architecture review; ADR-024 | ✅ COMPLETE |
+
+| **PHASE_06D.1_INVOICE_PDF_CLIENT_REVISION** | Client-approved invoice layout revision 2 (presentation only) | **✅ COMPLETE** |
+| **PHASE_06D.2_ENTERPRISE_DOCUMENT_PLATFORM_DESIGN_FREEZE** | Enterprise design system freeze — design tokens, header, title, financial summary grouping, single signature, professional notes, enterprise footer, rebalanced table, single dealer section | **✅ COMPLETE** |
 
 
 
@@ -74,7 +77,7 @@ COMPLETE
 
 
 
-# PHASE_06D_FINANCIAL_ARCHITECTURE_CERTIFICATION
+# PHASE_06D.1_INVOICE_PDF_CLIENT_REVISION
 
 
 
@@ -86,31 +89,22 @@ Status: COMPLETE
 
 
 
-Chief ERP Architect review of the full financial pipeline before PHASE_07 Ledger.
-Certify that PHASE_01–06 decisions support enterprise accounting without future
-refactoring.
+Revise the enterprise invoice printable layout per latest client feedback.
+Presentation-layer changes only — no accounting, posting, workflow, or schema changes.
 
 
 
-* Source-of-truth hierarchy (Ledger → Documents → Cache)
+* Enlarge company name hierarchy (Nazma + WATER TAPS subtitle)
 
-* Financial Posting Service strategy for all future operations
+* Dynamic product rows (no fixed 20-row padding)
 
-* Future Ledger architecture design (not implemented)
+* Remove discount column, VAT row, and Due Date from print
 
-* Dealer statement hybrid architecture
+* Sales person = Sales Order creator (not dealer territory)
 
-* Generic allocation certification
+* Blank signature areas (Prepared By / Checked By / Authorized Signature)
 
-* Advance payment certification
-
-* Reporting readiness assessment
-
-* Accounting rules verification
-
-* Production readiness scoring
-
-* ADR-024 — Financial Architecture Certification
+* Maintain Preview = Print = PDF single pipeline
 
 
 
@@ -118,43 +112,98 @@ refactoring.
 
 
 
-* Full pipeline reviewed (Order → Challan → Invoice → Collection → Posting): ✓
+* Company name enlarged; subtitle aligned: ✓
 
-* Source-of-truth recommendation documented: ✓
+* Dynamic row generation; no placeholder rows: ✓
 
-* Financial posting strategy for future operations: ✓
+* Discount column removed from print: ✓
 
-* Ledger architecture designed (schema hardening plan): ✓
+* VAT row removed from print: ✓
 
-* Dealer statement architecture defined: ✓
+* Due Date removed from print: ✓
 
-* Generic allocation certified (no redesign required): ✓
+* Sales person shows SR (order creator) name: ✓
 
-* Advance payment certified: ✓
+* Signature areas blank: ✓
 
-* Reporting readiness assessed: ✓
+* Preview == Print == PDF: ✓
 
-* Identified risks documented: ✓
+* No business or financial logic changes: ✓
 
-* Overall ERP readiness score: **8.7 / 10**: ✓
-
-* PHASE_07 breakdown recommended: ✓
+* ADR-017 / ADR-018 updated: ✓
 
 * Governance docs updated: ✓
 
 
 
-### Explicitly NOT Built
+### Explicitly NOT Changed
 
 
 
-* Ledger posting, migrations, server actions, UI
+* Prisma schema, PostingService, Invoice Engine, validators, workflow
 
-* Chart of Accounts, credit notes, invoice void
+* Financial calculations (subtotal, grandTotal, previousDue, currentDue, outstanding)
 
-* Due reports, dealer statement implementation
+* Database fields and DTO monetary fields
 
 
+
+---
+
+
+
+---
+
+
+
+# PHASE_06D.2_ENTERPRISE_DOCUMENT_PLATFORM_DESIGN_FREEZE
+
+Status: COMPLETE
+
+## Objectives
+
+Production design freeze for the Enterprise Document Platform before the Ledger phase begins.
+Presentation-layer changes only — no accounting, posting, workflow, or schema changes.
+
+* Design tokens file — single source of truth for all document visual constants
+* Enterprise CompanyHeader redesign — enlarged company name (32pt black), improved hierarchy, vertical rule separator, professional address block (T/E/W prefix style)
+* Stronger DocumentTitle — 17pt font-black, 0.12em tracking, increased vertical spacing
+* Simplified dealer section — single "Dealer Information" block (B2B ERP; no redundant Ship To column)
+* Rebalanced product table — Product Name column expanded to 42% (was 34%); compact numeric columns
+* Tabular numerals — font-variant-numeric: tabular-nums on qty/price/amount/financial columns
+* Grouped financial summary — visual divider between Invoice Amount group and Due Summary group
+* Single Authorized By signature — replaces three-signature block (Prepared By, Checked By, Authorized Signature)
+* Professional notes — business-grade Terms & Conditions replacing consumer-oriented text
+* Enterprise footer — blue bar + left "Confidential" label + right thank-you message
+* PaymentTerms section removed — no orphan sections
+
+### Completion Criteria
+
+* Design tokens file created: ✓
+* Enterprise header improved: ✓
+* Document title strengthened: ✓
+* Dealer section simplified (single B2B block): ✓
+* Product table rebalanced (42% name column): ✓
+* Tabular numerals on numeric columns: ✓
+* Financial summary grouped (divider between Invoice Amount / Due Summary): ✓
+* Payment terms removed from invoice print: ✓
+* Professional notes (Terms & Conditions): ✓
+* Single Authorized By signature: ✓
+* Enterprise footer (blue bar + confidential + message): ✓
+* DocumentLabels updated (authorizedBy, dealerInfo fields): ✓
+* EN/BN localization updated: ✓
+* Preview == Print == PDF: ✓
+* No business or financial logic changes: ✓
+* `npx tsc --noEmit` — 0 errors: ✓
+* `npx eslint` — 0 errors: ✓
+* Governance docs updated: ✓
+
+### Explicitly NOT Changed
+
+* Prisma schema, PostingService, Invoice Engine, validators, workflow
+* Financial calculations (subtotal, grandTotal, previousDue, currentDue, outstanding)
+* Database fields and DTO monetary fields
+* Money Receipt pipeline (DocumentFinancialSummary changes are backward-compatible)
 
 ---
 

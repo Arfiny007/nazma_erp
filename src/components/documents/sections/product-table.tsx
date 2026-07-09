@@ -1,5 +1,4 @@
 import { DocumentTable } from "@/components/documents/sections/document-table";
-import { DOCUMENT_MAX_PRODUCT_ROWS } from "@/types/document";
 import type { DocumentLabels, DocumentProductRowDTO } from "@/types/document";
 import type { InvoiceItemDTO } from "@/types/invoice";
 
@@ -13,7 +12,6 @@ interface ProductTableProps {
     | "columnUnit"
     | "columnQty"
     | "columnUnitPrice"
-    | "columnDiscount"
     | "columnAmount"
     | "productTableCaption"
   >;
@@ -34,26 +32,9 @@ function toProductRows(items: InvoiceItemDTO[]): DocumentProductRowDTO[] {
   }));
 }
 
-function padRows(rows: DocumentProductRowDTO[]): DocumentProductRowDTO[] {
-  const padded = [...rows];
-  while (padded.length < DOCUMENT_MAX_PRODUCT_ROWS) {
-    padded.push({
-      serial: padded.length + 1,
-      productCode: "",
-      productName: "",
-      unit: "",
-      quantity: "",
-      unitPrice: "",
-      discount: "",
-      amount: "",
-    });
-  }
-  return padded.slice(0, DOCUMENT_MAX_PRODUCT_ROWS);
-}
-
 /**
- * Fixed 20-row product grid — always renders exactly DOCUMENT_MAX_PRODUCT_ROWS
- * rows so A4 layout never shifts between 1 and 20 line invoices.
+ * Dynamic product grid — renders only actual invoice line items with no
+ * placeholder padding rows. Table height grows naturally with line count.
  */
 export function ProductTable({
   items,
@@ -61,7 +42,7 @@ export function ProductTable({
   formatMoney,
   formatQuantity,
 }: ProductTableProps) {
-  const rows = padRows(toProductRows(items));
+  const rows = toProductRows(items);
 
   return (
     <DocumentTable
@@ -101,40 +82,21 @@ export function ProductTable({
           header: labels.columnQty,
           align: "right",
           className: "col-qty",
-          render: (row) => {
-            const isEmpty = !row.productCode && !row.productName;
-            return isEmpty ? "" : formatQuantity(row.quantity);
-          },
+          render: (row) => formatQuantity(row.quantity),
         },
         {
           key: "price",
           header: labels.columnUnitPrice,
           align: "right",
           className: "col-price",
-          render: (row) => {
-            const isEmpty = !row.productCode && !row.productName;
-            return isEmpty ? "" : formatMoney(row.unitPrice);
-          },
-        },
-        {
-          key: "discount",
-          header: labels.columnDiscount,
-          align: "right",
-          className: "col-discount",
-          render: (row) => {
-            const isEmpty = !row.productCode && !row.productName;
-            return isEmpty ? "" : formatMoney(row.discount);
-          },
+          render: (row) => formatMoney(row.unitPrice),
         },
         {
           key: "amount",
           header: labels.columnAmount,
           align: "right",
           className: "col-amount",
-          render: (row) => {
-            const isEmpty = !row.productCode && !row.productName;
-            return isEmpty ? "" : formatMoney(row.amount);
-          },
+          render: (row) => formatMoney(row.amount),
         },
       ]}
     />

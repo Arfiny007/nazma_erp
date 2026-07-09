@@ -4,6 +4,82 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_06D.2_ENTERPRISE_DOCUMENT_PLATFORM_DESIGN_FREEZE] — 2026-07-09
+
+### Purpose
+
+Enterprise Document Platform production design freeze. All future printable documents (Invoice, Money Receipt, Delivery Challan, Ledger Statement, Dealer Statement, Credit Note, Return Slip) inherit this design system with zero major UI redesign effort. Presentation layer only — no accounting, posting, workflow, or schema changes.
+
+### Added
+
+- **Design tokens** (`src/lib/documents/design-tokens.ts`) — `DOC_COLORS`, `DOC_TYPOGRAPHY`, `DOC_SPACING`, `DOC_PRODUCT_TABLE_COLS`, `DOC_DATA_TABLE_COLS`
+- **`authorizedBy`** field added to `DocumentLabels` (single-signature label)
+- **`dealerInfo`** field added to `DocumentLabels` (single B2B dealer section label)
+- **EN/BN localization** — `document.invoice.dealerInfo`, `document.invoice.authorizedBy`, updated `pleaseNote` / `pleaseNoteText` / `footerThanks`
+
+### Changed
+
+- **CompanyHeader** — 32pt `font-black` company name; vertical rule separator between brand and address; professional T/E/W address prefixes replacing emoji symbols
+- **DocumentTitle** — upgraded to 17pt `font-black` with 0.12em letter-spacing and increased vertical margins
+- **InvoiceMetadata** — single "Dealer Information" section (B2B: removed redundant Ship To column); `labels.dealerInfo` replaces `labels.billTo` / `labels.shipTo`
+- **DocumentFinancialSummary** — added `divider?: boolean` to `DocumentFinancialLine`; renders a thin separator between line groups
+- **FinancialSummary** — divider applied between Invoice Amount group (Subtotal, Grand Total) and Due Summary group (Previous Due, Current Due, Outstanding)
+- **document-print.css** — `col-name` expanded to 42%; tabular-nums (`font-variant-numeric: tabular-nums`) on `col-qty`, `col-price`, `col-amount`, `col-ref-amount`; `doc-numeric` utility class; footer blue top bar; padding improvements
+- **CompanyFooter** — enterprise layout: 2px blue top bar + "Confidential — For addressee only" left label + thank-you message right-aligned
+- **InvoicePrintable** — PaymentTerms section removed; single `DocumentSignature` with `[labels.authorizedBy]`; uses `labels.dealerInfo`
+
+### Deprecated (DocumentLabels)
+
+- `preparedBy` — superseded by `authorizedBy`
+- `checkedBy` — superseded by `authorizedBy`
+- `authorizedSignature` — superseded by `authorizedBy`
+- `paymentTerms` / `paymentTermsText` — removed from invoice print
+
+### Architecture
+
+- Single `InvoicePrintable` pipeline preserved: Preview = Print = PDF
+- Document platform primitives strengthened — no Invoice-specific hacks
+- Money Receipt pipeline unaffected (backward-compatible changes)
+- Financial architecture (ADR-024) unchanged
+- Design freeze: future documents require near-zero styling work
+
+### Scope
+
+Presentation layer only. Zero changes to Prisma schema, PostingService, Invoice Engine, validators, or financial calculations.
+
+---
+
+## [PHASE_06D.1_INVOICE_PDF_CLIENT_REVISION] — 2026-07-09
+
+### Purpose
+
+Client-approved invoice layout revision 2 (presentation layer only). Supersedes the fixed 20-row A4 invoice grid with dynamic product rows. No financial, posting, workflow, or schema changes.
+
+### Changed
+
+- **Company header** — enlarged Nazma brand name; WATER TAPS remains subtitle via `getCompanyBranding()`
+- **Product table** — dynamic rows only (actual line items); removed 20-row padding and truncation warning
+- **Print removals** — discount column, VAT row, Due Date hidden on printable invoice (DTO/calculations unchanged)
+- **Sales person** — displays Sales Order creator name (`order.createdBy.name`), not dealer territory
+- **Signatures** — blank Prepared By / Checked By / Authorized Signature lines (no printed names)
+- **Print CSS** — natural table growth; multi-page print allowed; column widths redistributed
+
+### Architecture
+
+- Single `InvoicePrintable` pipeline preserved: Preview = Print = PDF
+- Document platform primitives only — no duplicated templates
+- Financial architecture (ADR-024) unchanged
+
+### Files Modified
+
+Document platform components, invoice document loader (`helpers.ts`), types, localization (EN/BN), ADR-017, ADR-018, governance docs.
+
+### Scope
+
+Presentation layer only. Zero changes to Prisma schema, PostingService, Invoice Engine, validators, or financial calculations.
+
+---
+
 ## [REPOSITORY_MIGRATION_AND_METADATA_DUMP] — 2026-07-01
 
 ### Purpose

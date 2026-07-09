@@ -2,17 +2,25 @@
 
 ## Current State
 
-PHASE_06D_FINANCIAL_ARCHITECTURE_CERTIFICATION is **complete**:
+PHASE_06D.2_ENTERPRISE_DOCUMENT_PLATFORM_DESIGN_FREEZE is **complete**:
 
-- Full financial pipeline certified (Order → Challan → Invoice → Collection → Posting)
-- Source of truth: `LedgerEntry` (future authoritative) + documents + `Dealer.currentBalance` (cache)
-- Financial Posting Service mandated for all future financial operations
-- Ledger architecture designed — extend existing `posting-service.ts`, no refactor
-- Dealer statement: hybrid (ledger running balance + document line detail)
-- Generic allocation certified — no redesign required for future reference types
-- Advance payment / negative AR certified
-- Overall ERP readiness: **8.7 / 10**
-- ADR-024 created
+- Enterprise Document Platform has reached **Production Design Freeze** status
+- Design tokens (`src/lib/documents/design-tokens.ts`) introduced — single source of truth for all document visual constants
+- CompanyHeader: 32pt font-black company name, vertical rule separator, professional T/E/W address block
+- DocumentTitle: 17pt font-black, 0.12em letter-spacing, stronger visual weight
+- InvoiceMetadata: single "Dealer Information" section (B2B ERP — no redundant Ship To)
+- Product table: col-name expanded to 42%; tabular-nums on numeric columns
+- Financial summary: visual divider groups Invoice Amount vs Due Summary
+- Single "Authorized By" signature block replaces three-signature layout
+- Professional "Terms & Conditions" notes replace consumer-oriented text
+- PaymentTerms section removed from invoice print
+- Enterprise footer: blue top bar + "Confidential — For addressee only" + thank-you message
+- Preview = Print = PDF preserved via single pipeline
+- Money Receipt pipeline unaffected (DocumentFinancialSummary changes backward-compatible)
+- No financial, posting, or workflow changes
+
+PHASE_06D.1 invoice layout revision remains valid.
+PHASE_06D financial architecture certification remains valid (8.7 / 10).
 
 **Not yet built:** Ledger posting, opening balance, credit notes, dealer statements, due reports.
 
@@ -20,22 +28,9 @@ PHASE_06D_FINANCIAL_ARCHITECTURE_CERTIFICATION is **complete**:
 
 ## Next Steps
 
-Roadmap after PHASE_06D (Financial Architecture Certification):
+Roadmap after PHASE_06D.1:
 
-### 1. Invoice PDF Patch Upgrade
-
-Use client feedback to refine printable invoice layout:
-
-- Typography (title, body, table row sizes)
-- Spacing and margins (A4 padding, section gaps)
-- Visual polish (enterprise blue bars, alignment, density)
-- **Document platform only** — compose existing `Document*` primitives
-- **No duplicated templates** — single `InvoicePrintable` pipeline
-- **No business logic changes**
-
-See `CLIENT_FEEDBACK_LOG.md` entry #34.
-
-### 2. PHASE_07A — Ledger Schema Hardening
+### 1. PHASE_07A — Ledger Schema Hardening
 
 Prepare immutable ledger architecture:
 
@@ -47,34 +42,34 @@ Prepare immutable ledger architecture:
 - Journal architecture design (append-only, compensating reversals)
 - Prisma migration only — no posting logic yet
 
-### 3. PHASE_07B — Ledger Engine
+### 2. PHASE_07B — Ledger Engine
 
 - `createLedgerEntry()` inside `posting-service.ts`
 - Wire into `postReceivableIncrease`, `postReceivableDecrease`, `postReceivableDecreaseReversal`
 - Running balance per dealer; assert `LedgerEntry.balance === Dealer.currentBalance`
 - Integration tests
 
-### 4. PHASE_07C — Ledger UI
+### 3. PHASE_07C — Ledger UI
 
 - Ledger list / detail routes
 - Dealer subledger statement (hybrid: ledger balance + document lines)
 - Document platform statement composer
 - Print / PDF via existing document pipeline
 
-### 5. Reporting
+### 4. Reporting
 
 - Due reports and aging (PHASE_08)
 - Cash book, collection register
 - Territory / area analytics
 - Sales reports from `InvoiceItem` snapshots
 
-### 6. Analytics
+### 5. Analytics
 
 - Management dashboard KPIs
 - Dealer analytics (`totalSales`, targets)
 - Fulfillment rate reporting
 
-### 7. Final Production Hardening
+### 6. Final Production Hardening
 
 - Balance reconciliation job (`currentBalance` vs ledger vs document replay)
 - Collection concurrency integration tests

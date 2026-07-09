@@ -1,10 +1,22 @@
 interface DocumentSignatureProps {
-  label: string;
+  /** Single labeled signature block (money receipt). */
+  label?: string;
+  /** Multiple blank signature lines (invoice-style documents). */
+  lines?: string[];
 }
 
-export function DocumentSignature({ label }: DocumentSignatureProps) {
+function BlankSignatureLine({ label }: { label: string }) {
   return (
-    <section className="document-avoid-break mt-2 w-[72mm] shrink-0 text-center">
+    <div className="text-left">
+      <p className="text-[8pt] font-semibold doc-blue">{label}</p>
+      <hr className="mt-6 w-full border-0 border-t border-[var(--doc-border)]" />
+    </div>
+  );
+}
+
+function DecorativeSignature({ label }: { label: string }) {
+  return (
+    <>
       <svg
         viewBox="0 0 200 48"
         className="mx-auto h-10 w-40 text-[var(--doc-enterprise-blue)]"
@@ -20,6 +32,28 @@ export function DocumentSignature({ label }: DocumentSignatureProps) {
       </svg>
       <hr className="mx-auto mt-1 w-36 border-0 border-t border-dotted border-[var(--doc-enterprise-blue)]" />
       <p className="mt-1 text-[8pt] font-semibold doc-blue">{label}</p>
+    </>
+  );
+}
+
+export function DocumentSignature({ label, lines }: DocumentSignatureProps) {
+  if (lines && lines.length > 0) {
+    return (
+      <section className="document-avoid-break mt-2 w-[72mm] shrink-0 space-y-4">
+        {lines.map((line) => (
+          <BlankSignatureLine key={line} label={line} />
+        ))}
+      </section>
+    );
+  }
+
+  if (!label) {
+    return null;
+  }
+
+  return (
+    <section className="document-avoid-break mt-2 w-[72mm] shrink-0 text-center">
+      <DecorativeSignature label={label} />
     </section>
   );
 }

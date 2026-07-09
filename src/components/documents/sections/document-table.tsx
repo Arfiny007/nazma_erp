@@ -14,7 +14,7 @@ interface DocumentTableProps<T> {
   columns: DocumentTableColumn<T>[];
   rows: T[];
   caption: string;
-  /** Applies fixed product-row heights for A4 invoice grids. */
+  /** Applies product-row styling for invoice line tables. */
   variant?: "product" | "standard";
   rowKey: (row: T, index: number) => string;
 }

@@ -377,12 +377,55 @@ Permanent institutional knowledge files (2026-07-01):
 
 ## Next Priorities (post PHASE_06D)
 
-1. **Invoice PDF Patch Upgrade** — client feedback layout polish (document platform only)
-2. **PHASE_07A** — Ledger schema hardening
-3. **PHASE_07B** — Ledger engine (posting integration)
-4. **PHASE_07C** — Ledger UI (dealer subledger statement)
-5. **Reporting** — due reports, cash book, territory analytics
-6. **Analytics** — management dashboards
-7. **Final Production Hardening** — reconciliation, concurrency tests, deployment checklist
+1. **PHASE_07A** — Ledger schema hardening
+2. **PHASE_07B** — Ledger engine (posting integration)
+3. **PHASE_07C** — Ledger UI (dealer subledger statement)
+4. **Reporting** — due reports, cash book, territory analytics
+5. **Analytics** — management dashboards
+6. **Final Production Hardening** — reconciliation, concurrency tests, deployment checklist
 
 See `NEXT_ACTION.md` for immediate implementation goals.
+
+---
+
+## PHASE_06D.1 — Invoice PDF Client Revision (Revision 2)
+
+**Status:** COMPLETE (2026-07-09)
+
+Client-approved presentation-only invoice layout revision. No financial, posting, or workflow changes.
+
+| Change | Detail |
+|--------|--------|
+| Company header | Enlarged `shortDisplayName` (Nazma); tagline (WATER TAPS) as subtitle |
+| Product table | Dynamic rows only — no 20-row padding; table grows naturally |
+| Removed from print | Discount column, VAT row, Due Date (DTO/calculations unchanged) |
+| Sales person | Sales Order `createdBy.name` — not dealer territory |
+| Signatures | Blank Prepared By / Checked By / Authorized Signature lines |
+| Pipeline | Preview = Print = PDF via single `InvoicePrintable` |
+
+Supersedes fixed 20-row invoice requirement (ADR-017, ADR-018). See ADR-017 amendment and ADR-018 revision.
+
+---
+
+## PHASE_06D.2 — Enterprise Document Platform Design Freeze
+
+**Status:** COMPLETE (2026-07-09)
+
+Production design freeze. All future printable documents inherit this enterprise visual language. No financial, posting, or workflow changes.
+
+| Change | Detail |
+|--------|--------|
+| Design tokens | `src/lib/documents/design-tokens.ts` — `DOC_COLORS`, `DOC_TYPOGRAPHY`, `DOC_SPACING`, `DOC_PRODUCT_TABLE_COLS`, `DOC_DATA_TABLE_COLS` |
+| CompanyHeader | 32pt `font-black` company name; vertical rule separator; T/E/W professional address prefixes |
+| DocumentTitle | 17pt `font-black`, 0.12em letter-spacing; stronger visual separation |
+| InvoiceMetadata | Single "Dealer Information" section — no redundant Ship To (B2B only) |
+| Product table CSS | `col-name` → 42%; tabular-nums on all numeric columns |
+| Financial summary | `divider` flag on `DocumentFinancialLine`; groups Invoice Amount vs Due Summary |
+| Signature | Single "Authorized By" blank line — replaces three-signature block |
+| Notes | "Terms & Conditions" with professional business language |
+| Footer | Blue top bar + "Confidential" left + thank-you right |
+| PaymentTerms | Removed from invoice print (no due date = no payment terms) |
+| DocumentLabels | `authorizedBy` and `dealerInfo` fields added; old fields deprecated |
+| Pipeline | Preview = Print = PDF via single `InvoicePrintable` |
+
+**Design freeze status:** Every future printable document (Delivery Challan, Ledger Statement, Dealer Statement, Credit Note, Return Slip) must inherit the document platform tokens and primitives with near-zero additional styling.

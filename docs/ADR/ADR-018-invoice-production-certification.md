@@ -2,7 +2,7 @@
 
 Date: 2026-06-27
 
-Status: ACCEPTED
+Status: ACCEPTED (revised 2026-07-09 — PHASE_06D.1)
 
 Phase: PHASE_05D3_ENTERPRISE_INVOICE_QA
 
@@ -28,7 +28,10 @@ No new business features. No invoice redesign.
 Production readiness score: **9.0 / 10** (up from 7.5 after PHASE_05C2A concurrency fix)
 
 The invoice pipeline is architecturally sound, financially consistent across
-surfaces, and print-ready for standard A4 invoices (1–20 line items).
+surfaces, and print-ready for production invoices with dynamic line-item counts.
+
+**PHASE_06D.1 amendment:** Fixed 20-row grid superseded by client-approved dynamic
+rows. Presentation-only changes; financial certification unchanged.
 
 ---
 
@@ -61,15 +64,18 @@ surfaces, and print-ready for standard A4 invoices (1–20 line items).
 
 ## Verified Scenarios
 
-### Product table (A4 fixed grid)
+### Product table (dynamic rows — PHASE_06D.1)
 
-| Row count | Layout | Clipping | Overlap | Page overflow |
-|-----------|--------|----------|---------|---------------|
-| 1 | ✅ Stable padding | ✅ | ✅ | ✅ |
-| 5 | ✅ | ✅ | ✅ | ✅ |
-| 10 | ✅ | ✅ | ✅ | ✅ |
-| 15 | ✅ | ✅ | ✅ | ✅ |
-| 20 | ✅ | ✅ | ✅ | ✅ |
+| Row count | Layout | Placeholder rows | Page overflow |
+|-----------|--------|------------------|---------------|
+| 1 | ✅ Natural height | ✅ None | ✅ |
+| 5 | ✅ | ✅ | ✅ |
+| 10 | ✅ | ✅ | ✅ |
+| 15 | ✅ | ✅ | ✅ |
+| 20 | ✅ | ✅ | ✅ |
+| >20 | ✅ Multi-page print | ✅ None | ✅ Allowed |
+
+**Supersedes:** Fixed 20-row A4 grid with placeholder padding (ADR-017 original).
 
 Long product names/codes: `word-break: break-word` on product column; ellipsis on
 header cells. Large quantities/prices/discounts: tabular-nums + fixed column widths.
@@ -138,13 +144,12 @@ header cells. Large quantities/prices/discounts: tabular-nums + fixed column wid
 
 | Limitation | Impact | Mitigation |
 |------------|--------|------------|
-| **Max 20 printable line items per A4 page** | Invoices with >20 lines truncate on print/PDF | Screen warning; detail view shows all lines; defer multi-page to future phase |
 | **PDF = browser Save-as-PDF** | No server-side PDF; output varies slightly by browser | By design (ADR-017); vector HTML/CSS |
 | **`outstanding === currentDue` pre-Collections** | Redundant lines on print until payments recorded | Correct until PHASE_06; `collectionReceived` always 0 |
-| **`salesPerson` maps to dealer territory** | May not reflect actual SR | Acceptable for v1; denormalize in future |
 | **Bill To = Ship To** | Same party block on both columns | Acceptable for dealer-only B2B model |
 | **No modal focus trap** | Tab may escape preview dialog | Initial focus + Escape; full trap deferred |
 | **Company branding hardcoded** | Settings UI not built | `getCompanyBranding()` extension point ready |
+| **Discount / VAT / Due Date hidden on print** | Not shown on printable invoice | DTO and calculations unchanged; detail UI still shows values |
 
 ---
 
@@ -152,7 +157,6 @@ header cells. Large quantities/prices/discounts: tabular-nums + fixed column wid
 
 | Item | Phase |
 |------|-------|
-| Multi-page invoice (>20 lines) | Post-Collections |
 | Server-side headless PDF | Optional future |
 | `Invoice.issuedById` denormalization | Reporting enhancement |
 | Denormalize `dealerName` / `orderNo` / `challanNo` on header | Resilience enhancement |
@@ -168,8 +172,8 @@ header cells. Large quantities/prices/discounts: tabular-nums + fixed column wid
 |------|----------|--------|
 | Dealer balance concurrency | Critical | ✅ Remediated (PHASE_05C2A) |
 | Financial value drift across surfaces | High | ✅ Verified consistent |
-| Print layout breakage (1–20 rows) | Medium | ✅ Verified |
-| >20 line silent truncation | Medium | ⚠️ Documented + warning banner |
+| Print layout breakage (dynamic rows) | Medium | ✅ Verified (PHASE_06D.1) |
+| >20 line truncation | Medium | ✅ Resolved — dynamic multi-page (PHASE_06D.1) |
 | Browser PDF variance | Low | Accepted by design |
 | Collections integration breaking invoice snapshots | Low | Extension points verified (ADR-015) |
 
@@ -198,8 +202,9 @@ no refactoring for payment recording.
 - [x] Print equals PDF (same DOM + print CSS)
 - [x] Financial values consistent across pipeline
 - [x] Previous Due / Current Due / Outstanding correct
-- [x] 20-row table verified
-- [x] No clipping / overlap (1–20 rows)
+- [x] Dynamic product table verified (PHASE_06D.1)
+- [x] No placeholder rows
+- [x] Sales person = order creator (PHASE_06D.1)
 - [x] `npx prisma generate` — OK
 - [x] `npx tsc --noEmit` — 0 errors
 - [x] `npx eslint` — 0 errors

@@ -66,7 +66,7 @@ export interface InvoiceDetailDTO extends InvoiceSummaryDTO {
   dealerAddress: string;
   dealerMobile: string;
   dealerEmail: string | null;
-  /** Optional sales representative label for document metadata. */
+  /** Sales representative — user who created the linked Sales Order. */
   salesPerson: string | null;
   /** Audit-derived lifecycle history for the invoice detail page. */
   auditHistory: InvoiceHistoryDTO[];
