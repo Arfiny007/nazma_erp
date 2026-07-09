@@ -3,7 +3,7 @@
 Authoritative engineering rulebook. Every rule below is mandatory. Violation constitutes a production defect and potential accounting corruption.
 
 **Certification basis:** ADR-015, ADR-021, ADR-024, ADR-025, ADR-026, ADR-027, ADR-028  
-**Last updated:** 2026-07-09 (PHASE_07C — Enterprise Financial Initialization Engine)
+**Last updated:** 2026-07-10 (PHASE_07E2 — Enterprise Historical Ledger Replay Engine)
 
 ---
 
@@ -325,6 +325,21 @@ Reports and statements must not trust Tier 3 alone without reconciliation to Tie
 | Producer-agnostic core | `OpeningBalanceRecordInput.source: Manual \| CsvImport \| ExcelImport \| ErpMigration` — future bulk import/migration reuses `opening-balance.ts` unchanged |
 | RBAC | Reuses `invoices:create` (Super_Admin, Accounts) — `permissions.ts` not modified for this phase |
 | Forbidden | Direct `dealer.update({ currentBalance })` or `LedgerEntry` insert from the initialization engine; editing/deleting a `Locked` `OpeningBalance`; posting an amount without the `previousBalance = 0` precondition |
+
+---
+
+## 22. Historical Ledger Replay Invariants (PHASE_07E2 — shipped)
+
+| Rule | Detail |
+|------|--------|
+| Write path | Replay inserts `LedgerEntry` only via `createLedgerEntry()` — never duplicates posting-service logic |
+| No balance mutation | `Dealer.currentBalance` is NEVER updated during replay — documents already posted the cache |
+| Idempotency | `postingKey @unique` — `replayDealerLedger()` safe to run twice; second run creates 0 rows |
+| Replay order | Opening Balance → Invoices → Collections → Reversals; chronological within phase |
+| Eligibility | `NO_LEDGER` and `PARTIAL_LEDGER` dealers; reject true `CACHE_DRIFT` and corrupted chains |
+| Parity gate | After replay, `LedgerEntry.balance` MUST equal `Dealer.currentBalance`; mismatch rolls back transaction |
+| Discovery reuse | Eligibility consumes PHASE_07E1 `classifyBackfillReason()` — no duplicate classification |
+| Forbidden | Direct SQL inserts; `posting-service.ts` calls during replay; auto-correcting cache drift |
 
 ---
 

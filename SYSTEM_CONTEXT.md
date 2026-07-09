@@ -4,9 +4,9 @@ Definitive engineering context for AI sessions and new maintainers.
 
 Read this document first. Then consult `PROJECT_BRAIN.md`, `CURRENT_PHASE.md`, and relevant ADRs.
 
-**Last updated:** 2026-07-10 (PHASE_07D3 — Enterprise Dealer Statement Document Platform)  
-**Current phase:** PHASE_07D3 complete → Next: PHASE_07E Reconciliation & Backfill  
-**Production readiness:** 9.1 / 10 (ADR-027, ADR-028, ADR-029, ADR-030, ADR-031)
+**Last updated:** 2026-07-10 (PHASE_07E2 — Enterprise Historical Ledger Replay Engine)  
+**Current phase:** PHASE_07E2 complete → Next: PHASE_07E3 Scheduled Reconciliation Job  
+**Production readiness:** 9.1 / 10 (ADR-027, ADR-028, ADR-029, ADR-030, ADR-031, ADR-032)
 
 ---
 
@@ -132,6 +132,8 @@ See ADR-011 for fulfillment architecture.
 | Dealer Subledger Foundation (Statement Read Engine) | ✅ Complete (PHASE_07D1) — read-only `getDealerStatement()`; ADR-029 | `src/lib/ledger/statement/` |
 | Dealer Statement UI | ✅ Complete (PHASE_07D2) — production `/ledger`; ADR-030 | `src/components/ledger/`, `/ledger` |
 | Dealer Statement Document | ✅ Complete (PHASE_07D3) — printable via Document Platform; ADR-031 | `src/components/documents/statement/` |
+| Ledger Backfill Discovery | ✅ Complete (PHASE_07E1) — read-only `getLedgerBackfillCandidates()`; ADR-032 | `src/lib/ledger/backfill/`, `/ledger/backfill` |
+| Ledger Historical Replay | ✅ Complete (PHASE_07E2) — `replayDealerLedger()` via `createLedgerEntry`; ADR-033 | `src/lib/ledger/backfill/`, `/ledger/backfill` |
 | Due Reports | ❌ Not built | — |
 | Audit Log UI | ❌ Not built | — |
 | User Management | ❌ Not built | — |
@@ -197,7 +199,9 @@ See ADR-017, ADR-023.
 
 **PHASE_07D3 (shipped):** Printable Dealer Statement via Document Platform — `DealerStatementPrintable`, statement mapper, print preview from `/ledger`. Preview = Print = PDF. ADR-031. Excel/email export deferred.
 
-**Future (PHASE_07E+):** Reconciliation job + backfill; Excel/email statement export; PHASE_07F Chart of Accounts (optional).
+**PHASE_07E2 (shipped):** `replayDealerLedger()` — idempotent historical reconstruction of missing `LedgerEntry` rows via `createLedgerEntry()`. Never mutates `Dealer.currentBalance`. Parity verified; rollback on mismatch. ADR-033.
+
+**Future (PHASE_07E3+):** Scheduled reconciliation job; Excel/email statement export; PHASE_07F Chart of Accounts (optional).
 
 ---
 
@@ -413,8 +417,10 @@ postOpeningBalanceRecord()  [PHASE_07C]
 |-------|-------------|
 | Invoice PDF Patch | Layout polish from client feedback (document platform only) |
 | Statement Document Composer | ~~Printable / PDF from `DealerStatementDTO`~~ ✅ PHASE_07D3 |
+| PHASE_07E1 Backfill Discovery | ~~Identify dealers requiring ledger reconstruction~~ ✅ PHASE_07E1 |
+| PHASE_07E2 Historical Replay | ~~Replay invoices/collections → ledger entries~~ ✅ PHASE_07E2 |
+| PHASE_07E3 Reconciliation Job | Scheduled reconciliation + optional DB immutability |
 | Statement Excel / Email | Excel export / email delivery from same DTO |
-| PHASE_07E | Reconciliation & backfill |
 | PHASE_07F | Chart of Accounts foundation (optional) |
 | PHASE_08 | Due reports |
 | Reporting / Analytics | Operational and management reports |
@@ -473,7 +479,7 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 
 **Blocking defects:** None for Order → Invoice → Collection → Ledger posting → Opening Balance → Dealer Statement read + UI + printable document pipeline as of PHASE_07D3.
 
-**PHASE_07E (Reconciliation & Backfill):** NEXT per ADR-031.
+**PHASE_07E1 (Backfill Discovery):** SHIPPED per ADR-032. **PHASE_07E2 (Historical Replay):** NEXT → **COMPLETE** (ADR-033).
 
 ---
 
@@ -493,6 +499,7 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 | Receipt mapper | `src/lib/documents/map-collection-receipt.ts` |
 | Print CSS | `src/components/documents/styles/document-print.css` |
 | Dealer statement read engine | `src/lib/ledger/statement/` — `getDealerStatement()` |
+| Ledger backfill discovery | `src/lib/ledger/backfill/` — `getLedgerBackfillCandidates()` |
 | Dealer statement actions | `src/lib/actions/ledger-statement/` |
 | Dealer statement UI | `src/components/ledger/`, `/ledger` |
 | Dealer statement document | `src/components/documents/statement/` |
@@ -540,6 +547,8 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 | ADR-029 | Enterprise Dealer Subledger Foundation (PHASE_07D1) |
 | ADR-030 | Enterprise Dealer Statement UI (PHASE_07D2) |
 | ADR-031 | Enterprise Dealer Statement Document Platform (PHASE_07D3) |
+| ADR-032 | Enterprise Ledger Backfill Discovery (PHASE_07E1) |
+| ADR-033 | Enterprise Historical Ledger Replay Engine (PHASE_07E2) |
 
 ---
 

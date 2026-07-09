@@ -1,6 +1,76 @@
 # IMPLEMENTATION STATUS
 
-Last updated: 2026-07-10 (PHASE_07D3 — Enterprise Dealer Statement Document Platform)
+Last updated: 2026-07-10 (PHASE_07E2 — Historical Replay Engine)
+
+---
+
+## Historical Replay Engine — Verification (PHASE_07E2)
+
+| Criterion | Status |
+|-----------|--------|
+| `replayDealerLedger()` — idempotent reconstruction via `createLedgerEntry()` | ✅ |
+| Strict replay order — OB → Invoices → Collections → Reversals | ✅ |
+| Eligibility — `NO_LEDGER`, `PARTIAL_LEDGER`; reject true `CACHE_DRIFT` | ✅ |
+| Corrupted chain rejection | ✅ |
+| Parity check — rollback on mismatch | ✅ |
+| No `Dealer.currentBalance` mutation | ✅ |
+| Server actions + RBAC (`ledger:view` + `invoices:create`) | ✅ |
+| Dev page replay controls | ✅ |
+| ADR-033 authored | ✅ |
+| `npx vitest run` — 201 passed / 7 skipped | ✅ |
+
+Total: **201 passed / 7 skipped** (+15 new tests).
+
+---
+
+## Historical Ledger Discovery Engine — Verification (PHASE_07E1)
+
+| Criterion | Status |
+|-----------|--------|
+| `getLedgerBackfillCandidates()` — read-only scan of all dealers | ✅ |
+| Rule A — `NO_LEDGER` (non-zero cache, zero ledger) | ✅ |
+| Rule B — `PARTIAL_LEDGER` (documents exist, ledger missing/partial) | ✅ |
+| Rule C — `CACHE_DRIFT` (ledger balance ≠ cache) | ✅ |
+| `RECONCILED` when no backfill required | ✅ |
+| No `LedgerEntry` creation / no `posting-service.ts` import | ✅ |
+| Server action with `ledger:view` RBAC | ✅ |
+| Dev page `/ledger/backfill` — simple table + status badges | ✅ |
+| ADR-032 authored | ✅ |
+| Governance docs updated | ✅ |
+| `npx tsc --noEmit` — 0 errors | ✅ |
+| `npx eslint` — 0 errors | ✅ |
+| `npx vitest run` — 186 passed / 7 skipped | ✅ |
+
+### Files Delivered — PHASE_07E1
+
+**New:**
+- `src/lib/ledger/backfill/ledger-backfill-discovery.ts`
+- `src/lib/ledger/backfill/ledger-backfill-query.ts`
+- `src/lib/ledger/backfill/ledger-backfill-types.ts`
+- `src/lib/ledger/backfill/ledger-backfill-validation.ts`
+- `src/lib/ledger/backfill/ledger-backfill-errors.ts`
+- `src/lib/ledger/backfill/ledger-backfill-discovery.test.ts` (8 tests)
+- `src/lib/ledger/backfill/index.ts`
+- `src/lib/actions/ledger-backfill/get-ledger-backfill-candidates.ts`
+- `src/app/(dashboard)/ledger/backfill/page.tsx`
+- `src/app/(dashboard)/ledger/backfill/ledger-backfill-table.tsx`
+- `docs/ADR/ADR-032-enterprise-ledger-backfill-discovery.md`
+
+### Regression Verification — PHASE_07E1
+
+| Suite | Result |
+|-------|--------|
+| `src/lib/ledger/backfill/ledger-backfill-discovery.test.ts` | ✅ 8 pass (new) |
+| All prior suites | ✅ unchanged |
+
+Total: **186 passed / 7 skipped** (+8 new tests).
+
+### Certification Score — PHASE_07E1
+
+| Metric | Score |
+|--------|-------|
+| Ledger Backfill Discovery Readiness | **9.2 / 10** |
+| Production Readiness (overall) | **9.1 / 10** (unchanged) |
 
 ---
 

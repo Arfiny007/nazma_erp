@@ -159,9 +159,9 @@ The codebase should be reusable as a multi-company ERP platform in future versio
 
 ---
 
-## Architecture Maturity (as of PHASE_07D3 — 2026-07-10)
+## Architecture Maturity (as of PHASE_07E2 — 2026-07-10)
 
-**Overall ERP production readiness: 9.1 / 10** (ADR-027, ADR-028)
+**Overall ERP production readiness: 9.1 / 10** (ADR-027, ADR-028, ADR-032)
 
 The commercial → fulfillment → financial → document pipeline is **production-certified** for controlled deployment:
 
@@ -175,7 +175,48 @@ Sales Order → Delivery Challan → Invoice → Collection → Allocation → M
 
 **Blocking defects:** None for Order → Invoice → Collection → Ledger posting → Opening Balance → Dealer Statement read + UI + printable document pipeline.
 
-**Opening Balance:** SHIPPED (PHASE_07C) per ADR-028. **Dealer Subledger Foundation:** SHIPPED (PHASE_07D1) per ADR-029. **Dealer Statement UI:** SHIPPED (PHASE_07D2) per ADR-030. **Dealer Statement Document:** SHIPPED (PHASE_07D3) per ADR-031. **PHASE_07E (Reconciliation & Backfill):** NEXT.
+**Opening Balance:** SHIPPED (PHASE_07C) per ADR-028. **Dealer Subledger Foundation:** SHIPPED (PHASE_07D1) per ADR-029. **Dealer Statement UI:** SHIPPED (PHASE_07D2) per ADR-030. **Dealer Statement Document:** SHIPPED (PHASE_07D3) per ADR-031. **Ledger Backfill Discovery:** SHIPPED (PHASE_07E1) per ADR-032. **Historical Replay Engine:** SHIPPED (PHASE_07E2) per ADR-033. **PHASE_07E3 (Scheduled Reconciliation):** NEXT.
+
+---
+
+---
+
+## PHASE_07E2 — Historical Ledger Replay Engine
+
+**Status:** COMPLETE (2026-07-10)
+
+Idempotent reconstruction of missing `LedgerEntry` rows for dealers flagged
+by PHASE_07E1 discovery. Never mutates `Dealer.currentBalance`.
+
+| Change | Detail |
+|--------|--------|
+| Replay engine | `replayDealerLedger()` in `src/lib/ledger/backfill/` |
+| Write path | `createLedgerEntry()` + `buildLedgerPostingKey()` only |
+| Order | Opening Balance → Invoices → Collections → Reversals |
+| Parity | `LedgerEntry.balance == Dealer.currentBalance`; rollback on mismatch |
+| Server actions | `executeLedgerBackfill`, `previewLedgerReplay`, `getReplayStatus` |
+| Dev UI | `/ledger/backfill` — Replay / Preview / Status per dealer |
+| Tests | 15 unit tests |
+| ADR | `docs/ADR/ADR-033-enterprise-historical-ledger-replay-engine.md` |
+| Verdict | **PHASE_07E3 (Scheduled Reconciliation Job) NEXT** |
+
+---
+
+## PHASE_07E1 — Historical Ledger Discovery Engine
+
+**Status:** COMPLETE (2026-07-10)
+
+Read-only discovery module. Answers which dealers require historical ledger
+reconstruction. No repair, no replay, no mutation.
+
+| Change | Detail |
+|--------|--------|
+| Discovery engine | `getLedgerBackfillCandidates()` in `src/lib/ledger/backfill/` |
+| Rules | `NO_LEDGER`, `PARTIAL_LEDGER`, `CACHE_DRIFT`, `RECONCILED` |
+| Dev page | `/ledger/backfill` — simple verification table |
+| Tests | 8 unit tests |
+| ADR | `docs/ADR/ADR-032-enterprise-ledger-backfill-discovery.md` |
+| Verdict | **PHASE_07E2 (Historical Replay Engine) NEXT** |
 
 ---
 
@@ -475,6 +516,8 @@ TIER 3 — OPERATIONAL CACHE
 | Dealer Subledger Foundation (Statement Read Engine) | ✅ Complete (PHASE_07D1) — ADR-029; read-only `getDealerStatement()` |
 | Dealer Statement UI | ✅ Complete (PHASE_07D2) — ADR-030; production `/ledger` |
 | Dealer Statement Document | ✅ Complete (PHASE_07D3) — ADR-031; printable via Document Platform |
+| Ledger Backfill Discovery | ✅ Complete (PHASE_07E1) — ADR-032; read-only `getLedgerBackfillCandidates()` |
+| Ledger Historical Replay | ✅ Complete (PHASE_07E2) — ADR-033; `replayDealerLedger()` |
 | Due Reports | ❌ Not built |
 | Audit Log UI | ❌ Not built |
 | User Management | ❌ Not built |
@@ -496,9 +539,9 @@ Permanent institutional knowledge files (2026-07-01):
 
 ---
 
-## Next Priorities (post PHASE_07D3)
+## Next Priorities (post PHASE_07E1)
 
-1. **PHASE_07E** — Reconciliation + backfill of pre-PHASE_07B data
+1. **PHASE_07E3** — Scheduled reconciliation job
 2. **Statement Excel / Email Export** — same `DealerStatementDTO`, toolbar actions only
 3. **Bulk Opening Balance Import** — file parser + import UI on top of the shipped `postOpeningBalanceBatch()` engine
 4. **Reporting** — due reports, cash book, territory analytics

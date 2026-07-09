@@ -6,7 +6,7 @@ Current Phase:
 
 
 
-PHASE_07D3_ENTERPRISE_DEALER_STATEMENT_DOCUMENT_PLATFORM
+PHASE_07E2_HISTORICAL_REPLAY_ENGINE
 
 
 
@@ -77,6 +77,8 @@ COMPLETE
 | **PHASE_07D1_ENTERPRISE_DEALER_SUBLEDGER_FOUNDATION** | Read-only Dealer Statement engine — `getDealerStatement()` / `getDealerStatementSummary()`; `LedgerEntry`-authoritative running balance; server actions; `/ledger/demo` dev verification; ADR-029 | **✅ COMPLETE** |
 | **PHASE_07D2_ENTERPRISE_DEALER_STATEMENT_UI** | Production Dealer Statement UI at `/ledger` — header, filters, summary cards, ledger table, integrity badge; consumes PHASE_07D1 read engine only; ADR-030 | **✅ COMPLETE** |
 | **PHASE_07D3_ENTERPRISE_DEALER_STATEMENT_DOCUMENT_PLATFORM** | Printable Dealer Statement via Document Platform — mapper, `DealerStatementPrintable`, print preview from `/ledger`; ADR-031 | **✅ COMPLETE** |
+| **PHASE_07E1_HISTORICAL_LEDGER_DISCOVERY_ENGINE** | Read-only `getLedgerBackfillCandidates()` — identifies dealers requiring historical ledger reconstruction; dev page `/ledger/backfill`; ADR-032 | **✅ COMPLETE** |
+| **PHASE_07E2_HISTORICAL_REPLAY_ENGINE** | Idempotent `replayDealerLedger()` — reconstructs missing `LedgerEntry` rows via `createLedgerEntry`; server actions; dev replay controls; ADR-033 | **✅ COMPLETE** |
 
 
 
@@ -557,8 +559,90 @@ mutations, posting changes, or LedgerEntry modifications.
 
 ## Next Phase
 
-**PHASE_07E_RECONCILIATION_AND_BACKFILL** — Backfill pre-PHASE_07B data;
-scheduled reconciliation job.
+**PHASE_07E3_SCHEDULED_RECONCILIATION_JOB** — Scheduled job using
+`reconcileAllDealers`, `assertDealerLedgerReconciled`. No replay logic
+duplication.
+
+---
+
+# PHASE_07E2_HISTORICAL_REPLAY_ENGINE
+
+Status: COMPLETE (2026-07-10)
+
+## Objectives
+
+Build the Historical Replay Engine consuming PHASE_07E1 discovery results.
+Reconstruct missing `LedgerEntry` rows idempotently. No dashboards, cron,
+exports, or balance mutation.
+
+* `replayDealerLedger()` — chronological replay via `createLedgerEntry()`
+* Strict order: Opening Balance → Invoices → Collections → Reversals
+* Eligibility: `NO_LEDGER`, `PARTIAL_LEDGER`; reject `CACHE_DRIFT`, corrupted chains
+* Parity check: `LedgerEntry.balance == Dealer.currentBalance`; rollback on mismatch
+* Server actions: `executeLedgerBackfill`, `previewLedgerReplay`, `getReplayStatus`
+* Dev page `/ledger/backfill` — Replay button, status badge, result panel
+* ADR-033
+
+## Completion Criteria
+
+* Replay uses `createLedgerEntry()` + `buildLedgerPostingKey()`: ✓
+* Idempotent — safe to run twice: ✓
+* No duplicate rows: ✓
+* Chronological ordering preserved: ✓
+* Only eligible dealers replay: ✓
+* Ledger parity verified: ✓
+* No financial workflows modified: ✓
+* 15 new unit tests: ✓
+* ADR-033 authored: ✓
+* Governance docs updated: ✓
+* `npx tsc --noEmit` — 0 errors: ✓
+* `npx eslint` — 0 errors: ✓
+* `npx vitest run` — 201 passed / 7 skipped: ✓
+
+## Explicitly NOT Changed
+
+* PostingService, Invoice Engine, Collection Engine, Opening Balance Engine
+* Dealer Statement read engine, Document Platform, Prisma schema, permissions
+* Reconciliation scheduled job, exports, dashboards (PHASE_07E3)
+
+---
+
+# PHASE_07E1_HISTORICAL_LEDGER_DISCOVERY_ENGINE
+
+Status: COMPLETE (2026-07-10)
+
+## Objectives
+
+Build a read-only discovery module that answers: "Which dealers require
+historical ledger reconstruction?" No repair, no replay, no scheduled jobs.
+
+* `src/lib/ledger/backfill/` — `getLedgerBackfillCandidates()`
+* Classification rules: `NO_LEDGER`, `PARTIAL_LEDGER`, `CACHE_DRIFT`, `RECONCILED`
+* Server action with `ledger:view` RBAC
+* Dev verification page `/ledger/backfill` — simple table
+* Unit tests for all required scenarios
+* ADR-032
+
+## Completion Criteria
+
+* Read-only architecture — no writes in backfill module: ✓
+* No balance mutation / no `LedgerEntry` creation: ✓
+* No `posting-service.ts` import: ✓
+* Rule A / B / C classification correct: ✓
+* Server action `getLedgerBackfillCandidates`: ✓
+* `/ledger/backfill` dev page: ✓
+* ADR-032 authored: ✓
+* Governance docs updated: ✓
+* `npx tsc --noEmit` — 0 errors: ✓
+* `npx eslint` — 0 errors: ✓
+* `npx vitest run` — 186 passed / 7 skipped: ✓
+
+## Explicitly NOT Changed
+
+* PostingService, Invoice Engine, Collection Engine, Opening Balance Engine
+* Dealer Statement read engine, Document Platform
+* Financial calculations, LedgerEntry writes, Prisma schema, permissions
+* Reconciliation jobs, replay, backfill execution
 
 ---
 

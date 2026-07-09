@@ -4,6 +4,58 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_07E2] — 2026-07-10 — Enterprise Historical Ledger Replay Engine
+
+### Added
+
+- `replayDealerLedger()` — idempotent historical reconstruction of missing `LedgerEntry` rows
+- `executeLedgerBackfill()`, `previewLedgerReplay()`, `getReplayStatus()` server actions
+- Dev page `/ledger/backfill` — Replay, Preview, Status controls per dealer
+- ADR-033 — Enterprise Historical Ledger Replay Engine
+- 15 unit tests in `ledger-backfill.test.ts`
+
+### Architecture
+
+- Replay uses `createLedgerEntry()` + `buildLedgerPostingKey()` — no posting logic duplication
+- Strict order: Opening Balance → Invoices → Collections → Reversals
+- Parity verified after replay; transaction rolls back on mismatch
+- Never mutates `Dealer.currentBalance`
+
+---
+
+## [PHASE_07E1_HISTORICAL_LEDGER_DISCOVERY_ENGINE] — 2026-07-10
+
+### Purpose
+
+Identify dealers that require historical ledger reconstruction before any
+PHASE_07E replay or backfill executes. Discovery only — no repair, no replay,
+no mutation.
+
+### Added
+
+- **Backfill discovery module** (`src/lib/ledger/backfill/`):
+  - `getLedgerBackfillCandidates()` — scans all dealers
+  - Classification: `NO_LEDGER`, `PARTIAL_LEDGER`, `CACHE_DRIFT`, `RECONCILED`
+  - Batched read queries for invoice/collection/ledger counts
+- **Server action** — `getLedgerBackfillCandidates` with `ledger:view` RBAC
+- **Dev page** — `/ledger/backfill` simple verification table
+- **Unit tests** — 8 Vitest cases covering all discovery rules
+- **ADR-032** — Enterprise Ledger Backfill Discovery
+
+### Architecture
+
+- Read-only boundary — no `LedgerEntry` creation, no `posting-service.ts`
+- Discovery rules are pure functions in `ledger-backfill-validation.ts`
+- PHASE_07E2 replay must consume this module — no duplicate classification
+
+### Verification
+
+- `npx tsc --noEmit` — 0 errors
+- `npx eslint` — 0 errors
+- `npx vitest run` — 186 passed / 7 skipped (8 new tests)
+
+---
+
 ## [PHASE_07D3_ENTERPRISE_DEALER_STATEMENT_DOCUMENT_PLATFORM] — 2026-07-10
 
 ### Purpose
