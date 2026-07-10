@@ -91,7 +91,7 @@ export const NAV_SECTIONS: NavSection[] = [
       {
         id: "reports",
         labelKey: "nav.reports",
-        href: "/reports",
+        href: "/reports/due",
         icon: FileText,
         permission: "reports:view",
       },

@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/rbac/guards";
+import { canAccessDealerByCode } from "@/lib/rbac/territory";
 import {
   calculateOrderTotals,
   findInvalidLineIndex,
@@ -75,6 +76,15 @@ export async function createOrder(
             "INACTIVE_DEALER",
             "order.error.inactiveDealer",
             [{ field: "dealerCode", messageKey: "order.error.inactiveDealer" }],
+          );
+        }
+
+        const territoryAllowed = await canAccessDealerByCode(user.id, dealer.dealerCode);
+        if (!territoryAllowed) {
+          throw new OrderActionError(
+            "FORBIDDEN",
+            "rbac.territory.noAccess",
+            [{ field: "dealerCode", messageKey: "rbac.territory.noAccess" }],
           );
         }
 

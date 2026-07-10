@@ -4,6 +4,11 @@ import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/rbac/guards";
+import {
+  buildTerritoryScope,
+  canAccessOrder,
+  mergeOrderTerritoryScope,
+} from "@/lib/rbac/territory";
 import { listOrdersSchema } from "@/lib/validators/order.schema";
 import type {
   ActionResult,
@@ -36,8 +41,9 @@ import {
 export async function listOrders(
   input: unknown = {},
 ): Promise<ActionResult<PaginatedResult<OrderSummaryDTO>>> {
+  let user;
   try {
-    await requirePermission("orders:view");
+    user = await requirePermission("orders:view");
   } catch {
     return fail<PaginatedResult<OrderSummaryDTO>>("FORBIDDEN", "rbac.noAccess");
   }
@@ -88,11 +94,14 @@ export async function listOrders(
     ];
   }
 
+  const scope = await buildTerritoryScope(user.id);
+  const scopedWhere = mergeOrderTerritoryScope(where, scope);
+
   try {
     const [total, orders] = await prisma.$transaction([
-      prisma.salesOrder.count({ where }),
+      prisma.salesOrder.count({ where: scopedWhere }),
       prisma.salesOrder.findMany({
-        where,
+        where: scopedWhere,
         include: orderSummaryInclude,
         orderBy: { [sortBy]: sortOrder },
         skip: (page - 1) * pageSize,

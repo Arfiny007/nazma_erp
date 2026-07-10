@@ -2,6 +2,7 @@
 
 import { getDealerStatement as getDealerStatementRead } from "@/lib/ledger/statement";
 import { requirePermission } from "@/lib/rbac/guards";
+import { canAccessDealerByCode } from "@/lib/rbac/territory";
 import { getDealerStatementSchema } from "@/lib/validators/ledger-statement.schema";
 import type { ActionResult, DealerStatementDTO } from "@/types/ledger-statement";
 
@@ -20,8 +21,9 @@ import { toDealerStatementDTO } from "./mappers";
 export async function getDealerStatement(
   input: unknown,
 ): Promise<ActionResult<DealerStatementDTO>> {
+  let user;
   try {
-    await requirePermission("ledger:view");
+    user = await requirePermission("ledger:view");
   } catch {
     return fail<DealerStatementDTO>("FORBIDDEN", "rbac.noAccess");
   }
@@ -29,6 +31,11 @@ export async function getDealerStatement(
   const parsed = getDealerStatementSchema.safeParse(input);
   if (!parsed.success) {
     return fromZodError(parsed.error);
+  }
+
+  const allowed = await canAccessDealerByCode(user.id, parsed.data.dealerCode);
+  if (!allowed) {
+    return fail<DealerStatementDTO>("FORBIDDEN", "rbac.territory.noAccess");
   }
 
   try {

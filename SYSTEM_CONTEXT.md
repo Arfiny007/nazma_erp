@@ -4,9 +4,9 @@ Definitive engineering context for AI sessions and new maintainers.
 
 Read this document first. Then consult `PROJECT_BRAIN.md`, `CURRENT_PHASE.md`, and relevant ADRs.
 
-**Last updated:** 2026-07-10 (PHASE_07E5 — Financial Integrity Operations Console)  
-**Current phase:** PHASE_07E5 complete → Next: Cron / notifications / repair follow-ons  
-**Production readiness:** 9.1 / 10 (ADR-027 … ADR-035, ADR-036)
+**Last updated:** 2026-07-11 (PHASE_08E — Enterprise Territory & Due Certification)  
+**Current phase:** PHASE_08E complete → Next: Audit Log UI or Due Report Exports  
+**Production readiness:** 9.6 / 10 (ADR-041)
 
 ---
 
@@ -137,7 +137,12 @@ See ADR-011 for fulfillment architecture.
 | Ledger Reconciliation Engine | ✅ Complete (PHASE_07E3) — read-only `reconcileDealer()`; ADR-034 | `src/lib/ledger/reconciliation/`, `/ledger/reconciliation` |
 | Financial Integrity Monitor | ✅ Complete (PHASE_07E4) — `runFinancialIntegrityScan()`; ADR-035 | `src/lib/ledger/monitor/` |
 | Financial Integrity Console | ✅ Complete (PHASE_07E5) — production `/ledger/integrity`; ADR-036 | `src/components/ledger/integrity/` |
-| Due Reports | ❌ Not built | — |
+| Financial System Certification | ✅ Complete (PHASE_07F) — `runFinancialCertification()`; ADR-037 | `src/lib/finance/certification/` |
+| Geography Foundation | ✅ Complete (PHASE_08A) — Division/District/Territory; seeds; `/settings/geography` | `src/lib/geography/`, `src/lib/actions/geography/` |
+| Territory RBAC Engine | ✅ Complete (PHASE_08B) — `buildTerritoryScope()`; assignments; ADR-038 | `src/lib/rbac/territory/`, `/settings/territory-assignments` |
+| Dealer Ownership & Migration | ✅ Complete (PHASE_08C) — `DealerOwnershipHistory`; backfill; ADR-039 | `src/lib/dealers/ownership/`, `/dealers/[id]/ownership` |
+| Due Reports | ✅ Complete (PHASE_08D) — `getDueReport()` etc.; aging; territory/SR aggregation; ADR-040 | `src/lib/reports/due/`, `/reports/due` |
+| Territory & Due Certification | ✅ Complete (PHASE_08E) — `runTerritoryCertification()`; Rules 1–8; ADR-041 | `src/lib/certification/territory/` |
 | Audit Log UI | ❌ Not built | — |
 | User Management | ❌ Not built | — |
 
@@ -207,6 +212,8 @@ See ADR-017, ADR-023.
 **PHASE_07E4 (shipped):** `src/lib/ledger/monitor/` — Scheduled Financial Integrity Monitor. `runFinancialIntegrityScan()` orchestrates `reconcileAllDealers()` and persists `FinancialIntegrityScan` summary history. ADR-035.
 
 **PHASE_07E5 (shipped):** Production Financial Integrity Console at `/ledger/integrity` — header, summary cards, scan history, manual scan, dealer drill-down. Presentation only. ADR-036.
+
+**PHASE_07F (shipped):** Enterprise Financial System Certification — `runFinancialCertification()` audits all financial subsystems (Rules 1–10, concurrency, sensitivity, immutability, performance measurement). Read-only. ADR-037. **PHASE_08 approved.**
 
 **Future:** Cron wiring, notifications, repair tools, Excel/email statement export; PHASE_07F Chart of Accounts (optional).
 
@@ -429,6 +436,7 @@ postOpeningBalanceRecord()  [PHASE_07C]
 | PHASE_07E3 Reconciliation Engine | ~~Read-only integrity detection~~ ✅ PHASE_07E3 |
 | PHASE_07E4 Integrity Monitor | ~~Automated scan + persisted history~~ ✅ PHASE_07E4 |
 | PHASE_07E5 Integrity Console | ~~Production operations console~~ ✅ PHASE_07E5 |
+| PHASE_07F Financial Certification | ~~Full enterprise financial system certification~~ ✅ PHASE_07F |
 | Statement Excel / Email | Excel export / email delivery from same DTO |
 | PHASE_07F | Chart of Accounts foundation (optional) |
 | PHASE_08 | Due reports |
@@ -467,7 +475,7 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 
 ## 21. Production Readiness (ADR-024)
 
-**Overall score: 9.1 / 10** (ADR-027)
+**Overall score: 9.3 / 10** (ADR-037)
 
 | Subsystem | Score |
 |-----------|-------|
@@ -479,7 +487,8 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 | Document Engine | 9.0 |
 | Financial Posting | 9.3 |
 | Ledger | 9.3 |
-| Financial Initialization | 9.2 |
+| Financial Integrity Console | 9.3 |
+| Financial System Certification | 9.3 |
 | Reporting Readiness | 7.0 |
 
 **Suitable for controlled production:** Order → Challan → Invoice → Collection → Money Receipt → Opening Balance pipeline.
@@ -488,7 +497,7 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 
 **Blocking defects:** None for Order → Invoice → Collection → Ledger posting → Opening Balance → Dealer Statement read + UI + printable document pipeline as of PHASE_07D3.
 
-**PHASE_07E1 (Backfill Discovery):** SHIPPED per ADR-032. **PHASE_07E2 (Historical Replay):** SHIPPED per ADR-033. **PHASE_07E3 (Reconciliation Engine):** SHIPPED per ADR-034. **PHASE_07E4 (Integrity Monitor):** SHIPPED per ADR-035. **PHASE_07E5 (Integrity Console):** SHIPPED per ADR-036.
+**PHASE_07E1 (Backfill Discovery):** SHIPPED per ADR-032. **PHASE_07E2 (Historical Replay):** SHIPPED per ADR-033. **PHASE_07E3 (Reconciliation Engine):** SHIPPED per ADR-034. **PHASE_07E4 (Integrity Monitor):** SHIPPED per ADR-035. **PHASE_07E5 (Integrity Console):** SHIPPED per ADR-036. **PHASE_07F (Financial System Certification):** SHIPPED per ADR-037 — PHASE_08 approved.
 
 ---
 
@@ -515,6 +524,7 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 | Ledger reconciliation | `src/lib/ledger/reconciliation/` — `reconcileAllDealers()` |
 | Financial integrity monitor | `src/lib/ledger/monitor/` — `runFinancialIntegrityScan()` |
 | Financial integrity console | `src/components/ledger/integrity/` — `/ledger/integrity` |
+| Financial system certification | `src/lib/finance/certification/` — `runFinancialCertification()` |
 | Statement print fetch | `src/lib/documents/fetch-dealer-statement-for-print.ts` |
 | Permissions | `src/lib/permissions.ts` |
 | RBAC guards | `src/lib/rbac/guards.ts` |
@@ -564,6 +574,7 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 | ADR-034 | Enterprise Reconciliation Engine (PHASE_07E3) |
 | ADR-035 | Scheduled Financial Integrity Monitor (PHASE_07E4) |
 | ADR-036 | Financial Integrity Operations Console (PHASE_07E5) |
+| ADR-037 | Enterprise Financial System Certification (PHASE_07F) |
 
 ---
 

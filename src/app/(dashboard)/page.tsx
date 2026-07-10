@@ -80,7 +80,7 @@ export default function DashboardPage() {
       value: "—",
       change: "+0%",
       icon: <Wallet aria-hidden="true" className="size-5" />,
-      href: "/reports",
+      href: "/reports/due",
     },
     {
       label: t("dashboard.collectionsToday"),

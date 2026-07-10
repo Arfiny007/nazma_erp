@@ -6,7 +6,7 @@ Current Phase:
 
 
 
-PHASE_07E5_FINANCIAL_INTEGRITY_OPERATIONS_CONSOLE
+PHASE_08E_ENTERPRISE_TERRITORY_DUE_CERTIFICATION
 
 
 
@@ -20,9 +20,161 @@ COMPLETE
 
 ---
 
+# PHASE_08E_ENTERPRISE_TERRITORY_DUE_CERTIFICATION
 
+Status: COMPLETE (2026-07-11)
 
-## Roadmap — Fulfillment, Invoicing & Collections
+## Objectives
+
+Certify PHASE_08A–08D without modifying business logic.
+
+* `runTerritoryCertification()` — Rules 1–8
+* Subsystem scores: territory security, ownership integrity, due accuracy, financial boundary
+* Aging vs balance reconciliation (Rule 7)
+* Repository boundary scans (Rule 8)
+* ADR-041
+
+## Completion Criteria
+
+* Territory isolation certified: ✓
+* Ownership history certified: ✓
+* Due report accuracy certified: ✓
+* Financial boundaries intact: ✓
+* No business logic modified: ✓
+* 18 certification tests: ✓
+* `npx vitest run` — 317 passed / 7 skipped: ✓
+* ADR-041 + governance docs: ✓
+
+## Explicitly NOT Changed
+
+* Territory RBAC, ownership service, due report engine, financial posting
+
+## Next Phase
+
+**Audit Log UI** or **Due Report Exports (PHASE_08F)**
+
+---
+
+# PHASE_08D_ENTERPRISE_DUE_REPORT_ENGINE
+
+Status: COMPLETE (2026-07-11)
+
+## Objectives
+
+Enterprise due reports consuming existing financial engines only.
+
+* `src/lib/reports/due/` — `getDueReport()`, `getDealerDueReport()`, `getTerritoryDueReport()`, `getSrDueReport()`, `getCompanyDueSummary()`, `getDueAgingReport()`
+* Invoice aging buckets (current, 1–30, 31–60, 61–90, 90+ days overdue)
+* Territory RBAC on all queries
+* Ownership history read-only joins for SR attribution
+* Server actions + `/reports/due` dev page
+* ADR-040
+
+## Completion Criteria
+
+* Company due viewable: ✓
+* Territory due viewable: ✓
+* SR due viewable: ✓
+* Aging reports work: ✓
+* No duplicate balance logic: ✓
+* Financial engine untouched: ✓
+* 18 unit tests: ✓
+* `npx vitest run` — 299 passed / 7 skipped: ✓
+* Governance docs + ADR-040: ✓
+
+## Explicitly NOT Changed
+
+* posting-service, LedgerEntry, Dealer.currentBalance writer
+* Statement, reconciliation, integrity monitor, certification engines
+* Dashboards, charts, analytics, PDF/Excel exports
+
+## Next Phase
+
+**PHASE_08E — Due Report Exports** or **Audit Log UI**
+
+---
+
+# PHASE_08C_ENTERPRISE_DEALER_OWNERSHIP_MIGRATION
+
+Status: COMPLETE (2026-07-11)
+
+## Objectives
+
+Enterprise dealer ownership history, territory migration, dealer form integration.
+
+* `DealerOwnershipHistory` model
+* `assignDealerTerritory`, `transferDealer`, `backfillDealerOwnership`
+* Geography selects on dealer create/edit
+* `/dealers/[id]/ownership` timeline UI
+* ADR-039
+
+## Completion Criteria
+
+* Ownership history auditable: ✓
+* Single active ownership enforced: ✓
+* Transfer closes prior record: ✓
+* Legacy backfill with report: ✓
+* SR/Manager territory validation: ✓
+* Financial engine untouched: ✓
+* ADR-039 + governance docs: ✓
+
+## Next Phase
+
+**PHASE_08 — Due Reports**
+
+---
+
+# PHASE_08B_ENTERPRISE_TERRITORY_RBAC_ENGINE
+
+Status: COMPLETE (2026-07-11)
+
+## Objectives
+
+Upgrade role-only RBAC into enterprise Territory RBAC. Authorization only.
+
+* `UserTerritoryAssignment` model
+* `buildTerritoryScope()` + `canAccess*` functions
+* Server-side scope on dealers, orders, collections, statements
+* `/settings/territory-assignments` admin UI
+* ADR-038
+
+## Completion Criteria
+
+* Territory-based access control works: ✓
+* SR isolation enforced server-side: ✓
+* Manager supervised territory scope: ✓
+* Accounts / Super_Admin global visibility: ✓
+* Financial engine untouched: ✓
+* No duplicated permission logic in pages: ✓
+* Unit tests: ✓
+* Governance docs + ADR-038: ✓
+
+## Explicitly NOT Changed
+
+* posting-service, LedgerEntry, Dealer.currentBalance
+* Invoice/collection/statement/reconciliation/certification engines
+
+## Next Phase
+
+**PHASE_08C — Dealer Territory Ownership**
+
+---
+
+# PHASE_08A_ENTERPRISE_GEOGRAPHY_FOUNDATION
+
+Status: COMPLETE (2026-07-11)
+
+## Objectives
+
+Bangladesh geography hierarchy: Division → District → Territory.
+
+* Prisma models + seed (8/64/64)
+* Geography server actions + select components
+* `/settings/geography`, `/settings/territories`
+
+---
+
+# PHASE_07F_ENTERPRISE_FINANCIAL_SYSTEM_CERTIFICATION
 
 
 
@@ -82,6 +234,7 @@ COMPLETE
 | **PHASE_07E3_ENTERPRISE_RECONCILIATION_ENGINE** | Read-only `reconcileDealer()` / `reconcileAllDealers()` — drift, missing ledger, corrupted chain detection; dev page `/ledger/reconciliation`; ADR-034 | **✅ COMPLETE** |
 | **PHASE_07E4_SCHEDULED_FINANCIAL_INTEGRITY_MONITOR** | `runFinancialIntegrityScan()` orchestrates reconciliation + persists `FinancialIntegrityScan` summaries; ADR-035 | **✅ COMPLETE** |
 | **PHASE_07E5_FINANCIAL_INTEGRITY_OPERATIONS_CONSOLE** | Production `/ledger/integrity` — header, summary cards, scan history, manual scan, dealer drill-down; ADR-036 | **✅ COMPLETE** |
+| **PHASE_07F_ENTERPRISE_FINANCIAL_SYSTEM_CERTIFICATION** | Full enterprise financial certification — `runFinancialCertification()`; Rules 1–10; ADR-037 | **✅ COMPLETE** |
 
 
 
@@ -89,7 +242,44 @@ COMPLETE
 
 
 
-# PHASE_06D.1_INVOICE_PDF_CLIENT_REVISION
+# PHASE_07F_ENTERPRISE_FINANCIAL_SYSTEM_CERTIFICATION
+
+Status: COMPLETE (2026-07-10)
+
+## Objectives
+
+Prove the entire accounting system behaves correctly under real-world ERP
+conditions. Verification only — no new business functionality.
+
+* `runFinancialCertification()` — repository-wide certification entry point
+* Rules 1–10 — ledger, posting, opening balance, statement, replay, audit, immutability
+* Concurrency, accounting sensitivity, immutability, performance measurement
+* ADR-037
+
+## Completion Criteria
+
+* `src/lib/finance/certification/` module (6 files): ✓
+* All 10 certification rules verified: ✓
+* Repository grep — no forbidden mutations: ✓
+* 12 unit tests: ✓
+* ADR-037 authored: ✓
+* Governance docs updated: ✓
+* `npx vitest run` — 245 passed / 7 skipped: ✓
+* PHASE_08 approved: ✓
+
+## Explicitly NOT Changed
+
+* posting-service, engines, document platform, permissions, Prisma schema
+
+---
+
+## Next Phase
+
+**PHASE_08 — Due Reports**
+
+---
+
+# PHASE_07E5_FINANCIAL_INTEGRITY_OPERATIONS_CONSOLE
 
 
 

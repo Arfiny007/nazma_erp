@@ -54,6 +54,9 @@ export interface DealerDTO {
   address: string;
   district: string;
   territory: string;
+  divisionId: string | null;
+  districtId: string | null;
+  territoryId: string | null;
   creditLimit: string;
   currentBalance: string;
   isActive: boolean;
@@ -97,6 +100,8 @@ export type DealerErrorCode =
   | "DUPLICATE_DEALER_CODE"
   | "DUPLICATE_MOBILE"
   | "DEALER_HAS_DEPENDENCIES"
+  | "FORBIDDEN"
+  | "TERRITORY_NOT_ASSIGNABLE"
   | "INTERNAL_ERROR";
 
 /** A single field-level validation failure carrying a localization key. */

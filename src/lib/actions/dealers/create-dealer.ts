@@ -1,42 +1,62 @@
 "use server";
 
-import { Prisma } from "@prisma/client";
+import { Prisma, UserRole } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
+import {
+  assignDealerTerritory,
+  assertUserCanAssignTerritory,
+  resolveTerritoryGeography,
+  TerritoryNotAssignableError,
+  transferDealer,
+} from "@/lib/dealers/ownership";
 import { prisma } from "@/lib/prisma";
+import { requirePermission } from "@/lib/rbac/guards";
 import { generateNextDealerCode } from "@/lib/utils/dealer-code";
 import { createDealerSchema } from "@/lib/validators/dealer.schema";
 import type { ActionResult, DealerDTO } from "@/types/dealer";
 
 import { fail, fromPrismaError, fromZodError, ok, toDealerDTO } from "./helpers";
 
-/** Number of attempts to retry on a dealer-code unique collision under load. */
 const MAX_CODE_GENERATION_ATTEMPTS = 5;
 
-/**
- * Creates a new dealer.
- *
- * The dealer code is generated sequentially inside the same transaction that
- * persists the record; the unique constraint on `dealerCode` is the final guard
- * against concurrent inserts, so the operation retries a bounded number of
- * times on a collision.
- *
- * Mobile uniqueness is enforced at the application level because `mobile` has
- * no `@unique` index in the schema.  This means two concurrent requests that
- * pass the `findFirst` check within the same READ COMMITTED snapshot can both
- * insert the same mobile number.  Adding `mobile @unique` to `schema.prisma`
- * would eliminate the race; the `fromPrismaError` P2002 handler already
- * surfaces this as DUPLICATE_MOBILE when a DB-level conflict occurs.
- */
 export async function createDealer(
   input: unknown,
 ): Promise<ActionResult<DealerDTO>> {
+  let user;
+  try {
+    user = await requirePermission("dealers:create");
+  } catch {
+    return fail<DealerDTO>("FORBIDDEN", "rbac.noAccess");
+  }
+
   const parsed = createDealerSchema.safeParse(input);
   if (!parsed.success) {
     return fromZodError(parsed.error);
   }
 
   const data = parsed.data;
+
+  try {
+    await assertUserCanAssignTerritory(user.id, data.territoryId);
+  } catch {
+    return fail<DealerDTO>("TERRITORY_NOT_ASSIGNABLE", "rbac.territory.noAccess", [
+      { field: "territoryId", messageKey: "rbac.territory.noAccess" },
+    ]);
+  }
+
+  const territory = await resolveTerritoryGeography(data.territoryId);
+  if (
+    !territory?.isActive ||
+    territory.districtId !== data.districtId ||
+    territory.district.divisionId !== data.divisionId
+  ) {
+    return fail<DealerDTO>("VALIDATION_ERROR", "validation.failed", [
+      { field: "territoryId", messageKey: "validation.territory.invalid" },
+    ]);
+  }
+
+  const assignedSrId = user.role === UserRole.SR ? user.id : null;
 
   for (let attempt = 0; attempt < MAX_CODE_GENERATION_ATTEMPTS; attempt += 1) {
     try {
@@ -51,7 +71,7 @@ export async function createDealer(
 
         const dealerCode = await generateNextDealerCode(tx);
 
-        return tx.dealer.create({
+        const created = await tx.dealer.create({
           data: {
             dealerCode,
             companyName: data.companyName,
@@ -59,12 +79,28 @@ export async function createDealer(
             mobile: data.mobile,
             email: data.email,
             address: data.address,
-            district: data.district,
-            territory: data.territory,
+            divisionId: data.divisionId,
+            districtId: data.districtId,
+            territoryId: data.territoryId,
+            district: territory.district.name,
+            territory: territory.name,
             creditLimit: data.creditLimit,
             isActive: data.isActive,
           },
         });
+
+        await assignDealerTerritory(
+          {
+            dealerId: created.id,
+            territoryId: data.territoryId,
+            assignedById: user.id,
+            assignedSrId,
+            reason: "Initial territory assignment",
+          },
+          tx,
+        );
+
+        return created;
       });
 
       revalidatePath("/dealers");
@@ -77,15 +113,12 @@ export async function createDealer(
           [{ field: "mobile", messageKey: "dealer.error.duplicateMobile" }],
         );
       }
-
-      // Retry on dealerCode collision regardless of which attempt we are on.
-      // When attempts are exhausted the for-loop exits naturally and the
-      // `fail("...codeGenerationFailed")` below is reached with a consistent
-      // error key.  Non-collision errors exit immediately via fromPrismaError.
+      if (error instanceof TerritoryNotAssignableError) {
+        return fail<DealerDTO>("TERRITORY_NOT_ASSIGNABLE", "rbac.territory.noAccess");
+      }
       if (isDealerCodeCollision(error)) {
         continue;
       }
-
       return fromPrismaError(error);
     }
   }
@@ -96,7 +129,6 @@ export async function createDealer(
   );
 }
 
-/** Sentinel used to surface application-level mobile uniqueness violations. */
 class DuplicateMobileError extends Error {
   constructor() {
     super("DUPLICATE_MOBILE");

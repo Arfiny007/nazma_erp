@@ -32,8 +32,33 @@ Priority Order:
 7. Invoice Engine
 8. Collections
 9. Ledger
-10. Due Reports
+10. **Due Reports** ✅ (PHASE_08D)
 11. Audit Logs
+
+---
+
+## Territory RBAC (PHASE_08B)
+
+Enterprise authorization layer on top of flat role permissions:
+
+```
+Bangladesh → Division → District → Territory → SR/Manager → Dealer
+```
+
+| Role | Territory scope |
+|------|-----------------|
+| Super_Admin | ALL |
+| Accounts | ALL |
+| Manager | Assigned territories |
+| SR | Assigned territories |
+
+All territory decisions flow through `src/lib/rbac/territory/` — never scattered role checks in pages.
+
+Assignment admin: `/settings/territory-assignments`. See ADR-038.
+
+### Dealer Ownership (PHASE_08C)
+
+`DealerOwnershipHistory` tracks territory assignment over time. Transfers close the prior record (`effectiveTo`, `isActive=false`) and append a new row. Financial documents are never rewritten. Backfill migrates legacy `district`/`territory` text to structured FKs. See ADR-039.
 
 ---
 
@@ -159,9 +184,9 @@ The codebase should be reusable as a multi-company ERP platform in future versio
 
 ---
 
-## Architecture Maturity (as of PHASE_07E5 — 2026-07-10)
+## Architecture Maturity (as of PHASE_07F — 2026-07-10)
 
-**Overall ERP production readiness: 9.1 / 10** (ADR-027, ADR-028, ADR-032, ADR-035, ADR-036)
+**Overall ERP production readiness: 9.3 / 10** (ADR-037)
 
 The commercial → fulfillment → financial → document pipeline is **production-certified** for controlled deployment:
 
@@ -175,9 +200,26 @@ Sales Order → Delivery Challan → Invoice → Collection → Allocation → M
 
 **Blocking defects:** None for Order → Invoice → Collection → Ledger posting → Opening Balance → Dealer Statement read + UI + printable document pipeline.
 
-**Opening Balance:** SHIPPED (PHASE_07C) per ADR-028. **Dealer Subledger Foundation:** SHIPPED (PHASE_07D1) per ADR-029. **Dealer Statement UI:** SHIPPED (PHASE_07D2) per ADR-030. **Dealer Statement Document:** SHIPPED (PHASE_07D3) per ADR-031. **Ledger Backfill Discovery:** SHIPPED (PHASE_07E1) per ADR-032. **Historical Replay Engine:** SHIPPED (PHASE_07E2) per ADR-033. **Reconciliation Engine:** SHIPPED (PHASE_07E3) per ADR-034. **Integrity Monitor:** SHIPPED (PHASE_07E4) per ADR-035. **Integrity Console:** SHIPPED (PHASE_07E5) per ADR-036.
+**Opening Balance:** SHIPPED (PHASE_07C) per ADR-028. **Dealer Subledger Foundation:** SHIPPED (PHASE_07D1) per ADR-029. **Dealer Statement UI:** SHIPPED (PHASE_07D2) per ADR-030. **Dealer Statement Document:** SHIPPED (PHASE_07D3) per ADR-031. **Ledger Backfill Discovery:** SHIPPED (PHASE_07E1) per ADR-032. **Historical Replay Engine:** SHIPPED (PHASE_07E2) per ADR-033. **Reconciliation Engine:** SHIPPED (PHASE_07E3) per ADR-034. **Integrity Monitor:** SHIPPED (PHASE_07E4) per ADR-035. **Integrity Console:** SHIPPED (PHASE_07E5) per ADR-036. **Financial System Certification:** SHIPPED (PHASE_07F) per ADR-037 — **PHASE_08 APPROVED**.
 
 ---
+
+## PHASE_07F — Enterprise Financial System Certification
+
+**Status:** COMPLETE (2026-07-10)
+
+Full enterprise financial certification before PHASE_08. Proves accounting
+correctness, ledger immutability, replay safety, statement trustworthiness,
+concurrency patterns, and audit completeness — without new business features.
+
+| Change | Detail |
+|--------|--------|
+| Certification service | `runFinancialCertification()` in `src/lib/finance/certification/` |
+| Rules 1–10 | Cache parity, sum parity, chain, replay idempotency, opening balance, statement, document pipeline, audit, posting boundary, immutability |
+| Report | `FinancialCertificationReport` — scores, risks, manual checks |
+| Tests | 12 unit tests |
+| ADR | `docs/ADR/ADR-037-enterprise-financial-system-certification.md` |
+| Verdict | **PHASE_08 (Due Reports) APPROVED** |
 
 ---
 

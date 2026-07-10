@@ -8,11 +8,12 @@ import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import type { z } from "zod";
 
 import { DealerFormSection } from "@/components/dealers/dealer-form-section";
+import { DealerGeographyFields } from "@/components/dealers/dealer-geography-fields";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { createDealer } from "@/lib/actions/dealers/create-dealer";
 import { updateDealer } from "@/lib/actions/dealers/update-dealer";
 import { cn } from "@/lib/utils";
-import { createDealerSchema } from "@/lib/validators/dealer.schema";
+import { createDealerSchema, dealerFormBaseSchema } from "@/lib/validators/dealer.schema";
 import type { DealerDTO, DealerError } from "@/types/dealer";
 
 /* -------------------------------------------------------------------------- */
@@ -20,9 +21,9 @@ import type { DealerDTO, DealerError } from "@/types/dealer";
 /* -------------------------------------------------------------------------- */
 
 /** Raw values held by the form controls (pre Zod transform). */
-type DealerFormInput = z.input<typeof createDealerSchema>;
+type DealerFormInput = z.input<typeof dealerFormBaseSchema>;
 /** Transformed, validated values handed to the server actions. */
-type DealerFormOutput = z.output<typeof createDealerSchema>;
+type DealerFormOutput = z.output<typeof dealerFormBaseSchema>;
 
 type DealerFormMode = "create" | "edit";
 
@@ -38,8 +39,6 @@ const EDITABLE_FIELDS = [
   "mobile",
   "email",
   "address",
-  "district",
-  "territory",
   "creditLimit",
   "isActive",
 ] as const;
@@ -250,6 +249,20 @@ export function DealerForm({ mode, dealer }: DealerFormProps) {
 
   const [submitted, setSubmitted] = useState(false);
   const [bannerError, setBannerError] = useState<string | null>(null);
+  const [divisionId, setDivisionId] = useState<string | null>(
+    dealer?.divisionId ?? null,
+  );
+  const [districtId, setDistrictId] = useState<string | null>(
+    dealer?.districtId ?? null,
+  );
+  const [territoryId, setTerritoryId] = useState<string | null>(
+    dealer?.territoryId ?? null,
+  );
+  const [geoErrors, setGeoErrors] = useState<{
+    divisionId?: string;
+    districtId?: string;
+    territoryId?: string;
+  }>({});
 
   useEffect(() => {
     if (!submitted) {
@@ -272,8 +285,6 @@ export function DealerForm({ mode, dealer }: DealerFormProps) {
           mobile: dealer.mobile,
           email: dealer.email ?? "",
           address: dealer.address,
-          district: dealer.district,
-          territory: dealer.territory,
           creditLimit: dealer.creditLimit,
           isActive: dealer.isActive,
         }
@@ -283,8 +294,6 @@ export function DealerForm({ mode, dealer }: DealerFormProps) {
           mobile: "",
           email: "",
           address: "",
-          district: "",
-          territory: "",
           creditLimit: "",
           isActive: true,
         };
@@ -296,7 +305,7 @@ export function DealerForm({ mode, dealer }: DealerFormProps) {
     setError,
     formState: { errors, isSubmitting },
   } = useForm<DealerFormInput, unknown, DealerFormOutput>({
-    resolver: zodResolver(createDealerSchema),
+    resolver: zodResolver(dealerFormBaseSchema),
     defaultValues,
     mode: "onBlur",
   });
@@ -320,11 +329,34 @@ export function DealerForm({ mode, dealer }: DealerFormProps) {
 
   const onSubmit: SubmitHandler<DealerFormOutput> = async (values) => {
     setBannerError(null);
+    setGeoErrors({});
+
+    if (!divisionId || !districtId || !territoryId) {
+      const nextGeoErrors: typeof geoErrors = {};
+      if (!divisionId) {
+        nextGeoErrors.divisionId = t("validation.division.required");
+      }
+      if (!districtId) {
+        nextGeoErrors.districtId = t("validation.district.required");
+      }
+      if (!territoryId) {
+        nextGeoErrors.territoryId = t("validation.territory.required");
+      }
+      setGeoErrors(nextGeoErrors);
+      return;
+    }
+
+    const payload = {
+      ...values,
+      divisionId,
+      districtId,
+      territoryId,
+    };
 
     const result =
       mode === "edit" && dealer
-        ? await updateDealer({ id: dealer.id, ...values })
-        : await createDealer(values);
+        ? await updateDealer({ id: dealer.id, ...payload })
+        : await createDealer(payload);
 
     if (result.success) {
       setSubmitted(true);
@@ -475,41 +507,18 @@ export function DealerForm({ mode, dealer }: DealerFormProps) {
           />
         </FieldShell>
 
-        <FieldShell
-          htmlFor="district"
-          label={t("dealers.form.field.district")}
-          required
-          error={fieldError("district")}
-        >
-          <input
-            id="district"
-            type="text"
-            autoComplete="address-level2"
+        <div className="sm:col-span-2">
+          <DealerGeographyFields
+            divisionId={divisionId}
+            districtId={districtId}
+            territoryId={territoryId}
+            onDivisionChange={setDivisionId}
+            onDistrictChange={setDistrictId}
+            onTerritoryChange={setTerritoryId}
             disabled={isBusy}
-            placeholder={t("dealers.form.placeholder.district")}
-            aria-invalid={Boolean(errors.district) || undefined}
-            className={controlClass(Boolean(errors.district))}
-            {...register("district")}
+            errors={geoErrors}
           />
-        </FieldShell>
-
-        <FieldShell
-          htmlFor="territory"
-          label={t("dealers.form.field.territory")}
-          required
-          error={fieldError("territory")}
-        >
-          <input
-            id="territory"
-            type="text"
-            autoComplete="off"
-            disabled={isBusy}
-            placeholder={t("dealers.form.placeholder.territory")}
-            aria-invalid={Boolean(errors.territory) || undefined}
-            className={controlClass(Boolean(errors.territory))}
-            {...register("territory")}
-          />
-        </FieldShell>
+        </div>
       </DealerFormSection>
 
       <DealerFormSection

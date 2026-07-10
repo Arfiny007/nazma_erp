@@ -1,6 +1,7 @@
 "use server";
 
 import { requirePermission } from "@/lib/rbac/guards";
+import { canAccessCollection } from "@/lib/rbac/territory";
 import { collectionIdentifierSchema } from "@/lib/validators/collection.schema";
 import type { ActionResult, CollectionDetailDTO } from "@/types/collection";
 
@@ -14,8 +15,9 @@ import {
 export async function getCollection(
   input: unknown,
 ): Promise<ActionResult<CollectionDetailDTO>> {
+  let user;
   try {
-    await requirePermission("collections:view");
+    user = await requirePermission("collections:view");
   } catch {
     return fail<CollectionDetailDTO>("FORBIDDEN", "rbac.noAccess");
   }
@@ -31,6 +33,11 @@ export async function getCollection(
       "COLLECTION_NOT_FOUND",
       "collection.error.notFound",
     );
+  }
+
+  const allowed = await canAccessCollection(user.id, detail.id);
+  if (!allowed) {
+    return fail<CollectionDetailDTO>("FORBIDDEN", "rbac.territory.noAccess");
   }
 
   return ok(detail);

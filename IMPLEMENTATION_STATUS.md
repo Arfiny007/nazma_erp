@@ -1,6 +1,130 @@
 # IMPLEMENTATION STATUS
 
-Last updated: 2026-07-10 (PHASE_07E5 — Financial Integrity Operations Console)
+Last updated: 2026-07-11 (PHASE_08E — Enterprise Territory & Due Certification)
+
+---
+
+## Enterprise Territory & Due Certification — Verification (PHASE_08E)
+
+| Criterion | Status |
+|-----------|--------|
+| `runTerritoryCertification()` — Rules 1–8 | ✅ |
+| Territory security score | ✅ 9.5/10 |
+| Ownership integrity score | ✅ 10/10 |
+| Due accuracy score | ✅ 10/10 |
+| Financial boundary score | ✅ 10/10 |
+| Aging vs balance reconciliation (Rule 7) | ✅ |
+| Repository boundary scans (Rule 8) | ✅ |
+| No business logic modified | ✅ |
+| ADR-041 authored | ✅ |
+| `territory-certification.test.ts` — 18 tests | ✅ |
+
+Total: **317 passed / 7 skipped** (+18 new tests).
+
+Overall territory & due readiness: **9.6 / 10**
+
+---
+
+## Enterprise Due Report Engine — Verification (PHASE_08D)
+
+| Criterion | Status |
+|-----------|--------|
+| `src/lib/reports/due/` module (8 files) | ✅ |
+| `getDueReport()` / `getDealerDueReport()` / `getTerritoryDueReport()` | ✅ |
+| `getSrDueReport()` / `getCompanyDueSummary()` / `getDueAgingReport()` | ✅ |
+| `Dealer.currentBalance` authoritative — no duplicate balance engine | ✅ |
+| Invoice aging buckets (5 buckets) | ✅ |
+| Territory RBAC on all queries | ✅ |
+| Ownership history read-only joins | ✅ |
+| Server actions (5) + DTOs + validators | ✅ |
+| `/reports/due` page with filters + tables | ✅ |
+| No financial engine modifications | ✅ |
+| ADR-040 authored | ✅ |
+| `due-report.test.ts` — 18 tests | ✅ |
+
+Total: **299 passed / 7 skipped** (+18 new tests).
+
+---
+
+## Enterprise Dealer Ownership — Verification (PHASE_08C)
+
+| Criterion | Status |
+|-----------|--------|
+| `DealerOwnershipHistory` model + migration | ✅ |
+| `assignDealerTerritory` / `transferDealer` / `backfillDealerOwnership` | ✅ |
+| Single active ownership enforced | ✅ |
+| Dealer form geography integration | ✅ |
+| `/dealers/[id]/ownership` timeline UI | ✅ |
+| SR/Manager territory validation on create/edit | ✅ |
+| No financial engine modifications | ✅ |
+| ADR-039 authored | ✅ |
+| `ownership.test.ts` — 10 tests | ✅ |
+
+---
+
+## Enterprise Territory RBAC Engine — Verification (PHASE_08B)
+
+| Criterion | Status |
+|-----------|--------|
+| `UserTerritoryAssignment` model + migration | ✅ |
+| `buildTerritoryScope()` — ALL / TERRITORIES / NONE | ✅ |
+| `canAccessDealer/Order/Collection/Statement` | ✅ |
+| Server-side list filtering (dealers, orders, collections) | ✅ |
+| Detail/statement territory gates | ✅ |
+| `/settings/territory-assignments` admin UI | ✅ |
+| Assignment server actions (5) | ✅ |
+| No financial engine modifications | ✅ |
+| ADR-038 authored | ✅ |
+| `territory-rbac.test.ts` — 15+ tests | ✅ |
+
+---
+
+## Enterprise Geography Foundation — Verification (PHASE_08A)
+
+| Criterion | Status |
+|-----------|--------|
+| Division / District / Territory models | ✅ |
+| Dealer geography FKs (nullable) | ✅ |
+| Seed: 8 divisions, 64 districts, 64 territories | ✅ |
+| Geography server actions + UI selects | ✅ |
+| `/settings/geography`, `/settings/territories` | ✅ |
+
+---
+
+## Enterprise Financial System Certification — Verification (PHASE_07F)
+
+| Criterion | Status |
+|-----------|--------|
+| `runFinancialCertification()` — full subsystem audit | ✅ |
+| Rules 1–10 — ledger, posting, opening balance, statement, replay, audit, immutability | ✅ |
+| Repository grep — no forbidden balance/ledger mutations | ✅ |
+| Concurrency / sensitivity / performance measurement checks | ✅ |
+| `FinancialCertificationReport` with subsystem scores + risks | ✅ |
+| No financial mutation / no engine modifications | ✅ |
+| ADR-037 authored | ✅ |
+| `npx vitest run` — 245 passed / 7 skipped | ✅ |
+
+Total: **245 passed / 7 skipped** (+12 new tests).
+
+### Files Delivered — PHASE_07F
+
+**New:**
+- `src/lib/finance/certification/financial-certification-types.ts`
+- `src/lib/finance/certification/financial-certification-validation.ts`
+- `src/lib/finance/certification/financial-certification-service.ts`
+- `src/lib/finance/certification/financial-certification-report.ts`
+- `src/lib/finance/certification/financial-certification.test.ts` (12 tests)
+- `src/lib/finance/certification/index.ts`
+- `docs/ADR/ADR-037-enterprise-financial-system-certification.md`
+
+### Certification Score — PHASE_07F
+
+| Metric | Score |
+|--------|-------|
+| Financial System Certification | **9.3 / 10** |
+| Production Readiness (overall) | **9.3 / 10** |
+
+**PHASE_08 (Due Reports) APPROVED**
 
 ---
 

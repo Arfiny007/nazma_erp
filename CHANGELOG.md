@@ -4,6 +4,131 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_08E] — 2026-07-11 — Enterprise Territory & Due Certification
+
+### Added
+
+- `src/lib/certification/territory/` — `runTerritoryCertification()` with Rules 1–8
+- Subsystem scores: territory security, ownership integrity, due accuracy, financial boundary
+- Aging vs balance reconciliation with documented delta causes (Rule 7)
+- Repository boundary scans (duplicated due logic, rogue territory checks, client-side money math)
+- ADR-041
+
+### Verdict
+
+**317 tests passed / 7 skipped** — Territory & due layer certified at 9.6/10
+
+---
+
+## [PHASE_08D] — 2026-07-11 — Enterprise Due Report Engine
+
+### Added
+
+- `src/lib/reports/due/` — read-only due report engine (6 service functions, aging, query, validation)
+- Server actions: `getDueReport`, `getTerritoryDueReport`, `getSrDueReport`, `getCompanyDueSummary`, `getDueAgingReport`
+- `/reports/due` — enterprise due report page with filters, summary cards, territory/SR/dealer tables
+- ADR-040
+
+### Architecture
+
+- `Dealer.currentBalance` authoritative for dealer-level due — no duplicate balance engine
+- Invoice outstanding + `dueDate` for aging buckets only
+- Territory RBAC via `mergeDealerTerritoryScope()`
+- Historical SR attribution via read-only `DealerOwnershipHistory` join at invoice `issueDate`
+- Financial engines untouched (posting, ledger, statement, reconciliation, certification)
+
+### Verdict
+
+**299 tests passed / 7 skipped** — PHASE_08E (exports/analytics) or Audit Log UI next
+
+---
+
+## [PHASE_08C] — 2026-07-11 — Enterprise Dealer Ownership & Territory Migration
+
+### Added
+
+- `DealerOwnershipHistory` model — auditable territory timeline
+- `src/lib/dealers/ownership/` — assign, transfer, backfill, history queries
+- Dealer form geography selects (Division → District → Territory)
+- `/dealers/[id]/ownership` ownership timeline UI
+- `runDealerOwnershipBackfill()` with migrated/skipped/failed report
+- ADR-039
+
+### Architecture
+
+- Organizational layer only — financial records immutable
+- Single active ownership per dealer enforced in service layer
+
+### Verdict
+
+**PHASE_08 (Due Reports) NEXT**
+
+---
+
+## [PHASE_08B] — 2026-07-11 — Enterprise Territory RBAC Engine
+
+### Added
+
+- `UserTerritoryAssignment` Prisma model — SR/Manager → Territory mapping
+- `src/lib/rbac/territory/` — `buildTerritoryScope`, `canAccess*`, scope merge filters
+- Territory scope injection: `listDealers`, `listOrders`, `listCollections`
+- Territory gates: `getDealer`, `updateDealer`, `getOrder`, `createOrder`, `getCollection`, statement actions
+- Territory assignment server actions + `/settings/territory-assignments` admin UI
+- ADR-038 — Enterprise Territory RBAC Engine
+- 15+ unit tests in `territory-rbac.test.ts`
+
+### Architecture
+
+- Authorization only — financial engines untouched
+- No scattered `if (role === "SR")` — all decisions via `buildTerritoryScope()`
+
+### Verdict
+
+**PHASE_08C (Dealer Ownership) NEXT**
+
+---
+
+## [PHASE_08A] — 2026-07-11 — Enterprise Geography Foundation
+
+### Added
+
+- `Division`, `District`, `Territory` Prisma models
+- `Dealer.divisionId`, `districtId`, `territoryId` FKs (nullable)
+- Bangladesh seed: 8 divisions, 64 districts, 64 default territories
+- Geography server actions + cascading select components
+- `/settings/geography`, `/settings/territories` admin pages
+
+---
+
+## [PHASE_07F] — 2026-07-10 — Enterprise Financial System Certification
+
+### Added
+
+- `runFinancialCertification()` — full enterprise financial certification entry point
+- Rules 1–10 verification across all financial subsystems
+- Repository boundary grep, concurrency/sensitivity/immutability/performance checks
+- `FinancialCertificationReport` with subsystem scores, risks, manual checks
+- ADR-037 — Enterprise Financial System Certification
+- 12 unit tests in `financial-certification.test.ts`
+
+### Architecture
+
+- Read-only verification — reuses reconciliation, statement, integrity monitor
+- No modifications to posting engines, document platform, or schema
+- Live database checks require reachable `DATABASE_URL`
+
+### Verification
+
+- `npx tsc --noEmit` — 0 errors
+- `npx eslint` — 0 errors
+- `npx vitest run` — 245 passed / 7 skipped (12 new tests)
+
+### Verdict
+
+**PHASE_08 (Due Reports) APPROVED**
+
+---
+
 ## [PHASE_07E5] — 2026-07-10 — Financial Integrity Operations Console
 
 ### Added

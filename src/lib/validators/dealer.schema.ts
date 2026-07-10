@@ -96,6 +96,16 @@ const territorySchema = z
   .min(1, { error: "validation.territory.required" })
   .max(100, { error: "validation.territory.tooLong" });
 
+const territoryIdSchema = z.uuid({ error: "validation.territory.required" });
+const districtIdSchema = z.uuid({ error: "validation.district.required" });
+const divisionIdSchema = z.uuid({ error: "validation.division.required" });
+
+const geographyFieldsSchema = z.object({
+  divisionId: divisionIdSchema,
+  districtId: districtIdSchema,
+  territoryId: territoryIdSchema,
+});
+
 /* -------------------------------------------------------------------------- */
 /*                                Create / Update                             */
 /* -------------------------------------------------------------------------- */
@@ -106,10 +116,18 @@ export const createDealerSchema = z.object({
   mobile: mobileSchema,
   email: emailSchema,
   address: addressSchema,
-  district: districtSchema,
-  territory: territorySchema,
+  divisionId: divisionIdSchema,
+  districtId: districtIdSchema,
+  territoryId: territoryIdSchema,
   creditLimit: moneyNonNegativeSchema,
   isActive: z.boolean().default(true),
+});
+
+/** Client form schema — geography IDs validated separately in the form UI. */
+export const dealerFormBaseSchema = createDealerSchema.omit({
+  divisionId: true,
+  districtId: true,
+  territoryId: true,
 });
 
 /**
@@ -125,8 +143,9 @@ export const updateDealerSchema = z
     mobile: mobileSchema.optional(),
     email: emailSchema.optional(),
     address: addressSchema.optional(),
-    district: districtSchema.optional(),
-    territory: territorySchema.optional(),
+    divisionId: divisionIdSchema.optional(),
+    districtId: districtIdSchema.optional(),
+    territoryId: territoryIdSchema.optional(),
     creditLimit: moneyNonNegativeSchema.optional(),
     isActive: z.boolean().optional(),
   })

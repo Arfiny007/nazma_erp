@@ -153,6 +153,85 @@ model User {
   openingBalancesValidated OpeningBalance[]  @relation("OpeningBalanceValidatedBy")
   openingBalancesPosted    OpeningBalance[]  @relation("OpeningBalancePostedBy")
   auditLogs                AuditLog[]
+  territoryAssignments     UserTerritoryAssignment[]
+  ownedDealers             DealerOwnershipHistory[] @relation("OwnershipAssignedSr")
+  dealerOwnershipAssignedBy DealerOwnershipHistory[] @relation("OwnershipAssignedBy")
+}
+
+/// Bangladesh administrative division (8 divisions). See PHASE_08A.
+model Division {
+  id String @id @default(uuid())
+
+  /// Stable slug, e.g. `dhaka`.
+  code String @unique
+
+  name   String
+  nameBn String
+
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  districts District[]
+  dealers   Dealer[]
+
+  @@index([isActive, sortOrder])
+}
+
+/// Bangladesh district (64 districts). See PHASE_08A.
+model District {
+  id String @id @default(uuid())
+
+  /// Stable slug scoped globally, e.g. `dhaka`.
+  code String @unique
+
+  name   String
+  nameBn String
+
+  divisionId String
+  division   Division @relation(fields: [divisionId], references: [id])
+
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  territories Territory[]
+  dealers     Dealer[]
+
+  @@index([divisionId, isActive, sortOrder])
+  @@index([name])
+}
+
+/// Company-defined sales territory within a district. See PHASE_08A.
+model Territory {
+  id String @id @default(uuid())
+
+  /// Stable slug, e.g. `dhaka-central`.
+  code String @unique
+
+  name   String
+  nameBn String?
+
+  districtId String
+  district   District @relation(fields: [districtId], references: [id])
+
+  sortOrder Int     @default(0)
+  isActive  Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  dealers Dealer[]
+
+  userAssignments UserTerritoryAssignment[]
+  ownershipHistory DealerOwnershipHistory[]
+
+  @@index([districtId, isActive, sortOrder])
+  @@index([name])
 }
 
 model Dealer {
@@ -168,8 +247,17 @@ model Dealer {
 
   address String
 
+  /// Legacy free-text fields — retained for backward compatibility during migration.
   district  String
   territory String
+
+  /// Structured geography FKs — optional until dealers are migrated. See PHASE_08A.
+  divisionId  String?
+  division    Division?  @relation(fields: [divisionId], references: [id])
+  districtId  String?
+  geoDistrict District?  @relation(fields: [districtId], references: [id])
+  territoryId String?
+  geoTerritory Territory? @relation(fields: [territoryId], references: [id])
 
   creditLimit    Decimal @db.Decimal(18, 2)
   /// Accounts Receivable balance — positive: dealer owes company; negative: company owes dealer (advance/credit). See ADR-019.
@@ -199,6 +287,68 @@ model Dealer {
   /// At most one Opening Balance record per dealer, ever — enforced by the
   /// `@unique` constraint on `OpeningBalance.dealerCode`. See ADR-028.
   openingBalance   OpeningBalance?
+  ownershipHistory DealerOwnershipHistory[]
+
+  @@index([divisionId])
+  @@index([districtId])
+  @@index([territoryId])
+}
+
+/// Maps users (SR / Manager) to supervised sales territories. See PHASE_08B / ADR-038.
+model UserTerritoryAssignment {
+  id String @id @default(cuid())
+
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+  territoryId String
+  territory   Territory @relation(fields: [territoryId], references: [id])
+
+  isPrimary Boolean @default(false)
+  isActive  Boolean @default(true)
+
+  assignedAt DateTime  @default(now())
+  revokedAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, territoryId])
+  @@index([userId])
+  @@index([territoryId])
+  @@index([userId, isActive])
+}
+
+/// Auditable dealer → territory ownership timeline. See PHASE_08C / ADR-039.
+model DealerOwnershipHistory {
+  id String @id @default(cuid())
+
+  dealerId String
+  dealer   Dealer @relation(fields: [dealerId], references: [id])
+
+  territoryId String
+  territory   Territory @relation(fields: [territoryId], references: [id])
+
+  assignedSrId String?
+  assignedSr   User? @relation("OwnershipAssignedSr", fields: [assignedSrId], references: [id])
+
+  assignedById String
+  assignedBy   User @relation("OwnershipAssignedBy", fields: [assignedById], references: [id])
+
+  reason String?
+
+  effectiveFrom DateTime
+  effectiveTo   DateTime?
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([dealerId])
+  @@index([territoryId])
+  @@index([assignedSrId])
+  @@index([dealerId, isActive])
+  @@index([isActive])
 }
 
 model Project {

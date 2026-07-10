@@ -2,8 +2,8 @@
 
 Authoritative engineering rulebook. Every rule below is mandatory. Violation constitutes a production defect and potential accounting corruption.
 
-**Certification basis:** ADR-015, ADR-021, ADR-024, ADR-025, ADR-026, ADR-027, ADR-028  
-**Last updated:** 2026-07-10 (PHASE_07E4 — Scheduled Financial Integrity Monitor)
+**Certification basis:** ADR-015, ADR-021, ADR-024, ADR-025, ADR-026, ADR-027, ADR-028, ADR-037  
+**Last updated:** 2026-07-10 (PHASE_07F — Enterprise Financial System Certification)
 
 ---
 
@@ -357,6 +357,26 @@ Reports and statements must not trust Tier 3 alone without reconciliation to Tie
 
 ---
 
+## 24. Enterprise Financial System Certification Invariants (PHASE_07F — shipped)
+
+| Rule | Detail |
+|------|--------|
+| Certification read-only | `runFinancialCertification()` never mutates `LedgerEntry` or `Dealer.currentBalance` |
+| Rule 1 | `Dealer.currentBalance` = latest `LedgerEntry.balance` |
+| Rule 2 | `SUM(debit) - SUM(credit)` = latest `LedgerEntry.balance` |
+| Rule 3 | Chain: `balance[i] = balance[i-1] + debit - credit` |
+| Rule 4 | Replay idempotent — `postingKey @unique`; second run creates 0 rows |
+| Rule 5 | Opening Balance — exactly one initialization per dealer |
+| Rule 6 | Statement running balance = `LedgerEntry.balance` |
+| Rule 7 | Statement preview = print = PDF single pipeline |
+| Rule 8 | Every posting produces AuditLog + LedgerEntry + postingKey |
+| Rule 9 | PostingService sole writer of `Dealer.currentBalance` |
+| Rule 10 | No `ledgerEntry.update/delete` or balance bypass in application code |
+| Live DB gate | Full certification score requires reachable `DATABASE_URL` |
+| Forbidden | Modifying posting engines during certification phase |
+
+---
+
 ## Enforcement Checklist for New Code
 
 Before merging any financial feature:
@@ -384,4 +404,5 @@ Before merging any financial feature:
 - ADR-025 — Enterprise Ledger Foundation (PHASE_07A)
 - ADR-026 — Enterprise Ledger Posting Engine (PHASE_07B)
 - ADR-027 — Enterprise Financial Integrity Certification (PHASE_07B.5)
-- ADR-028 — Enterprise Financial Initialization Engine (PHASE_07C)
+- ADR-036 — Financial Integrity Operations Console (PHASE_07E5)
+- ADR-037 — Enterprise Financial System Certification (PHASE_07F)

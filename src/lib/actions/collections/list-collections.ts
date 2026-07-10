@@ -4,6 +4,11 @@ import { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/rbac/guards";
+import {
+  buildTerritoryScope,
+  canAccessCollection,
+  mergeCollectionTerritoryScope,
+} from "@/lib/rbac/territory";
 import { listCollectionsSchema } from "@/lib/validators/collection.schema";
 import type {
   ActionResult,
@@ -22,8 +27,9 @@ import {
 export async function listCollections(
   input: unknown,
 ): Promise<ActionResult<PaginatedResult<CollectionListItemDTO>>> {
+  let user;
   try {
-    await requirePermission("collections:view");
+    user = await requirePermission("collections:view");
   } catch {
     return fail<PaginatedResult<CollectionListItemDTO>>(
       "FORBIDDEN",
@@ -82,14 +88,17 @@ export async function listCollections(
     ];
   }
 
+  const scope = await buildTerritoryScope(user.id);
+  const scopedWhere = mergeCollectionTerritoryScope(where, scope);
+
   const orderBy: Prisma.CollectionOrderByWithRelationInput = {
     [sortBy]: sortOrder,
   };
 
   const [total, rows] = await prisma.$transaction([
-    prisma.collection.count({ where }),
+    prisma.collection.count({ where: scopedWhere }),
     prisma.collection.findMany({
-      where,
+      where: scopedWhere,
       include: collectionListInclude,
       orderBy,
       skip: (page - 1) * pageSize,

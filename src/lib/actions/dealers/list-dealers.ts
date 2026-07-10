@@ -3,10 +3,16 @@
 import type { Prisma } from "@prisma/client";
 
 import { prisma } from "@/lib/prisma";
+import { requirePermission } from "@/lib/rbac/guards";
+import {
+  buildTerritoryScope,
+  canAccessDealer,
+  mergeDealerTerritoryScope,
+} from "@/lib/rbac/territory";
 import { listDealersSchema } from "@/lib/validators/dealer.schema";
 import type { ActionResult, DealerDTO, PaginatedResult } from "@/types/dealer";
 
-import { fromPrismaError, fromZodError, ok, toDealerDTO } from "./helpers";
+import { fail, fromPrismaError, fromZodError, ok, toDealerDTO } from "./helpers";
 
 /**
  * Returns a paginated, filterable, sortable list of dealers.
@@ -18,6 +24,13 @@ import { fromPrismaError, fromZodError, ok, toDealerDTO } from "./helpers";
 export async function listDealers(
   input: unknown = {},
 ): Promise<ActionResult<PaginatedResult<DealerDTO>>> {
+  let user;
+  try {
+    user = await requirePermission("dealers:view");
+  } catch {
+    return fail<PaginatedResult<DealerDTO>>("FORBIDDEN", "rbac.noAccess");
+  }
+
   const parsed = listDealersSchema.safeParse(input);
   if (!parsed.success) {
     return fromZodError(parsed.error);
@@ -46,11 +59,14 @@ export async function listDealers(
     ];
   }
 
+  const scope = await buildTerritoryScope(user.id);
+  const scopedWhere = mergeDealerTerritoryScope(where, scope);
+
   try {
     const [total, dealers] = await prisma.$transaction([
-      prisma.dealer.count({ where }),
+      prisma.dealer.count({ where: scopedWhere }),
       prisma.dealer.findMany({
-        where,
+        where: scopedWhere,
         orderBy: { [sortBy]: sortOrder },
         skip: (page - 1) * pageSize,
         take: pageSize,

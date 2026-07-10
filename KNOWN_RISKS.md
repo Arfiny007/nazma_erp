@@ -2,8 +2,8 @@
 
 Operational risk register as of PHASE_06D completion. None are blocking for controlled production use of the Order → Invoice → Collection pipeline.
 
-**Overall readiness:** 9.1 / 10 (ADR-027)  
-**Last updated:** 2026-07-10 (PHASE_07E4 — Scheduled Financial Integrity Monitor)
+**Overall readiness:** 9.3 / 10 (ADR-037)  
+**Last updated:** 2026-07-10 (PHASE_07F — Enterprise Financial System Certification)
 
 ---
 
@@ -322,6 +322,19 @@ Operational risk register as of PHASE_06D completion. None are blocking for cont
 | Mitigation | Certified data model; phased delivery PHASE_08+ |
 | Status | **Open** |
 | Future Phase | PHASE_08, Analytics |
+
+---
+
+### T4. Full certification requires live database
+
+| Attribute | Value |
+|-----------|-------|
+| Description | `runFinancialCertification()` live Rules 1–3/5/6/8 skip with warnings when `DATABASE_URL` unreachable |
+| Impact | Structural-only score ~7.5/10 without live PostgreSQL |
+| Likelihood | Medium in CI without Docker DB |
+| Mitigation | Run certification with reachable `DATABASE_URL` before production cutover |
+| Status | **Accepted** (by design) |
+| Future Phase | CI pipeline with Docker PostgreSQL service |
 
 ---
 

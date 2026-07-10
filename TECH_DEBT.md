@@ -2,7 +2,7 @@
 
 Known deferred improvements categorized by priority. Each item includes rationale for deferral.
 
-**Last updated:** 2026-07-09 (PHASE_07C — Enterprise Financial Initialization Engine)
+**Last updated:** 2026-07-10 (PHASE_07F — Enterprise Financial System Certification)
 
 ---
 
@@ -13,10 +13,10 @@ Known deferred improvements categorized by priority. Each item includes rational
 | C1 | ~~Ledger posting not integrated~~ | ~~`createLedgerEntry` shipped in PHASE_07A but not yet called from `posting-service.ts`~~ | **Resolved in PHASE_07B** (ADR-026) | ~~No authoritative journal~~ | ✅ DONE |
 | C2 | ~~Ledger schema hardening~~ | ~~`referenceType` is String; missing `postingKey`, `postingType`, `reversesEntryId`~~ | **Resolved in PHASE_07A** (ADR-025) | ~~Type drift, duplicate entries on retry~~ | ✅ DONE |
 | C3 | Invoice void / credit note | Cannot reverse issued invoices | Collections prioritized; compensating model in ADR-024 | Cannot correct receivables in-system | Dedicated phase |
-| C4 | Balance reconciliation job | Reconciliation helpers shipped (PHASE_07A) + parity assertion live (PHASE_07B) but no scheduled offline job | Requires backfill first (PHASE_07E) | Silent balance drift for pre-PHASE_07B data undetected without scheduled job | PHASE_07E |
+| C4 | Balance reconciliation job | Reconciliation helpers + monitor + certification shipped | **Resolved in PHASE_07E4/07F** | Silent drift undetected | ✅ DONE |
 | C5 | ~~`postingKey` idempotency~~ | ~~Ledger lacks unique posting key~~ | **Resolved in PHASE_07A** — `postingKey String @unique` | ~~Duplicate ledger lines on retry~~ | ✅ DONE |
 | C6 | DB-level ledger immutability | Application-level `assertLedgerAppendOnly` guard only | Runtime guard sufficient for PHASE_07B; DB policy adds defense in depth | Rogue SQL could still UPDATE/DELETE historical rows | Optional |
-| C7 | Ledger backfill for pre-PHASE_07B data | Existing invoices/collections before PHASE_07B lack `LedgerEntry` rows | Backfill script deferred to PHASE_07E | Dealer statement / reconciliation on legacy data incomplete | PHASE_07E |
+| C7 | Ledger backfill for pre-PHASE_07B data | Replay engine shipped (PHASE_07E2) | **Resolved in PHASE_07E2** | Legacy data incomplete | ✅ DONE |
 | C8 | `it.skipIf` evaluated at registration time in pre-existing integration tests | `issue-invoice-concurrency.test.ts` and `ledger-reconciliation.integration.test.ts` compute `integrationReady` inside `beforeAll` but pass it to `it.skipIf` synchronously at describe-time — always `false` at that point, so these tests always skip even when `DATABASE_URL` is reachable | Discovered while building PHASE_07C's own integration test (which uses the correct `ctx.skip()` runtime pattern instead); fixing the pre-existing files is outside PHASE_07C's forbidden-files scope (Invoice) / out of scope (ledger reconciliation) | CI never actually exercises these "integration" tests even with a live database configured | Test-infrastructure pass |
 
 ---
@@ -32,7 +32,7 @@ Known deferred improvements categorized by priority. Each item includes rational
 | M5 | Collection concurrency tests | No integration tests mirroring invoice suite | Dealer lock pattern proven on invoice path | Lower confidence under load | Pre-production |
 | M6 | Allocation soft-delete on reversal | Rows hard-deleted; history incomplete in DB | Audit preserves amounts | Statement needs audit join | Optional |
 | M7 | Dealer analytics population | `totalSales`, activity dates not auto-updated | Reporting not started | Stale dealer profile metrics | Reporting |
-| M8 | Due report UI | `DueReport` model unused | Collections prioritized | No systematic overdue visibility | PHASE_08 |
+| T9 | Collection context territory gap | `getDealerCollectionContext` lacks `canAccessDealerByCode` | PHASE_08E certified as warning | SR may read out-of-territory dealer context in collection workspace | Add territory gate |
 | M9 | Dealer statement UI | Hybrid architecture designed; no route | Needs ledger for running balance | No account statements | PHASE_07D |
 | M10 | Composite DB indexes | Missing `(dealerCode, collectionDate)` etc. | Current volume acceptable | Slow reports at scale | PHASE_07–08 |
 | M11 | Credit limit manager override | Hard stop only; no RBAC override | ADR-011 future enhancement | No in-system exceptions | Future |
@@ -86,6 +86,7 @@ Known deferred improvements categorized by priority. Each item includes rational
 | Ledger posting integration tests | ✅ Delivered (PHASE_07B) | `posting-service.test.ts` (12 unit tests) + concurrency suite extended with ledger assertions |
 | Reconciliation job tests | ✅ Delivered (PHASE_07B.5) | `ledger-reconciliation.test.ts` (9) + integration scan |
 | Opening balance workflow + validation + concurrency tests | ✅ Delivered (PHASE_07C) | `opening-balance.test.ts` (11), `opening-balance-validation.test.ts` (31), `opening-balance-concurrency.integration.test.ts` (2, live DB — actually runs, see C8) |
+| Financial system certification tests | ✅ Delivered (PHASE_07F) | `financial-certification.test.ts` (12) |
 | E2E print layout tests | Low | Manual QA + browser matrix |
 
 ---
