@@ -4,6 +4,56 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_07E5] — 2026-07-10 — Financial Integrity Operations Console
+
+### Added
+
+- Production Financial Integrity Console at `/ledger/integrity`
+- Header, summary cards, scan history, manual scan, dealer drill-down
+- Client-side dealer filters (status, search; date future-ready)
+- ADR-036 — Financial Integrity Operations Console
+- 11 presentation tests in `integrity-console.test.ts`
+
+### Architecture
+
+- Presentation only — consumes `FinancialIntegrityScan` + reconciliation DTOs
+- GREEN/YELLOW overall status from persisted scan counts
+- Reuses `runFinancialIntegrityScan()` and `getReconciliationSummary()`
+
+### Verification
+
+- `npx tsc --noEmit` — 0 errors
+- `npx eslint` — 0 errors
+- `npx vitest run` — 233 passed / 7 skipped (11 new tests)
+
+---
+
+## [PHASE_07E4] — 2026-07-10 — Scheduled Financial Integrity Monitor
+
+### Added
+
+- `runFinancialIntegrityScan()` — orchestrates `reconcileAllDealers()` and persists scan summary
+- `getLatestIntegrityScan()` / `listIntegrityScans()` — scan history queries
+- `FinancialIntegrityScan` Prisma model + migration
+- Dev page `/ledger/integrity` — latest scan, history table, manual run button
+- ADR-035 — Scheduled Financial Integrity Monitor
+- 11 unit tests in `ledger-monitor.test.ts`
+
+### Architecture
+
+- Orchestration only — reuses PHASE_07E3 reconciliation engine
+- Persists summary counts only — no per-dealer report rows
+- No cron / workers configured — callable entry point for future infra
+- Financial administration RBAC (`invoices:create`)
+
+### Verification
+
+- `npx tsc --noEmit` — 0 errors
+- `npx eslint` — 0 errors
+- `npx vitest run` — 222 passed / 7 skipped (11 new tests)
+
+---
+
 ## [PHASE_07E3] — 2026-07-10 — Enterprise Reconciliation Engine
 
 ### Added

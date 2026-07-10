@@ -125,6 +125,11 @@ enum DeliveryChallanStatus {
   Cancelled
 }
 
+enum FinancialIntegrityScanStatus {
+  Completed
+  Failed
+}
+
 model User {
   id       String   @id @default(uuid())
   name     String
@@ -674,6 +679,30 @@ model DueReport {
 
   @@index([dealerCode])
   @@index([createdAt])
+}
+
+/// Scheduled Financial Integrity Monitor — PHASE_07E4.
+/// Persists repository-wide reconciliation scan summaries only.
+model FinancialIntegrityScan {
+  id String @id @default(uuid())
+
+  startedAt   DateTime
+  completedAt DateTime?
+  durationMs  Int?
+
+  totalDealers         Int
+  consistentDealers    Int
+  driftedDealers       Int
+  missingLedgerDealers Int
+  corruptedDealers     Int
+
+  status FinancialIntegrityScanStatus
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([startedAt])
+  @@index([status])
 }
 
 model AuditLog {

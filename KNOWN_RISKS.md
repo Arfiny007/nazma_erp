@@ -3,7 +3,7 @@
 Operational risk register as of PHASE_06D completion. None are blocking for controlled production use of the Order → Invoice → Collection pipeline.
 
 **Overall readiness:** 9.1 / 10 (ADR-027)  
-**Last updated:** 2026-07-10 (PHASE_07E2 — Enterprise Historical Ledger Replay Engine)
+**Last updated:** 2026-07-10 (PHASE_07E4 — Scheduled Financial Integrity Monitor)
 
 ---
 
@@ -27,9 +27,9 @@ Operational risk register as of PHASE_06D completion. None are blocking for cont
 | Description | Reports trusting cache without reconciliation may be wrong |
 | Impact | Incorrect balances in ad-hoc reports |
 | Likelihood | Very low (sole writer + dealer lock + `LedgerEntry.balance` parity assertion on every commit — PHASE_07B) |
-| Mitigation | Cache asserted equal to ledger on every commit; `reconcileAllDealers` + chain validation (PHASE_07B.5); historical replay (PHASE_07E2); enterprise reconciliation engine (PHASE_07E3) |
-| Status | **Mitigated** (parity on every commit + replay + read-only reconciliation engine) |
-| Future Phase | Reconciliation dashboard / scheduled cron (optional) |
+| Mitigation | Cache asserted equal to ledger on every commit; `reconcileAllDealers` + chain validation (PHASE_07B.5); historical replay (PHASE_07E2); enterprise reconciliation engine (PHASE_07E3); automated integrity monitor with persisted scan history (PHASE_07E4) |
+| Status | **Mitigated** (parity on every commit + replay + reconciliation + scan history) |
+| Future Phase | Integrity dashboard / notifications / cron wiring (optional) |
 
 ### F3. Allocation Rows Deleted on Reversal
 

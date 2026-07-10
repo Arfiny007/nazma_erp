@@ -89,3 +89,11 @@ export type {
   StatementRow,
   StatementTotals,
 } from "@/lib/ledger/statement";
+
+export {
+  runFinancialIntegrityScan,
+  getLatestIntegrityScan,
+  listIntegrityScans,
+  type FinancialIntegrityScanResult,
+  type FinancialIntegrityScanRecord,
+} from "@/lib/ledger/monitor";

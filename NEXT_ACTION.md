@@ -2,25 +2,29 @@
 
 ## Current State
 
-PHASE_07E3_ENTERPRISE_RECONCILIATION_ENGINE is **complete** (2026-07-10):
+PHASE_07E5_FINANCIAL_INTEGRITY_OPERATIONS_CONSOLE is **complete** (2026-07-10):
 
-- `reconcileDealer()` / `reconcileAllDealers()` — read-only integrity verification
-- Rules A/B/C — cache parity, sum parity, chain integrity
-- Status: `CONSISTENT`, `DRIFT`, `MISSING_LEDGER`, `CORRUPTED_CHAIN`
-- Dev page `/ledger/reconciliation` with summary cards + dealer table
-- 10 new unit tests; ADR-034 authored
-- Full suite: **211 passed / 7 skipped**
+- Production `/ledger/integrity` — Financial Integrity Console
+- Header, summary cards, scan history, manual scan, dealer drill-down
+- Consumes `FinancialIntegrityScan` + `getReconciliationSummary()` only
+- 11 new presentation tests; ADR-036 authored
+- Full suite: **233 passed / 7 skipped**
 
-PHASE_07E1 discovery, PHASE_07E2 replay, and prior phases remain complete.
+PHASE_07E4 monitor, PHASE_07E3 reconciliation, and prior phases remain complete.
 
-**Not yet built:** Reconciliation dashboard, scheduled cron job, repair tools,
+**Not yet built:** Cron scheduling, notifications, repair tools,
 Excel/email statement export, due reports.
 
 ---
 
 ## Next Steps
 
-### 1. Statement Excel / Email Export (presentation follow-on)
+### 1. Integrity Notifications & Cron (follow-on)
+
+- Wire background scheduler to `runFinancialIntegrityScan()`
+- Alert when scan detects drift, missing ledger, or corruption
+
+### 2. Statement Excel / Email Export (presentation follow-on)
 
 - Excel export / email delivery — same `DealerStatementDTO`, no second query path
 

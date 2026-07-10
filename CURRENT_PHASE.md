@@ -6,7 +6,7 @@ Current Phase:
 
 
 
-PHASE_07E3_ENTERPRISE_RECONCILIATION_ENGINE
+PHASE_07E5_FINANCIAL_INTEGRITY_OPERATIONS_CONSOLE
 
 
 
@@ -80,6 +80,8 @@ COMPLETE
 | **PHASE_07E1_HISTORICAL_LEDGER_DISCOVERY_ENGINE** | Read-only `getLedgerBackfillCandidates()` — identifies dealers requiring historical ledger reconstruction; dev page `/ledger/backfill`; ADR-032 | **✅ COMPLETE** |
 | **PHASE_07E2_HISTORICAL_REPLAY_ENGINE** | Idempotent `replayDealerLedger()` — reconstructs missing `LedgerEntry` rows via `createLedgerEntry`; server actions; dev replay controls; ADR-033 | **✅ COMPLETE** |
 | **PHASE_07E3_ENTERPRISE_RECONCILIATION_ENGINE** | Read-only `reconcileDealer()` / `reconcileAllDealers()` — drift, missing ledger, corrupted chain detection; dev page `/ledger/reconciliation`; ADR-034 | **✅ COMPLETE** |
+| **PHASE_07E4_SCHEDULED_FINANCIAL_INTEGRITY_MONITOR** | `runFinancialIntegrityScan()` orchestrates reconciliation + persists `FinancialIntegrityScan` summaries; ADR-035 | **✅ COMPLETE** |
+| **PHASE_07E5_FINANCIAL_INTEGRITY_OPERATIONS_CONSOLE** | Production `/ledger/integrity` — header, summary cards, scan history, manual scan, dealer drill-down; ADR-036 | **✅ COMPLETE** |
 
 
 
@@ -562,6 +564,70 @@ mutations, posting changes, or LedgerEntry modifications.
 
 **Statement Excel / Email Export** or **PHASE_08 Due Reports** — presentation
 and reporting follow-ons. No repair tooling.
+
+---
+
+# PHASE_07E5_FINANCIAL_INTEGRITY_OPERATIONS_CONSOLE
+
+Status: COMPLETE (2026-07-10)
+
+## Objectives
+
+Build production Financial Integrity Console at `/ledger/integrity`.
+Presentation only — answers "Is the accounting system healthy?"
+
+* Header — last scan time, duration, total dealers, GREEN/YELLOW status
+* Summary cards from `FinancialIntegrityScan` only
+* Scan history table + manual scan via `runFinancialIntegrityScan()`
+* Dealer drill-down via `getReconciliationSummary()` (reconcileAllDealers)
+* Client-side filters (status, search; date future-ready)
+* ADR-036
+
+## Completion Criteria
+
+* Production route replaces dev tooling: ✓
+* No duplicated accounting logic: ✓
+* Existing monitor + reconciliation reused: ✓
+* EN/BN localization: ✓
+* 11 presentation tests: ✓
+* `npx vitest run` — 233 passed / 7 skipped: ✓
+
+## Explicitly NOT Changed
+
+* posting-service, reconciliation engine, monitor engine, Prisma schema, permissions
+
+---
+
+# PHASE_07E4_SCHEDULED_FINANCIAL_INTEGRITY_MONITOR
+
+Status: COMPLETE (2026-07-10)
+
+## Objectives
+
+Build automated financial integrity monitor. Run reconciliation automatically
+and persist scan results. Orchestration only — no dashboards, notifications,
+repair tools, exports, or cron configuration.
+
+* `runFinancialIntegrityScan()` — calls `reconcileAllDealers()`, persists summary
+* `FinancialIntegrityScan` Prisma model — scan history
+* Server actions + dev page `/ledger/integrity`
+* ADR-035
+
+## Completion Criteria
+
+* Existing reconciliation engine reused — no duplicated Rules A/B/C: ✓
+* Scan summary persisted — no per-dealer rows: ✓
+* No financial mutation / no ledger creation: ✓
+* `getLatestIntegrityScan()` + `listIntegrityScans()`: ✓
+* Financial administration RBAC (`invoices:create`): ✓
+* 11 unit tests: ✓
+* ADR-035 authored: ✓
+* `npx vitest run` — 222 passed / 7 skipped: ✓
+
+## Explicitly NOT Changed
+
+* posting-service, invoice/collection/opening balance engines, reconciliation engine
+* backfill replay, statement engine, document platform, permissions
 
 ---
 

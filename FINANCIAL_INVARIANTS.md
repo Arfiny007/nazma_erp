@@ -3,7 +3,7 @@
 Authoritative engineering rulebook. Every rule below is mandatory. Violation constitutes a production defect and potential accounting corruption.
 
 **Certification basis:** ADR-015, ADR-021, ADR-024, ADR-025, ADR-026, ADR-027, ADR-028  
-**Last updated:** 2026-07-10 (PHASE_07E3 — Enterprise Reconciliation Engine)
+**Last updated:** 2026-07-10 (PHASE_07E4 — Scheduled Financial Integrity Monitor)
 
 ---
 

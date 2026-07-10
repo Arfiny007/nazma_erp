@@ -1,6 +1,93 @@
 # IMPLEMENTATION STATUS
 
-Last updated: 2026-07-10 (PHASE_07E3 — Enterprise Reconciliation Engine)
+Last updated: 2026-07-10 (PHASE_07E5 — Financial Integrity Operations Console)
+
+---
+
+## Financial Integrity Operations Console — Verification (PHASE_07E5)
+
+| Criterion | Status |
+|-----------|--------|
+| Production route `/ledger/integrity` | ✅ |
+| Header — last scan, duration, total dealers, GREEN/YELLOW status | ✅ |
+| Summary cards from `FinancialIntegrityScan` only | ✅ |
+| Scan history table + manual scan controls | ✅ |
+| Dealer drill-down via `getReconciliationSummary()` | ✅ |
+| Client-side status/search filters (date future-ready) | ✅ |
+| No financial mutation / no duplicated accounting logic | ✅ |
+| EN/BN localization | ✅ |
+| ADR-036 authored | ✅ |
+| `npx vitest run` — 233 passed / 7 skipped | ✅ |
+
+Total: **233 passed / 7 skipped** (+11 new tests).
+
+### Files Delivered — PHASE_07E5
+
+**New:**
+- `src/components/ledger/integrity/integrity-console-view.tsx`
+- `src/components/ledger/integrity/integrity-console-header.tsx`
+- `src/components/ledger/integrity/integrity-summary-cards.tsx`
+- `src/components/ledger/integrity/integrity-scan-controls.tsx`
+- `src/components/ledger/integrity/integrity-scan-history-table.tsx`
+- `src/components/ledger/integrity/integrity-dealer-filters.tsx`
+- `src/components/ledger/integrity/integrity-dealer-table.tsx`
+- `src/components/ledger/integrity/integrity-console-empty-state.tsx`
+- `src/components/ledger/integrity/integrity-overall-status-badge.tsx`
+- `src/components/ledger/integrity/integrity-dealer-status-badge.tsx`
+- `src/components/ledger/integrity/integrity-console-utils.ts`
+- `src/components/ledger/integrity/integrity-console.test.ts` (11 tests)
+- `src/components/ledger/integrity/index.ts`
+- `docs/ADR/ADR-036-financial-integrity-operations-console.md`
+
+**Modified:**
+- `src/app/(dashboard)/ledger/integrity/page.tsx` — production console
+- `public/locales/en/common.json`, `public/locales/bn/common.json` — `integrityConsole.*`
+- Governance docs
+
+**Removed:**
+- `src/app/(dashboard)/ledger/integrity/ledger-integrity-monitor.tsx`
+
+---
+
+## Scheduled Financial Integrity Monitor — Verification (PHASE_07E4)
+
+| Criterion | Status |
+|-----------|--------|
+| `runFinancialIntegrityScan()` — orchestrates `reconcileAllDealers()` | ✅ |
+| `FinancialIntegrityScan` model + migration | ✅ |
+| Scan summary persisted — no per-dealer rows | ✅ |
+| `getLatestIntegrityScan()` + `listIntegrityScans()` | ✅ |
+| No financial mutation / no ledger creation | ✅ |
+| Financial administration RBAC (`invoices:create`) | ✅ |
+| Dev page `/ledger/integrity` | ✅ |
+| ADR-035 authored | ✅ |
+| `npx vitest run` — 222 passed / 7 skipped | ✅ |
+
+Total: **222 passed / 7 skipped** (+11 new tests).
+
+### Files Delivered — PHASE_07E4
+
+**New:**
+- `src/lib/ledger/monitor/ledger-monitor-service.ts`
+- `src/lib/ledger/monitor/ledger-monitor-query.ts`
+- `src/lib/ledger/monitor/ledger-monitor-types.ts`
+- `src/lib/ledger/monitor/ledger-monitor-validation.ts`
+- `src/lib/ledger/monitor/ledger-monitor-errors.ts`
+- `src/lib/ledger/monitor/ledger-monitor-report.ts`
+- `src/lib/ledger/monitor/ledger-monitor.test.ts` (11 tests)
+- `src/lib/ledger/monitor/index.ts`
+- `src/lib/actions/ledger-monitor/run-financial-integrity-scan.ts`
+- `src/lib/actions/ledger-monitor/get-latest-integrity-scan.ts`
+- `src/lib/actions/ledger-monitor/list-integrity-scans.ts`
+- `src/app/(dashboard)/ledger/integrity/page.tsx`
+- `src/app/(dashboard)/ledger/integrity/ledger-integrity-monitor.tsx`
+- `prisma/migrations/20260710000000_financial_integrity_scan/migration.sql`
+- `docs/ADR/ADR-035-scheduled-financial-integrity-monitor.md`
+
+**Modified:**
+- `prisma/schema.prisma` — `FinancialIntegrityScan` model + enum
+- `src/lib/ledger/index.ts` — monitor exports
+- Governance docs
 
 ---
 

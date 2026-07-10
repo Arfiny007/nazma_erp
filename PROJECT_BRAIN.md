@@ -159,9 +159,9 @@ The codebase should be reusable as a multi-company ERP platform in future versio
 
 ---
 
-## Architecture Maturity (as of PHASE_07E3 — 2026-07-10)
+## Architecture Maturity (as of PHASE_07E5 — 2026-07-10)
 
-**Overall ERP production readiness: 9.1 / 10** (ADR-027, ADR-028, ADR-032)
+**Overall ERP production readiness: 9.1 / 10** (ADR-027, ADR-028, ADR-032, ADR-035, ADR-036)
 
 The commercial → fulfillment → financial → document pipeline is **production-certified** for controlled deployment:
 
@@ -175,11 +175,54 @@ Sales Order → Delivery Challan → Invoice → Collection → Allocation → M
 
 **Blocking defects:** None for Order → Invoice → Collection → Ledger posting → Opening Balance → Dealer Statement read + UI + printable document pipeline.
 
-**Opening Balance:** SHIPPED (PHASE_07C) per ADR-028. **Dealer Subledger Foundation:** SHIPPED (PHASE_07D1) per ADR-029. **Dealer Statement UI:** SHIPPED (PHASE_07D2) per ADR-030. **Dealer Statement Document:** SHIPPED (PHASE_07D3) per ADR-031. **Ledger Backfill Discovery:** SHIPPED (PHASE_07E1) per ADR-032. **Historical Replay Engine:** SHIPPED (PHASE_07E2) per ADR-033. **Reconciliation Engine:** SHIPPED (PHASE_07E3) per ADR-034.
+**Opening Balance:** SHIPPED (PHASE_07C) per ADR-028. **Dealer Subledger Foundation:** SHIPPED (PHASE_07D1) per ADR-029. **Dealer Statement UI:** SHIPPED (PHASE_07D2) per ADR-030. **Dealer Statement Document:** SHIPPED (PHASE_07D3) per ADR-031. **Ledger Backfill Discovery:** SHIPPED (PHASE_07E1) per ADR-032. **Historical Replay Engine:** SHIPPED (PHASE_07E2) per ADR-033. **Reconciliation Engine:** SHIPPED (PHASE_07E3) per ADR-034. **Integrity Monitor:** SHIPPED (PHASE_07E4) per ADR-035. **Integrity Console:** SHIPPED (PHASE_07E5) per ADR-036.
 
 ---
 
 ---
+
+---
+
+---
+
+---
+
+## PHASE_07E5 — Financial Integrity Operations Console
+
+**Status:** COMPLETE (2026-07-10)
+
+Production operations console at `/ledger/integrity`. Answers "Is the
+accounting system healthy?" Presentation only.
+
+| Change | Detail |
+|--------|--------|
+| Console UI | `src/components/ledger/integrity/` |
+| Route | `/ledger/integrity` — replaces dev tooling |
+| Data sources | `FinancialIntegrityScan` + `getReconciliationSummary()` |
+| Manual scan | `runFinancialIntegrityScan()` action |
+| Status | GREEN when no drift/missing/corruption; else YELLOW |
+| Tests | 11 presentation tests |
+| ADR | `docs/ADR/ADR-036-financial-integrity-operations-console.md` |
+
+---
+
+## PHASE_07E4 — Scheduled Financial Integrity Monitor
+
+**Status:** COMPLETE (2026-07-10)
+
+Automated integrity scan orchestration. Calls `reconcileAllDealers()` and
+persists repository-wide summary counts to `FinancialIntegrityScan`. No cron,
+dashboards, or notifications in this phase.
+
+| Change | Detail |
+|--------|--------|
+| Monitor service | `runFinancialIntegrityScan()` in `src/lib/ledger/monitor/` |
+| Persistence | `FinancialIntegrityScan` — summary counts + timing only |
+| Server actions | `runFinancialIntegrityScan`, `getLatestIntegrityScan`, `listIntegrityScans` |
+| Dev UI | `/ledger/integrity` — latest scan, history, manual run |
+| RBAC | `invoices:create` (financial administration) |
+| Tests | 11 unit tests |
+| ADR | `docs/ADR/ADR-035-scheduled-financial-integrity-monitor.md` |
 
 ---
 

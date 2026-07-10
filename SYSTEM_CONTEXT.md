@@ -4,9 +4,9 @@ Definitive engineering context for AI sessions and new maintainers.
 
 Read this document first. Then consult `PROJECT_BRAIN.md`, `CURRENT_PHASE.md`, and relevant ADRs.
 
-**Last updated:** 2026-07-10 (PHASE_07E3 — Enterprise Reconciliation Engine)  
-**Current phase:** PHASE_07E3 complete → Next: Reporting / Dashboard follow-ons  
-**Production readiness:** 9.1 / 10 (ADR-027, ADR-028, ADR-029, ADR-030, ADR-031, ADR-032)
+**Last updated:** 2026-07-10 (PHASE_07E5 — Financial Integrity Operations Console)  
+**Current phase:** PHASE_07E5 complete → Next: Cron / notifications / repair follow-ons  
+**Production readiness:** 9.1 / 10 (ADR-027 … ADR-035, ADR-036)
 
 ---
 
@@ -135,6 +135,8 @@ See ADR-011 for fulfillment architecture.
 | Ledger Backfill Discovery | ✅ Complete (PHASE_07E1) — read-only `getLedgerBackfillCandidates()`; ADR-032 | `src/lib/ledger/backfill/`, `/ledger/backfill` |
 | Ledger Historical Replay | ✅ Complete (PHASE_07E2) — `replayDealerLedger()` via `createLedgerEntry`; ADR-033 | `src/lib/ledger/backfill/`, `/ledger/backfill` |
 | Ledger Reconciliation Engine | ✅ Complete (PHASE_07E3) — read-only `reconcileDealer()`; ADR-034 | `src/lib/ledger/reconciliation/`, `/ledger/reconciliation` |
+| Financial Integrity Monitor | ✅ Complete (PHASE_07E4) — `runFinancialIntegrityScan()`; ADR-035 | `src/lib/ledger/monitor/` |
+| Financial Integrity Console | ✅ Complete (PHASE_07E5) — production `/ledger/integrity`; ADR-036 | `src/components/ledger/integrity/` |
 | Due Reports | ❌ Not built | — |
 | Audit Log UI | ❌ Not built | — |
 | User Management | ❌ Not built | — |
@@ -202,7 +204,11 @@ See ADR-017, ADR-023.
 
 **PHASE_07E3 (shipped):** `src/lib/ledger/reconciliation/` — read-only Enterprise Reconciliation Engine. `reconcileDealer()` / `reconcileAllDealers()` verify cache parity, sum parity, and chain integrity. Dev page `/ledger/reconciliation`. Never mutates financial data. ADR-034.
 
-**Future:** Reconciliation dashboard, scheduled cron job, Excel/email statement export; PHASE_07F Chart of Accounts (optional).
+**PHASE_07E4 (shipped):** `src/lib/ledger/monitor/` — Scheduled Financial Integrity Monitor. `runFinancialIntegrityScan()` orchestrates `reconcileAllDealers()` and persists `FinancialIntegrityScan` summary history. ADR-035.
+
+**PHASE_07E5 (shipped):** Production Financial Integrity Console at `/ledger/integrity` — header, summary cards, scan history, manual scan, dealer drill-down. Presentation only. ADR-036.
+
+**Future:** Cron wiring, notifications, repair tools, Excel/email statement export; PHASE_07F Chart of Accounts (optional).
 
 ---
 
@@ -421,6 +427,8 @@ postOpeningBalanceRecord()  [PHASE_07C]
 | PHASE_07E1 Backfill Discovery | ~~Identify dealers requiring ledger reconstruction~~ ✅ PHASE_07E1 |
 | PHASE_07E2 Historical Replay | ~~Replay invoices/collections → ledger entries~~ ✅ PHASE_07E2 |
 | PHASE_07E3 Reconciliation Engine | ~~Read-only integrity detection~~ ✅ PHASE_07E3 |
+| PHASE_07E4 Integrity Monitor | ~~Automated scan + persisted history~~ ✅ PHASE_07E4 |
+| PHASE_07E5 Integrity Console | ~~Production operations console~~ ✅ PHASE_07E5 |
 | Statement Excel / Email | Excel export / email delivery from same DTO |
 | PHASE_07F | Chart of Accounts foundation (optional) |
 | PHASE_08 | Due reports |
@@ -480,7 +488,7 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 
 **Blocking defects:** None for Order → Invoice → Collection → Ledger posting → Opening Balance → Dealer Statement read + UI + printable document pipeline as of PHASE_07D3.
 
-**PHASE_07E1 (Backfill Discovery):** SHIPPED per ADR-032. **PHASE_07E2 (Historical Replay):** SHIPPED per ADR-033. **PHASE_07E3 (Reconciliation Engine):** SHIPPED per ADR-034.
+**PHASE_07E1 (Backfill Discovery):** SHIPPED per ADR-032. **PHASE_07E2 (Historical Replay):** SHIPPED per ADR-033. **PHASE_07E3 (Reconciliation Engine):** SHIPPED per ADR-034. **PHASE_07E4 (Integrity Monitor):** SHIPPED per ADR-035. **PHASE_07E5 (Integrity Console):** SHIPPED per ADR-036.
 
 ---
 
@@ -504,6 +512,9 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 | Dealer statement actions | `src/lib/actions/ledger-statement/` |
 | Dealer statement UI | `src/components/ledger/`, `/ledger` |
 | Dealer statement document | `src/components/documents/statement/` |
+| Ledger reconciliation | `src/lib/ledger/reconciliation/` — `reconcileAllDealers()` |
+| Financial integrity monitor | `src/lib/ledger/monitor/` — `runFinancialIntegrityScan()` |
+| Financial integrity console | `src/components/ledger/integrity/` — `/ledger/integrity` |
 | Statement print fetch | `src/lib/documents/fetch-dealer-statement-for-print.ts` |
 | Permissions | `src/lib/permissions.ts` |
 | RBAC guards | `src/lib/rbac/guards.ts` |
@@ -551,6 +562,8 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 | ADR-032 | Enterprise Ledger Backfill Discovery (PHASE_07E1) |
 | ADR-033 | Enterprise Historical Ledger Replay Engine (PHASE_07E2) |
 | ADR-034 | Enterprise Reconciliation Engine (PHASE_07E3) |
+| ADR-035 | Scheduled Financial Integrity Monitor (PHASE_07E4) |
+| ADR-036 | Financial Integrity Operations Console (PHASE_07E5) |
 
 ---
 
