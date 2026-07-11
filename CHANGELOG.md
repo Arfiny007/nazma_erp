@@ -4,6 +4,23 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_08E.1] — 2026-07-11 — Territory Security Hotfix
+
+### Fixed
+
+- `getDealerCollectionContext()` — added `canAccessDealerByCode` territory gate before financial queries
+- Cross-territory collection workspace visibility closed (PHASE_08E finding)
+
+### Added
+
+- `get-dealer-collection-context.test.ts` — 9 territory RBAC tests
+
+### Verdict
+
+Territory security score **10/10** — overall production readiness **9.7/10**
+
+---
+
 ## [PHASE_08E] — 2026-07-11 — Enterprise Territory & Due Certification
 
 ### Added

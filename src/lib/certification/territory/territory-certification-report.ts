@@ -15,7 +15,6 @@ import { buildTerritoryCertificationResult } from "./territory-certification-ser
  */
 
 const REMAINING_RISKS = [
-  "getDealerCollectionContext lacks territory RBAC gate — SR may read out-of-territory dealer financial context (TECH_DEBT).",
   "Invoice aging total may differ from Dealer.currentBalance when opening balances or unallocated collections exist — by design (ADR-040).",
   "Dealer.lastInvoiceDate not auto-updated on every invoice issue — recency field may be stale.",
   "DueReport Prisma snapshot table unused — live query only (scheduled snapshots deferred).",
@@ -25,7 +24,7 @@ const REMAINING_RISKS = [
 const REQUIRED_MANUAL_CHECKS = [
   "Verify SR user cannot access dealers outside assigned territories via browser.",
   "Verify Manager user sees only assigned territory dealers in /dealers and /reports/due.",
-  "Execute dealer territory transfer and confirm ownership timeline at /dealers/[id]/ownership.",
+  "Execute dealer territory transfer and confirm ownership timeline at /dealers/[dealerCode]/ownership.",
   "Confirm old invoices remain unchanged after dealer transfer.",
   "Run `npx vitest run` with DATABASE_URL for full integration coverage.",
   "Review /reports/due aging summary against sample dealer statements.",

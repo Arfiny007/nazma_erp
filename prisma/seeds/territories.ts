@@ -3,7 +3,7 @@ import type { PrismaClient } from "@prisma/client";
 import {
   buildDefaultTerritorySeeds,
   type TerritorySeedTemplate,
-} from "../../src/lib/geography/territory-seeds";
+} from "./data/territory-seeds";
 
 /**
  * Upserts default territories for every district.
@@ -15,7 +15,7 @@ export async function seedTerritories(
   districtIdByCode: Map<string, string>,
   templates: TerritorySeedTemplate[] = buildDefaultTerritorySeeds(),
 ): Promise<void> {
-  const { DISTRICTS } = await import("../../src/lib/geography/bangladesh-geography-data");
+  const { DISTRICTS } = await import("./data/bangladesh-geography-data");
 
   console.log(`Seeding ${templates.length.toString()} default territories…`);
 

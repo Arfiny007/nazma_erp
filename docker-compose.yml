@@ -1,10 +1,9 @@
-version: "3.9"
-
 services:
   app:
     build:
       context: .
       dockerfile: Dockerfile
+      target: runner
 
     container_name: nazma-erp-app
 
@@ -18,7 +17,26 @@ services:
       - .env
 
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy
+
+  seed:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: seed
+
+    container_name: nazma-erp-seed
+
+    env_file:
+      - .env
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    profiles:
+      - tools
 
   postgres:
     image: postgres:16-alpine
@@ -37,6 +55,13 @@ services:
 
     volumes:
       - postgres_data:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d nazma_erp"]
+      interval: 3s
+      timeout: 5s
+      retries: 10
+      start_period: 5s
 
 volumes:
   postgres_data:

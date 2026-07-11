@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts",
+    "seed:demo": "tsx prisma/seed-demo.ts",
+    "seed:demo:docker": "docker compose --profile tools run --rm --build seed"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

@@ -29,7 +29,20 @@ COPY --from=builder /app/.next ./.next
 COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/scripts/start-app.sh ./scripts/start-app.sh
+
+RUN chmod +x ./scripts/start-app.sh
 
 EXPOSE 3000
 
-CMD ["npm","start"]
+CMD ["sh", "./scripts/start-app.sh"]
+
+FROM builder AS seed
+
+WORKDIR /app
+
+COPY --from=builder /app/scripts/run-demo-seed.sh ./scripts/run-demo-seed.sh
+
+RUN chmod +x ./scripts/run-demo-seed.sh
+
+ENTRYPOINT ["sh", "./scripts/run-demo-seed.sh"]

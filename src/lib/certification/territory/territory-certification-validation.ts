@@ -401,7 +401,7 @@ export function reconcileAgingAgainstBalance(
   const totalAging = totalAgingAmount(aging);
   const delta = input.currentBalance.minus(totalAging);
 
-  const explainedBy: AgingBalanceReconciliation["explainedBy"] = [];
+  const explainedBy: Array<AgingBalanceReconciliation["explainedBy"][number]> = [];
 
   if (delta.equals(ZERO)) {
     return {
@@ -732,9 +732,9 @@ function verifyCollectionContextGate(): TerritoryCertificationCheckResult {
     return passResult(definition, "Collection context enforces territory access");
   }
 
-  return warnResult(
+  return failResult(
     definition,
-    "getDealerCollectionContext lacks territory RBAC gate — SR may read out-of-territory dealer context",
+    "getDealerCollectionContext lacks territory RBAC gate",
   );
 }
 

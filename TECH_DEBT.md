@@ -32,7 +32,7 @@ Known deferred improvements categorized by priority. Each item includes rational
 | M5 | Collection concurrency tests | No integration tests mirroring invoice suite | Dealer lock pattern proven on invoice path | Lower confidence under load | Pre-production |
 | M6 | Allocation soft-delete on reversal | Rows hard-deleted; history incomplete in DB | Audit preserves amounts | Statement needs audit join | Optional |
 | M7 | Dealer analytics population | `totalSales`, activity dates not auto-updated | Reporting not started | Stale dealer profile metrics | Reporting |
-| T9 | Collection context territory gap | `getDealerCollectionContext` lacks `canAccessDealerByCode` | PHASE_08E certified as warning | SR may read out-of-territory dealer context in collection workspace | Add territory gate |
+| T9 | ~~Collection context territory gap~~ | **Resolved PHASE_08E.1** — `canAccessDealerByCode` on `getDealerCollectionContext` | — | — | — |
 | M9 | Dealer statement UI | Hybrid architecture designed; no route | Needs ledger for running balance | No account statements | PHASE_07D |
 | M10 | Composite DB indexes | Missing `(dealerCode, collectionDate)` etc. | Current volume acceptable | Slow reports at scale | PHASE_07–08 |
 | M11 | Credit limit manager override | Hard stop only; no RBAC override | ADR-011 future enhancement | No in-system exceptions | Future |

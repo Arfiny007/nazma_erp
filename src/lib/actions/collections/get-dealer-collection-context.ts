@@ -5,6 +5,7 @@ import { CollectionStatus, InvoiceStatus, Prisma } from "@prisma/client";
 import { computeInvoiceOutstanding } from "@/lib/collections/workflow";
 import { prisma } from "@/lib/prisma";
 import { requirePermission } from "@/lib/rbac/guards";
+import { canAccessDealerByCode } from "@/lib/rbac/territory";
 import { calculateCreditUtilization } from "@/lib/utils/credit-limit";
 import { z } from "zod";
 import type {
@@ -32,8 +33,9 @@ const ALLOCATABLE_INVOICE_STATUSES: InvoiceStatus[] = [
 export async function getDealerCollectionContext(
   input: unknown,
 ): Promise<ActionResult<DealerCollectionContextDTO>> {
+  let user;
   try {
-    await requirePermission("collections:view");
+    user = await requirePermission("collections:view");
   } catch {
     return fail<DealerCollectionContextDTO>("FORBIDDEN", "rbac.noAccess");
   }
@@ -44,6 +46,11 @@ export async function getDealerCollectionContext(
   }
 
   const { dealerCode } = parsed.data;
+
+  const allowed = await canAccessDealerByCode(user.id, dealerCode);
+  if (!allowed) {
+    return fail<DealerCollectionContextDTO>("FORBIDDEN", "rbac.territory.noAccess");
+  }
 
   const dealer = await prisma.dealer.findUnique({
     where: { dealerCode },

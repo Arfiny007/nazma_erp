@@ -2,14 +2,14 @@
 
 ## Current State
 
-PHASE_08E_ENTERPRISE_TERRITORY_DUE_CERTIFICATION is **complete** (2026-07-11):
+PHASE_08E.1_TERRITORY_SECURITY_HOTFIX is **complete** (2026-07-11):
 
-- `runTerritoryCertification()` — Rules 1–8 certified
-- Territory security 9.5/10, ownership 10/10, due accuracy 10/10, financial boundary 10/10
-- Overall territory & due readiness: **9.6/10** (ADR-041)
-- 317 tests passed / 7 skipped
+- `getDealerCollectionContext()` — `canAccessDealerByCode` gate added
+- Cross-territory collection workspace leak closed
+- Territory security score: **10/10**
+- Overall readiness: **9.7/10**
 
-PHASE_08A–08D geography, RBAC, ownership, and due reports complete and certified.
+PHASE_08E certification complete. PHASE_08A–08D certified.
 
 ---
 
@@ -23,11 +23,7 @@ PHASE_08A–08D geography, RBAC, ownership, and due reports complete and certifi
 
 - PDF / Excel using same read engine DTOs
 
-### 3. Remediate collection context territory gap
-
-- Add `canAccessDealerByCode` to `getDealerCollectionContext`
-
-### 4. Integrity Notifications & Cron (follow-on)
+### 3. Integrity Notifications & Cron (follow-on)
 
 - Wire background scheduler to `runFinancialIntegrityScan()`
 - Alert when scan detects drift, missing ledger, or corruption

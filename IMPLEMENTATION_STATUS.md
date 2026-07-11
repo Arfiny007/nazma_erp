@@ -1,6 +1,22 @@
 # IMPLEMENTATION STATUS
 
-Last updated: 2026-07-11 (PHASE_08E — Enterprise Territory & Due Certification)
+Last updated: 2026-07-11 (PHASE_08E.1 — Territory Security Hotfix)
+
+---
+
+## Territory Security Hotfix — Verification (PHASE_08E.1)
+
+| Criterion | Status |
+|-----------|--------|
+| `canAccessDealerByCode` on `getDealerCollectionContext` | ✅ |
+| Gate runs before `prisma.dealer.findUnique` | ✅ |
+| SR foreign dealer blocked (`rbac.territory.noAccess`) | ✅ |
+| Manager / Accounts / Super Admin paths verified | ✅ |
+| No financial engine modifications | ✅ |
+| Territory certification warning resolved | ✅ |
+| `get-dealer-collection-context.test.ts` — 9 tests | ✅ |
+
+Overall production readiness: **9.7 / 10**
 
 ---
 

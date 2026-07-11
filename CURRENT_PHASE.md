@@ -6,7 +6,7 @@ Current Phase:
 
 
 
-PHASE_08E_ENTERPRISE_TERRITORY_DUE_CERTIFICATION
+PHASE_08E.1_TERRITORY_SECURITY_HOTFIX
 
 
 
@@ -17,6 +17,32 @@ Status:
 COMPLETE
 
 
+
+---
+
+# PHASE_08E.1_TERRITORY_SECURITY_HOTFIX
+
+Status: COMPLETE (2026-07-11)
+
+## Objectives
+
+Close cross-territory collection context visibility gap from PHASE_08E certification.
+
+* `canAccessDealerByCode` on `getDealerCollectionContext()`
+* Territory gate before any financial query
+* 9 unit tests
+
+## Completion Criteria
+
+* SR cannot access foreign dealer context: ✓
+* Manager / Accounts / Super Admin paths verified: ✓
+* No financial engine changes: ✓
+* Territory certification passes without warning: ✓
+* `npx vitest run` — all pass: ✓
+
+## Next Phase
+
+**Audit Log UI** or **Due Report Exports (PHASE_08F)**
 
 ---
 

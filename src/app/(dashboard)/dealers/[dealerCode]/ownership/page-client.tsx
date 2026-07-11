@@ -11,11 +11,11 @@ import { getDealer } from "@/lib/actions/dealers/get-dealer";
 import type { DealerDTO } from "@/types/dealer";
 
 interface DealerOwnershipPageClientProps {
-  dealerId: string;
+  dealerCode: string;
 }
 
 export function DealerOwnershipPageClient({
-  dealerId,
+  dealerCode,
 }: DealerOwnershipPageClientProps) {
   const { t } = useLanguage();
   const [dealer, setDealer] = useState<DealerDTO | null>(null);
@@ -23,7 +23,7 @@ export function DealerOwnershipPageClient({
   useEffect(() => {
     let cancelled = false;
 
-    void getDealer({ id: dealerId }).then((result) => {
+    void getDealer({ dealerCode }).then((result) => {
       if (!cancelled && result.success) {
         setDealer(result.data);
       }
@@ -32,7 +32,7 @@ export function DealerOwnershipPageClient({
     return () => {
       cancelled = true;
     };
-  }, [dealerId]);
+  }, [dealerCode]);
 
   return (
     <PageContainer
@@ -52,7 +52,11 @@ export function DealerOwnershipPageClient({
         </Link>
       }
     >
-      <DealerOwnershipTimeline dealerId={dealerId} />
+      {dealer ? (
+        <DealerOwnershipTimeline dealerId={dealer.id} />
+      ) : (
+        <p className="text-sm text-slate-500">{t("common.loading")}</p>
+      )}
     </PageContainer>
   );
 }

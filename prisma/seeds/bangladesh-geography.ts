@@ -1,6 +1,6 @@
 import type { PrismaClient } from "@prisma/client";
 
-import { DISTRICTS, DIVISIONS } from "../../src/lib/geography/bangladesh-geography-data";
+import { DISTRICTS, DIVISIONS } from "./data/bangladesh-geography-data";
 
 /**
  * Upserts all 8 Bangladesh divisions and 64 districts.

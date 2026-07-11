@@ -21,8 +21,8 @@ import type {
   DueReportResultDTO,
   SrDueReportResultDTO,
   TerritoryDueReportResultDTO,
+  TerritoryGroupBy,
 } from "@/types/due-report";
-import type { AgingBucket } from "@/lib/reports/due";
 import type { DistrictDTO, DivisionDTO, TerritoryDTO } from "@/types/geography";
 
 const AGING_BUCKETS: { value: AgingBucket | ""; labelKey: string }[] = [

@@ -4,9 +4,9 @@ Definitive engineering context for AI sessions and new maintainers.
 
 Read this document first. Then consult `PROJECT_BRAIN.md`, `CURRENT_PHASE.md`, and relevant ADRs.
 
-**Last updated:** 2026-07-11 (PHASE_08E — Enterprise Territory & Due Certification)  
-**Current phase:** PHASE_08E complete → Next: Audit Log UI or Due Report Exports  
-**Production readiness:** 9.6 / 10 (ADR-041)
+**Last updated:** 2026-07-11 (PHASE_08E.1 — Territory Security Hotfix)  
+**Current phase:** PHASE_08E.1 complete → Next: Audit Log UI or Due Report Exports  
+**Production readiness:** 9.7 / 10 (ADR-041 + hotfix)
 
 ---
 

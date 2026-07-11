@@ -116,7 +116,7 @@ export async function updateDealer(
     });
 
     revalidatePath("/dealers");
-    revalidatePath(`/dealers/${dealer.id}/ownership`);
+    revalidatePath(`/dealers/${dealer.dealerCode}/ownership`);
     return ok(toDealerDTO(dealer));
   } catch (error) {
     if (error instanceof DealerNotFoundError) {

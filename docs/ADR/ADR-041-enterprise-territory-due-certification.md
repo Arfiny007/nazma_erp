@@ -60,4 +60,4 @@ New features, exports, dashboards, analytics, business logic changes.
 
 - Production readiness for territory/due layer is measurable and repeatable.
 - Aging vs balance deltas are expected and documented — not treated as defects.
-- Collection context territory gap remains tracked in TECH_DEBT until remediated.
+- Collection context territory gate remediated in PHASE_08E.1.
