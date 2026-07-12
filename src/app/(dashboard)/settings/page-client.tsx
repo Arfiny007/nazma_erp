@@ -28,6 +28,12 @@ export function SettingsPageClient() {
       description: t("settings.card.territoryAssignments.description"),
       icon: Users,
     },
+    {
+      href: "/settings/users",
+      title: t("settings.card.users.title"),
+      description: t("settings.card.users.description"),
+      icon: Users,
+    },
   ];
 
   return (

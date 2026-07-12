@@ -80,7 +80,11 @@ export type Permission =
   // Administration
   | "audit:view"
   | "settings:view"
-  | "users:manage";
+  | "users:view"
+  | "users:create"
+  | "users:update"
+  | "users:disable"
+  | "users:activate";
 
 // ---------------------------------------------------------------------------
 // Permission matrix
@@ -136,7 +140,11 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     // Administration — Full
     "audit:view",
     "settings:view",
-    "users:manage",
+    "users:view",
+    "users:create",
+    "users:update",
+    "users:disable",
+    "users:activate",
   ],
 
   Manager: [
@@ -169,6 +177,12 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     "ledger:view",
     // Reports — Read
     "reports:view",
+    // Audit — territory-scoped visibility
+    "audit:view",
+    // User management — limited SR provisioning in assigned territories
+    "users:view",
+    "users:create",
+    "users:update",
   ],
 
   Accounts: [
@@ -195,6 +209,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     "ledger:view",
     // Reports — Full
     "reports:view",
+    // Audit — financial + integrity visibility
+    "audit:view",
+    // Users — read-only visibility
+    "users:view",
   ],
 
   SR: [
@@ -220,6 +238,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     "ledger:view",
     // Reports — Read
     "reports:view",
+    // Audit — own dealers / orders / collections
+    "audit:view",
   ],
 } as const;
 

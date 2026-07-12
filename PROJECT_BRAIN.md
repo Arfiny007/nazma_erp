@@ -33,7 +33,10 @@ Priority Order:
 8. Collections
 9. Ledger
 10. **Due Reports** ✅ (PHASE_08D)
-11. Audit Logs
+11. Audit Logs ✅ (PHASE_09D)
+12. Audit Export ✅ (PHASE_09E)
+13. User Management Foundation ✅ (PHASE_10A)
+14. User Management Certification ✅ (PHASE_10B)
 
 ---
 
@@ -630,8 +633,11 @@ TIER 3 — OPERATIONAL CACHE
 | Enterprise Dashboard Certification | ✅ Complete (PHASE_09A.5) — ADR-043; PHASE_09B approved |
 | Enterprise Dashboard BI & Analytics | ✅ Complete (PHASE_09B) — ADR-044; SVG charts on `/dashboard` |
 | Enterprise Territory Map & Geo Visualization | ✅ Complete (PHASE_09C) — ADR-045; grid map on `/dashboard` |
-| Audit Log UI | ❌ Not built |
-| User Management | ❌ Not built |
+| Audit Log & Compliance Console | ✅ Complete (PHASE_09D) — ADR-046; read-only `/audit` |
+| Audit & Compliance Certification | ✅ Complete (PHASE_09D.5) — ADR-047; `runAuditCertification()` |
+| Audit Export & Compliance Archive | ✅ Complete (PHASE_09E) — ADR-048; PDF/Excel/ZIP |
+| User Management Foundation | ✅ Complete (PHASE_10A) — ADR-049; `/settings/users` |
+| User Management Certification | ✅ Complete (PHASE_10B) — ADR-050; `runUserCertification()` |
 
 ---
 

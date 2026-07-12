@@ -105,9 +105,9 @@ export const NAV_SECTIONS: NavSection[] = [
       {
         id: "users",
         labelKey: "nav.users",
-        href: "/users",
+        href: "/settings/users",
         icon: Users,
-        permission: "users:manage",
+        permission: "users:view",
       },
       {
         id: "settings",

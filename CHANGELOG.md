@@ -4,6 +4,133 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_10B] — 2026-07-13 — Enterprise User Management Certification
+
+### Added
+
+- `src/lib/certification/users/` — Rules 1–12 certification module
+- `runUserCertification()` / `runUserCertificationWithReport()`
+- `UserAuditCoverageReport` — covered / partial / missing for user audit actions
+- Repository scans: financial boundary, architecture imports, territory leakage
+- Performance audit for list/search/get operations (<1000ms target)
+- `user-certification.test.ts` — 20 tests
+- ADR-050
+
+### Certified
+
+- Super Admin full lifecycle authority
+- Manager SR-only isolation; no activate/disable
+- SR self-profile only; Accounts read-only
+- Privilege escalation blocked (SR/Manager/Accounts matrix)
+- Lifecycle state machine — ARCHIVED terminal; illegal transitions rejected
+- All 5 user audit writers present in `user-service.ts`
+- No forbidden financial engine imports in user module
+
+### Warnings (non-blocking)
+
+- `mustChangePassword` not enforced at login — PHASE_10C
+- `UserActivationToken` writer reserved for PHASE_10C
+
+### Verdict
+
+**470 tests passed / 7 skipped** (+20 new tests) — PHASE_10C (User Activation UX) approved
+
+---
+
+## [PHASE_10A] — 2026-07-13 — Enterprise User Management Foundation
+
+### Added
+
+- `UserLifecycleStatus` enum + additive models: `UserProfile`, `UserInvitation`, `UserActivationToken`
+- `User.lifecycleStatus`, `mustChangePassword`, `managerId`, `provisionedById`
+- `src/lib/users/` — provisioning service, lifecycle guards, RBAC validation, audit writers
+- Server actions: `createUser`, `updateUser`, `activateUser`, `disableUser`, `listUsers`, `getUser`, `searchUsers`
+- `/settings/users` — enterprise user console (table, filters, details panel, dialogs)
+- Granular permissions replacing `users:manage`
+- Audit writers: `USER_CREATED`, `USER_ACTIVATED`, `USER_DEACTIVATED`, `USER_ROLE_CHANGED`
+- `user-management.test.ts` — 11 tests
+- ADR-049
+
+### Architecture
+
+- Lifecycle: `INVITED → PENDING_ACTIVATION → ACTIVE → DISABLED → ARCHIVED`
+- Temporary passwords hashed with bcrypt; shown once to administrator
+- Territory assignments reuse `UserTerritoryAssignment` + `buildTerritoryScope()`
+- Manager: SR draft/create only within assigned territories
+- Accounts: read-only list/detail; SR: own profile only
+
+### Verdict
+
+**450 tests passed / 7 skipped** (+11 new tests) — PHASE_10B (User Management Certification) next
+
+---
+
+## [PHASE_09E] — 2026-07-13 — Enterprise Audit Export & Compliance Archive
+
+### Added
+
+- `src/lib/audit/export/` — server-generated PDF, Excel, ZIP compliance packages
+- Server actions: `exportAuditPdf`, `exportAuditExcel`, `exportAuditArchive` (`audit:view`)
+- UI: `audit-export-menu`, `audit-export-dialog`, `audit-export-progress` on `/audit`
+- Dependencies: `exceljs`, `jszip`, `pdfkit`
+- `audit-export.test.ts` — 11 tests
+- ADR-048
+
+### Architecture
+
+- Single read path: `getAuditConsoleData()` → export composers (no second query layer)
+- 10,000 row export cap with `AuditExportSizeLimitError`
+- Territory scope and Accounts category restrictions inherited from PHASE_09D
+- Compliance archive: `audit-report.pdf`, `audit-records.xlsx`, `compliance-summary.json`
+
+### Verdict
+
+**443 tests passed / 7 skipped** (+11 new tests) — User Management (PHASE_10) next
+
+---
+
+## [PHASE_09D.5] — 2026-07-13 — Enterprise Audit & Compliance Certification
+
+### Added
+
+- `src/lib/certification/audit/` — `runAuditCertification()` Rules 1–10
+- `AuditCoverageReport` — covered / partial / missing workflow measurement
+- Repository scans: financial immutability, territory leakage, architecture
+- Performance audit for audit console loads
+- ADR-047
+
+### Verdict
+
+**phase09eApproved: true** — PHASE_09E (Audit Export) approved
+
+---
+
+## [PHASE_09D] — 2026-07-13 — Enterprise Audit Log & Compliance Console
+
+### Added
+
+- `src/lib/audit/` — `AuditRecord` contract, scoped query service, timeline grouping
+- `src/components/audit/` — summary cards, server-side filters, table, timeline
+- Server action: `getAuditConsole()`
+- Routes: `/audit`, `/dashboard/audit`
+- `audit:view` permission for Super Admin, Accounts, Manager, SR
+- EN/BN localization for audit console
+- ADR-046
+
+### Architecture
+
+- Consumes existing `AuditLog` rows only — no duplicate audit generation
+- Territory RBAC via `buildTerritoryScope()` + batched entity ID resolution
+- Accounts restricted to financial + integrity categories
+- SR scoped to assigned dealers and related operational entities
+- Server-side search, pagination, and summary counts
+
+### Verdict
+
+**PHASE_09D complete** — Audit Export (PHASE_09E) or User Management next
+
+---
+
 ## [PHASE_09C] — 2026-07-13 — Enterprise Territory Map & Geo Visualization
 
 ### Added

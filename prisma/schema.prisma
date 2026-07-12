@@ -14,6 +14,15 @@ enum UserRole {
   SR
 }
 
+/// Enterprise user lifecycle states. See PHASE_10A / ADR-049.
+enum UserLifecycleStatus {
+  INVITED
+  PENDING_ACTIVATION
+  ACTIVE
+  DISABLED
+  ARCHIVED
+}
+
 enum OrderStatus {
   Draft
   Pending_Approval
@@ -137,7 +146,24 @@ model User {
   password String
   role     UserRole
 
+  /// Legacy login gate — kept in sync with lifecycleStatus (ACTIVE => true).
   isActive Boolean @default(true)
+
+  /// Enterprise lifecycle state machine. See PHASE_10A.
+  lifecycleStatus UserLifecycleStatus @default(ACTIVE)
+
+  /// When true, user must change password on next login (future phase).
+  mustChangePassword Boolean @default(false)
+
+  /// Direct manager for SR users (optional).
+  managerId String?
+  manager   User?  @relation("UserManagerHierarchy", fields: [managerId], references: [id], onDelete: SetNull)
+  directReports User[] @relation("UserManagerHierarchy")
+
+  /// User who provisioned this account.
+  provisionedById String?
+  provisionedBy   User?  @relation("UserProvisionedBy", fields: [provisionedById], references: [id], onDelete: SetNull)
+  usersProvisioned User[] @relation("UserProvisionedBy")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -156,6 +182,66 @@ model User {
   territoryAssignments     UserTerritoryAssignment[]
   ownedDealers             DealerOwnershipHistory[] @relation("OwnershipAssignedSr")
   dealerOwnershipAssignedBy DealerOwnershipHistory[] @relation("OwnershipAssignedBy")
+  profile                  UserProfile?
+  invitationsReceived      UserInvitation[] @relation("InvitationTargetUser")
+  invitationsSent          UserInvitation[] @relation("InvitationSentBy")
+  activationTokens         UserActivationToken[]
+}
+
+/// Extended user profile — organizational metadata only. See PHASE_10A.
+model UserProfile {
+  id String @id @default(cuid())
+
+  userId String @unique
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  phone        String?
+  employeeCode String?
+  notes        String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([employeeCode])
+}
+
+/// Invitation record for enterprise user provisioning. See PHASE_10A.
+model UserInvitation {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation("InvitationTargetUser", fields: [userId], references: [id], onDelete: Cascade)
+
+  invitedById String
+  invitedBy   User   @relation("InvitationSentBy", fields: [invitedById], references: [id])
+
+  invitedAt  DateTime  @default(now())
+  acceptedAt DateTime?
+  expiresAt  DateTime?
+  revokedAt  DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([invitedById])
+}
+
+/// Activation token storage (hashed). Reserved for PHASE_10B+ activation flows.
+model UserActivationToken {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tokenHash String
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
 }
 
 /// Bangladesh administrative division (8 divisions). See PHASE_08A.

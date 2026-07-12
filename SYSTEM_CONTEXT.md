@@ -4,9 +4,9 @@ Definitive engineering context for AI sessions and new maintainers.
 
 Read this document first. Then consult `PROJECT_BRAIN.md`, `CURRENT_PHASE.md`, and relevant ADRs.
 
-**Last updated:** 2026-07-13 (PHASE_09C — Territory Map & Geo Visualization)  
-**Current phase:** PHASE_09C complete → Next: Audit Log UI or PHASE_09D  
-**Production readiness:** 9.8 / 10 (ADR-041 + ADR-042 + ADR-043 + ADR-044 + ADR-045)
+**Last updated:** 2026-07-13 (PHASE_10B — Enterprise User Management Certification)
+**Current phase:** PHASE_10B complete → Next: PHASE_10C User Activation UX
+**Production readiness:** 9.8 / 10 (ADR-041 + ADR-042 + ADR-043 + ADR-044 + ADR-045 + ADR-046 + ADR-047 + ADR-048 + ADR-049)
 
 ---
 
@@ -147,8 +147,11 @@ See ADR-011 for fulfillment architecture.
 | Enterprise Dashboard Certification | ✅ Complete (PHASE_09A.5) — `runDashboardCertification()`; Rules 1–9; ADR-043 | `src/lib/certification/dashboard/` |
 | Enterprise Dashboard BI & Analytics | ✅ Complete (PHASE_09B) — role-aware charts; SVG chart system; ADR-044 | `src/lib/dashboard/analytics/`, `src/components/dashboard/charts/` |
 | Enterprise Territory Map & Geo Visualization | ✅ Complete (PHASE_09C) — role-aware grid map; filters; risk highlight; ADR-045 | `src/lib/dashboard/maps/`, `src/components/dashboard/maps/` |
-| Audit Log UI | ❌ Not built | — |
-| User Management | ❌ Not built | — |
+| Audit Log & Compliance Console | ✅ Complete (PHASE_09D) — role-aware `/audit`; read-only; ADR-046 | `src/lib/audit/`, `/audit` |
+| Audit & Compliance Certification | ✅ Complete (PHASE_09D.5) — `runAuditCertification()`; ADR-047 | `src/lib/certification/audit/` |
+| Audit Export & Compliance Archive | ✅ Complete (PHASE_09E) — PDF/Excel/ZIP; ADR-048 | `src/lib/audit/export/` |
+| User Management Foundation | ✅ Complete (PHASE_10A) — lifecycle, RBAC, `/settings/users`; ADR-049 | `src/lib/users/`, `src/lib/actions/users/` |
+| User Management Certification | ✅ Complete (PHASE_10B) — `runUserCertification()`; Rules 1–12; ADR-050 | `src/lib/certification/users/` |
 
 ---
 
@@ -582,6 +585,11 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 | ADR-043 | Enterprise Dashboard Certification (PHASE_09A.5) |
 | ADR-044 | Enterprise Dashboard BI & Analytics (PHASE_09B) |
 | ADR-045 | Enterprise Territory Map & Geo Visualization (PHASE_09C) |
+| ADR-046 | Enterprise Audit Log & Compliance Console (PHASE_09D) |
+| ADR-047 | Enterprise Audit & Compliance Certification (PHASE_09D.5) |
+| ADR-048 | Enterprise Audit Export & Compliance Archive (PHASE_09E) |
+| ADR-049 | Enterprise User Management Foundation (PHASE_10A) |
+| ADR-050 | Enterprise User Management Certification (PHASE_10B) |
 
 ---
 
