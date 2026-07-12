@@ -51,6 +51,8 @@ import {
   userDetailInclude,
   userSummarySelect,
 } from "./user-mappers";
+import { issueActivationToken } from "./user-activation-service";
+import { buildActivationUrl } from "./user-tokens";
 
 async function loadUserDetail(userId: string): Promise<UserDetailDTO> {
   const record = await prisma.user.findUnique({
@@ -139,6 +141,7 @@ export async function createUserRecord(
   const passwordHash = await hashPassword(temporaryPassword);
   const lifecycleStatus = resolveInitialLifecycleStatus(input.draftOnly);
   const isActive = lifecycleToIsActive(lifecycleStatus);
+  let activationToken: string | null = null;
 
   const userId = await prisma.$transaction(async (tx) => {
     const created = await tx.user.create({
@@ -188,11 +191,20 @@ export async function createUserRecord(
       },
     });
 
+    if (lifecycleStatus === "PENDING_ACTIVATION") {
+      activationToken = await issueActivationToken(tx, created.id);
+    }
+
     return created.id;
   });
 
   const user = await loadUserDetail(userId);
-  return { user, temporaryPassword };
+  return {
+    user,
+    temporaryPassword,
+    activationToken,
+    activationUrl: activationToken ? buildActivationUrl(activationToken) : null,
+  };
 }
 
 export async function updateUserRecord(

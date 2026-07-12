@@ -334,6 +334,7 @@ function authUser(id: string, role: UserRole): AuthUser {
     email: `${role}@cert.test`,
     name: role,
     isActive: true,
+    mustChangePassword: false,
   };
 }
 
@@ -466,7 +467,6 @@ export function verifySrIsolation(): { ok: boolean; reasons: string[] } {
 
   const visibility = buildUserVisibilityWhere(actor, {
     mode: "ALL",
-    territoryIds: [],
   });
   if (!("id" in visibility) || visibility.id !== actor.id) {
     reasons.push("SR visibility where does not restrict to self");
@@ -986,6 +986,7 @@ async function verifyRule11Performance(databaseAvailable: boolean): Promise<{
       email,
       name: role,
       isActive: true,
+      mustChangePassword: false,
     };
 
     if (role !== "SR") {

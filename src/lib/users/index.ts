@@ -41,6 +41,39 @@ export {
   type UserAuditAction,
 } from "./user-audit";
 
-export { generateTemporaryPassword, hashPassword } from "./user-password";
+export { generateTemporaryPassword, hashPassword, verifyPassword } from "./user-password";
+
+export {
+  generateSecureToken,
+  hashToken,
+  isTokenExpired,
+  buildActivationUrl,
+  buildPasswordResetUrl,
+  ACTIVATION_TOKEN_TTL_MS,
+  PASSWORD_RESET_TOKEN_TTL_MS,
+} from "./user-tokens";
+
+export {
+  issueActivationToken,
+  validateActivationToken,
+  completeAccountActivation,
+} from "./user-activation-service";
+
+export {
+  changeUserPassword,
+  requestPasswordReset,
+  validateResetToken,
+  completePasswordReset,
+} from "./user-password-reset-service";
+
+export {
+  AuthTokenError,
+  TokenInvalidError,
+  TokenExpiredError,
+  TokenReplayError,
+  PasswordMismatchError,
+  WeakPasswordError,
+  ActivationNotAllowedError,
+} from "./auth-errors";
 
 export { toUserDetailDTO, toUserSummaryDTO } from "./user-mappers";

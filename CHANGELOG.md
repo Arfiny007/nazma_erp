@@ -4,6 +4,39 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_10C] — 2026-07-13 — Enterprise Authentication & Activation Expansion
+
+### Added
+
+- `mustChangePassword` enforcement at login + middleware gate
+- `UserPasswordResetToken` additive model + migration
+- `src/lib/users/user-tokens.ts` — SHA-256 token hashing, secure generation
+- `src/lib/users/user-activation-service.ts` — issue, validate, complete activation
+- `src/lib/users/user-password-reset-service.ts` — change, request, validate, complete reset
+- `src/lib/auth/auth-routing.ts` — post-login redirect + middleware path helpers
+- Auth routes: `/auth/activate`, `/auth/change-password`, `/auth/forgot-password`, `/auth/reset-password`
+- Auth UI: `activation-form`, `change-password-form`, `forgot-password-form`, `reset-password-form`
+- Server actions: `activateUserAccount`, `changePassword`, `requestPasswordReset`, `resetPassword`
+- Audit writers: `USER_PASSWORD_CHANGED`, `USER_PASSWORD_RESET_REQUESTED`, `USER_PASSWORD_RESET_COMPLETED`, `USER_ACTIVATION_STARTED`, `USER_ACTIVATION_COMPLETED`
+- `authentication-expansion.test.ts`
+- ADR-051
+- Bilingual locale keys for all auth flows
+
+### Changed
+
+- `auth.ts` — `mustChangePassword` + `lifecycleStatus` in JWT/session; ACTIVE-only login
+- `middleware.ts` — public auth routes; mustChangePassword route restriction
+- `createUserRecord` — issues activation token + URL for `PENDING_ACTIVATION` users
+- `SECURITY_AUDIT_ACTIONS` — five new security audit actions
+
+### Explicitly NOT Changed
+
+- posting-service, due engine, territory RBAC, dashboard, financial engines
+- RBAC permission matrix
+- Email delivery
+
+---
+
 ## [PHASE_10B] — 2026-07-13 — Enterprise User Management Certification
 
 ### Added

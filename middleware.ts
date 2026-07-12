@@ -2,6 +2,10 @@ import { auth } from "./auth";
 import { NextResponse } from "next/server";
 import type { UserRole } from "@prisma/client";
 
+import {
+  isMustChangePasswordAllowedPath,
+  isPublicAuthRoute,
+} from "@/lib/auth/auth-routing";
 import type { Permission } from "@/lib/permissions";
 import { hasPermission } from "@/lib/permissions";
 
@@ -9,10 +13,8 @@ import { hasPermission } from "@/lib/permissions";
 // Public routes — no authentication required
 // ---------------------------------------------------------------------------
 
-const PUBLIC_ROUTES = ["/login", "/api/auth"];
-
 function isPublicRoute(pathname: string): boolean {
-  return PUBLIC_ROUTES.some((route) => pathname.startsWith(route));
+  return isPublicAuthRoute(pathname);
 }
 
 // ---------------------------------------------------------------------------
@@ -72,8 +74,12 @@ export default auth((req) => {
 
   // 1. Always allow public routes
   if (isPublicRoute(pathname)) {
-    // Redirect already-authenticated users away from the login page
-    if (pathname === "/login" && session?.user) {
+    // Redirect already-authenticated users away from login when password change not required
+    if (
+      pathname === "/login" &&
+      session?.user &&
+      !session.user.mustChangePassword
+    ) {
       return NextResponse.redirect(new URL("/", req.url));
     }
     return NextResponse.next();
@@ -86,12 +92,20 @@ export default auth((req) => {
     return NextResponse.redirect(loginUrl);
   }
 
-  // 3. The access-denied page is accessible to any authenticated user
+  // 3. Enforce mandatory password change — only change-password + logout allowed
+  if (session.user.mustChangePassword) {
+    if (!isMustChangePasswordAllowedPath(pathname)) {
+      return NextResponse.redirect(new URL("/auth/change-password", req.url));
+    }
+    return NextResponse.next();
+  }
+
+  // 4. The access-denied page is accessible to any authenticated user
   if (pathname === "/access-denied") {
     return NextResponse.next();
   }
 
-  // 4. Check route-level permission
+  // 5. Check route-level permission
   const requiredPermission = getRequiredPermission(pathname);
   if (requiredPermission) {
     const role = session.user.role as UserRole;

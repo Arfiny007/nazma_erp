@@ -21,6 +21,7 @@ const superAdmin: AuthUser = {
   email: "admin@test.local",
   role: "Super_Admin",
   isActive: true,
+  mustChangePassword: false,
 };
 
 const manager: AuthUser = {
@@ -29,6 +30,7 @@ const manager: AuthUser = {
   email: "mgr@test.local",
   role: "Manager",
   isActive: true,
+  mustChangePassword: false,
 };
 
 const sr: AuthUser = {
@@ -37,6 +39,7 @@ const sr: AuthUser = {
   email: "sr@test.local",
   role: "SR",
   isActive: true,
+  mustChangePassword: false,
 };
 
 describe("user lifecycle", () => {

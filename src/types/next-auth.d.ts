@@ -8,12 +8,14 @@ declare module "next-auth" {
       email: string;
       role: UserRole;
       isActive: boolean;
+      mustChangePassword: boolean;
     };
   }
 
   interface User {
     role: UserRole;
     isActive: boolean;
+    mustChangePassword: boolean;
   }
 }
 
@@ -22,5 +24,6 @@ declare module "next-auth/jwt" {
     id: string;
     role: UserRole;
     isActive: boolean;
+    mustChangePassword: boolean;
   }
 }

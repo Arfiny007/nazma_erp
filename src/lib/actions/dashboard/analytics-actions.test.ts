@@ -39,6 +39,7 @@ beforeEach(() => {
     email: "sr@nazma.local",
     role: "SR",
     isActive: true,
+    mustChangePassword: false,
   });
   vi.mocked(resolveAnalyticsForRole).mockResolvedValue(sampleAnalytics);
   vi.mocked(getSrAnalytics).mockResolvedValue(sampleAnalytics);
@@ -61,6 +62,7 @@ describe("analytics server actions", () => {
       email: "mgr@nazma.local",
       role: "Manager",
       isActive: true,
+      mustChangePassword: false,
     });
     const result = await getSrAnalyticsAction();
     expect(result.success).toBe(false);

@@ -9,7 +9,12 @@ export type UserAuditAction =
   | "USER_ACTIVATED"
   | "USER_DEACTIVATED"
   | "USER_ROLE_CHANGED"
-  | "USER_UPDATED";
+  | "USER_UPDATED"
+  | "USER_PASSWORD_CHANGED"
+  | "USER_PASSWORD_RESET_REQUESTED"
+  | "USER_PASSWORD_RESET_COMPLETED"
+  | "USER_ACTIVATION_STARTED"
+  | "USER_ACTIVATION_COMPLETED";
 
 export async function recordUserAudit(
   tx: AuditWriteClient,

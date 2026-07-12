@@ -6,6 +6,7 @@ export interface AuthUser {
   email: string;
   role: UserRole;
   isActive: boolean;
+  mustChangePassword: boolean;
 }
 
 export interface AuthSession {

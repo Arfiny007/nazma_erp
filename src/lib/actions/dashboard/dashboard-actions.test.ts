@@ -46,6 +46,7 @@ beforeEach(() => {
     email: "test@nazma.local",
     role: "SR",
     isActive: true,
+    mustChangePassword: false,
   });
   vi.mocked(resolveDashboardForRole).mockResolvedValue(samplePayload);
   vi.mocked(getSrDashboardService).mockResolvedValue(samplePayload);
@@ -79,6 +80,7 @@ describe("dashboard server actions", () => {
       email: "mgr@nazma.local",
       role: "Manager",
       isActive: true,
+      mustChangePassword: false,
     });
     const result = await getSrDashboardAction();
     expect(result.success).toBe(false);
@@ -91,6 +93,7 @@ describe("dashboard server actions", () => {
       email: "mgr@nazma.local",
       role: "Manager",
       isActive: true,
+      mustChangePassword: false,
     });
     const result = await getManagerDashboardAction();
     expect(result.success).toBe(true);
@@ -103,6 +106,7 @@ describe("dashboard server actions", () => {
       email: "acc@nazma.local",
       role: "Accounts",
       isActive: true,
+      mustChangePassword: false,
     });
     const result = await getAccountsDashboardAction();
     expect(result.success).toBe(true);
@@ -115,6 +119,7 @@ describe("dashboard server actions", () => {
       email: "admin@nazma.local",
       role: "Super_Admin",
       isActive: true,
+      mustChangePassword: false,
     });
     const result = await getAdminDashboardAction();
     expect(result.success).toBe(true);

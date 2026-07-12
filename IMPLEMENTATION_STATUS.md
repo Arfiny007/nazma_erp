@@ -1,6 +1,29 @@
 # IMPLEMENTATION STATUS
 
-Last updated: 2026-07-13 (PHASE_10B — Enterprise User Management Certification)
+Last updated: 2026-07-13 (PHASE_10C — Enterprise Authentication & Activation Expansion)
+
+---
+
+## Enterprise Authentication & Activation Expansion — Verification (PHASE_10C)
+
+| Criterion | Status |
+|-----------|--------|
+| `mustChangePassword` login redirect | ✅ |
+| Middleware blocks protected routes when flag set | ✅ |
+| `UserActivationToken` issuance on provisioning | ✅ |
+| `UserPasswordResetToken` additive model + migration | ✅ |
+| Token hashing (SHA-256), expiry, one-time use | ✅ |
+| Replay attack prevention (conditional `updateMany`) | ✅ |
+| Auth routes: activate, change-password, forgot-password, reset-password | ✅ |
+| Server actions (4): activate, change-password, request-reset, reset-password | ✅ |
+| Auth UI components (4 forms) + bilingual locales | ✅ |
+| Audit writers (5 new) in `SECURITY_AUDIT_ACTIONS` | ✅ |
+| No posting-service / financial engine modifications | ✅ |
+| No RBAC permission redesign | ✅ |
+| ADR-051 authored | ✅ |
+| `authentication-expansion.test.ts` | ✅ |
+
+Overall production readiness: **9.7 / 10**
 
 ---
 

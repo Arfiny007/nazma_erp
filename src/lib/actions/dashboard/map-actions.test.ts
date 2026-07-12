@@ -41,6 +41,7 @@ beforeEach(() => {
     email: "admin@nazma.local",
     role: "Super_Admin",
     isActive: true,
+    mustChangePassword: false,
   });
   vi.mocked(resolveTerritoryMapForRole).mockResolvedValue(samplePayload);
   vi.mocked(getManagerTerritoryMap).mockResolvedValue({
@@ -70,6 +71,7 @@ describe("territory map server actions", () => {
       email: "admin@nazma.local",
       role: "Super_Admin",
       isActive: true,
+      mustChangePassword: false,
     });
     const result = await getManagerTerritoryMapAction();
     expect(result.success).toBe(false);
@@ -82,6 +84,7 @@ describe("territory map server actions", () => {
       email: "sr@nazma.local",
       role: "SR",
       isActive: true,
+      mustChangePassword: false,
     });
     const result = await getAccountsTerritoryMapAction();
     expect(result.success).toBe(false);
@@ -94,6 +97,7 @@ describe("territory map server actions", () => {
       email: "mgr@nazma.local",
       role: "Manager",
       isActive: true,
+      mustChangePassword: false,
     });
     const result = await getAdminTerritoryMapAction();
     expect(result.success).toBe(false);

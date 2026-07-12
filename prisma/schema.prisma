@@ -186,6 +186,7 @@ model User {
   invitationsReceived      UserInvitation[] @relation("InvitationTargetUser")
   invitationsSent          UserInvitation[] @relation("InvitationSentBy")
   activationTokens         UserActivationToken[]
+  passwordResetTokens      UserPasswordResetToken[]
 }
 
 /// Extended user profile — organizational metadata only. See PHASE_10A.
@@ -229,6 +230,23 @@ model UserInvitation {
 
 /// Activation token storage (hashed). Reserved for PHASE_10B+ activation flows.
 model UserActivationToken {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  tokenHash String
+  expiresAt DateTime
+  usedAt    DateTime?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+/// Password reset token storage (hashed). See PHASE_10C.
+model UserPasswordResetToken {
   id String @id @default(cuid())
 
   userId String

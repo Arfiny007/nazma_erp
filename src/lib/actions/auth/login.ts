@@ -5,6 +5,9 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { signIn } from "../../../../auth";
 
+import { prisma } from "@/lib/prisma";
+import { resolvePostLoginRedirect } from "@/lib/auth/auth-routing";
+
 // ---------------------------------------------------------------------------
 // Validation schema
 // ---------------------------------------------------------------------------
@@ -72,5 +75,10 @@ export async function loginAction(input: LoginInput): Promise<LoginResult> {
     throw error;
   }
 
-  redirect("/");
+  const user = await prisma.user.findUnique({
+    where: { email: email.trim().toLowerCase() },
+    select: { mustChangePassword: true },
+  });
+
+  redirect(resolvePostLoginRedirect(user?.mustChangePassword ?? false));
 }

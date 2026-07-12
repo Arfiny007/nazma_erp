@@ -93,6 +93,7 @@ describe("Rule 6 — Privilege escalation", () => {
       email: "mgr@test",
       name: "Manager",
       isActive: true,
+      mustChangePassword: false,
     };
     expect(() => assertAssignableRole(manager, "Manager")).toThrow(RoleEscalationError);
   });

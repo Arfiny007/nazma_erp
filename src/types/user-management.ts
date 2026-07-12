@@ -70,6 +70,10 @@ export interface CreateUserResultDTO {
   user: UserDetailDTO;
   /** Plain temporary password — shown once to the administrator. */
   temporaryPassword: string;
+  /** Plain activation token — shown once when user is PENDING_ACTIVATION. */
+  activationToken: string | null;
+  /** Ready-to-share activation URL when token is issued. */
+  activationUrl: string | null;
 }
 
 export const USER_SORT_FIELDS = ["name", "email", "role", "lifecycleStatus", "createdAt"] as const;

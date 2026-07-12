@@ -67,6 +67,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
             password: true,
             role: true,
             isActive: true,
+            mustChangePassword: true,
+            lifecycleStatus: true,
           },
         });
 
@@ -74,7 +76,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           throw new InvalidCredentialsError();
         }
 
-        if (!user.isActive) {
+        if (!user.isActive || user.lifecycleStatus !== "ACTIVE") {
           throw new AccountDisabledError();
         }
 
@@ -90,6 +92,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
           email: user.email,
           role: user.role,
           isActive: user.isActive,
+          mustChangePassword: user.mustChangePassword,
         };
       },
     }),
@@ -101,6 +104,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         token.id = user.id as string;
         token.role = user.role;
         token.isActive = user.isActive;
+        token.mustChangePassword = user.mustChangePassword;
       }
       return token;
     },
@@ -109,6 +113,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       session.user.id = token.id as string;
       session.user.role = token.role as UserRole;
       session.user.isActive = token.isActive as boolean;
+      session.user.mustChangePassword = token.mustChangePassword as boolean;
       return session;
     },
   },

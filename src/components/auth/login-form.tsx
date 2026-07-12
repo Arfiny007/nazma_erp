@@ -220,6 +220,13 @@ export function LoginForm() {
           </>
         )}
       </button>
+
+      <a
+        href="/auth/forgot-password"
+        className="block text-center text-sm font-medium text-brand-600 hover:text-brand-700 dark:text-brand-400"
+      >
+        {t("auth.login.forgotPassword")}
+      </a>
     </form>
   );
 }
