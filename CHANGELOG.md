@@ -4,6 +4,96 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_09C] — 2026-07-13 — Enterprise Territory Map & Geo Visualization
+
+### Added
+
+- `src/lib/dashboard/maps/` — `TerritoryMapNode` contract, batched map service, risk classification
+- `src/components/dashboard/maps/` — division/district/territory grid visualization
+- Server actions: `getTerritoryMap`, `getManagerTerritoryMap`, `getAccountsTerritoryMap`, `getAdminTerritoryMap`
+- Parallel dashboard + analytics + map fetch on `/dashboard`
+- EN/BN localization for territory map widgets
+- ADR-045
+
+### Architecture
+
+- Sales/collections batched via single `findMany` + in-memory aggregation per territory
+- Due from `aggregateTerritoryDue()` analytics path (dealer `currentBalance`)
+- Dealer/SR counts via `groupBy` — no N+1 per territory
+- Risk classification visualization-only — not persisted
+- Territory RBAC via `buildTerritoryScope()` on all map queries
+
+### Verdict
+
+**400 tests passed / 7 skipped** (+19 new tests) — Audit Log UI or PHASE_09D next
+
+---
+
+## [PHASE_09B] — 2026-07-11 — Enterprise Dashboard BI & Analytics
+
+### Added
+
+- `src/lib/dashboard/analytics/` — role-aware BI layer with `DashboardChart` contract
+- `src/components/dashboard/charts/` — lightweight SVG chart system (line, bar, pie, area)
+- Server actions: `getDashboardAnalytics`, `getSrAnalytics`, `getManagerAnalytics`, `getAccountsAnalytics`, `getAdminAnalytics`
+- Parallel dashboard + analytics fetch on `/dashboard`
+- EN/BN localization for all chart widgets
+- ADR-044
+
+### Architecture
+
+- Sales/collections from operational Prisma aggregates (`Invoice.grandTotal`, `Collection.receivedAmount`)
+- Due/aging from Due Report Engine (`getCompanyDueSummary`, dealer aggregation paths)
+- Integrity from `getLatestIntegrityScan()`
+- Outstanding trend reads `Invoice.currentDue` by issue month — no balance mutation
+- Admin `territoryHeatmap` DTO ready for map UI (PHASE_09C)
+
+### Verdict
+
+**381 tests passed / 7 skipped** (+14 new tests) — PHASE_09C (Territory Map) or Audit Log UI next
+
+---
+
+## [PHASE_09A.5] — 2026-07-11 — Enterprise Dashboard Certification
+
+### Added
+
+- `src/lib/certification/dashboard/` — `runDashboardCertification()` with Rules 1–9
+- Subsystem scores: security, financial, performance, architecture
+- Repository scans: financial authority, territory leakage, architectural imports
+- Live performance audit when DATABASE_URL + demo seed available
+- ADR-043
+
+### Verdict
+
+**367 tests passed / 7 skipped** (+20 new tests) — **PHASE_09B APPROVED**
+
+---
+
+## [PHASE_09A] — 2026-07-11 — Enterprise Dashboard Foundation
+
+### Added
+
+- `src/lib/dashboard/` — role-aware dashboard read layer with `DashboardPayload` contract
+- Server actions: `getDashboard`, `getSrDashboard`, `getManagerDashboard`, `getAccountsDashboard`, `getAdminDashboard`
+- `src/components/dashboard/` — enterprise dashboard UI (cards + tables only)
+- Production route `/dashboard` with server-side role resolution; `/` redirects to `/dashboard`
+- EN/BN localization for all dashboard widgets and KPIs
+- ADR-042
+
+### Architecture
+
+- Due/receivable KPIs from Due Report Engine (`getCompanyDueSummary`, `getDueReport`, `getSrDueReport`, `getTerritoryDueReport`)
+- Integrity/reconciliation status from Integrity Monitor + Reconciliation Engine
+- Invoice/collection totals are operational Prisma aggregates — not balance authority
+- Territory RBAC via `buildTerritoryScope()` on all scoped queries
+
+### Verdict
+
+**337 tests passed / 7 skipped** (+20 new tests) — PHASE_09B (charts/BI) or Audit Log UI next
+
+---
+
 ## [PHASE_08E.1] — 2026-07-11 — Territory Security Hotfix
 
 ### Fixed

@@ -4,9 +4,9 @@ Definitive engineering context for AI sessions and new maintainers.
 
 Read this document first. Then consult `PROJECT_BRAIN.md`, `CURRENT_PHASE.md`, and relevant ADRs.
 
-**Last updated:** 2026-07-11 (PHASE_08E.1 — Territory Security Hotfix)  
-**Current phase:** PHASE_08E.1 complete → Next: Audit Log UI or Due Report Exports  
-**Production readiness:** 9.7 / 10 (ADR-041 + hotfix)
+**Last updated:** 2026-07-13 (PHASE_09C — Territory Map & Geo Visualization)  
+**Current phase:** PHASE_09C complete → Next: Audit Log UI or PHASE_09D  
+**Production readiness:** 9.8 / 10 (ADR-041 + ADR-042 + ADR-043 + ADR-044 + ADR-045)
 
 ---
 
@@ -143,6 +143,10 @@ See ADR-011 for fulfillment architecture.
 | Dealer Ownership & Migration | ✅ Complete (PHASE_08C) — `DealerOwnershipHistory`; backfill; ADR-039 | `src/lib/dealers/ownership/`, `/dealers/[id]/ownership` |
 | Due Reports | ✅ Complete (PHASE_08D) — `getDueReport()` etc.; aging; territory/SR aggregation; ADR-040 | `src/lib/reports/due/`, `/reports/due` |
 | Territory & Due Certification | ✅ Complete (PHASE_08E) — `runTerritoryCertification()`; Rules 1–8; ADR-041 | `src/lib/certification/territory/` |
+| Enterprise Dashboard Foundation | ✅ Complete (PHASE_09A) — role-aware `/dashboard`; consumes due/integrity/reconciliation; ADR-042 | `src/lib/dashboard/`, `/dashboard` |
+| Enterprise Dashboard Certification | ✅ Complete (PHASE_09A.5) — `runDashboardCertification()`; Rules 1–9; ADR-043 | `src/lib/certification/dashboard/` |
+| Enterprise Dashboard BI & Analytics | ✅ Complete (PHASE_09B) — role-aware charts; SVG chart system; ADR-044 | `src/lib/dashboard/analytics/`, `src/components/dashboard/charts/` |
+| Enterprise Territory Map & Geo Visualization | ✅ Complete (PHASE_09C) — role-aware grid map; filters; risk highlight; ADR-045 | `src/lib/dashboard/maps/`, `src/components/dashboard/maps/` |
 | Audit Log UI | ❌ Not built | — |
 | User Management | ❌ Not built | — |
 
@@ -574,7 +578,10 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 | ADR-034 | Enterprise Reconciliation Engine (PHASE_07E3) |
 | ADR-035 | Scheduled Financial Integrity Monitor (PHASE_07E4) |
 | ADR-036 | Financial Integrity Operations Console (PHASE_07E5) |
-| ADR-037 | Enterprise Financial System Certification (PHASE_07F) |
+| ADR-042 | Enterprise Dashboard Foundation (PHASE_09A) |
+| ADR-043 | Enterprise Dashboard Certification (PHASE_09A.5) |
+| ADR-044 | Enterprise Dashboard BI & Analytics (PHASE_09B) |
+| ADR-045 | Enterprise Territory Map & Geo Visualization (PHASE_09C) |
 
 ---
 

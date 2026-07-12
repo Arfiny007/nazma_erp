@@ -625,7 +625,11 @@ TIER 3 — OPERATIONAL CACHE
 | Ledger Backfill Discovery | ✅ Complete (PHASE_07E1) — ADR-032; read-only `getLedgerBackfillCandidates()` |
 | Ledger Historical Replay | ✅ Complete (PHASE_07E2) — ADR-033; `replayDealerLedger()` |
 | Ledger Reconciliation Engine | ✅ Complete (PHASE_07E3) — ADR-034; read-only `reconcileDealer()` |
-| Due Reports | ❌ Not built |
+| Due Reports | ✅ Complete (PHASE_08D) — ADR-040 |
+| Enterprise Dashboard Foundation | ✅ Complete (PHASE_09A) — ADR-042; role-aware `/dashboard` |
+| Enterprise Dashboard Certification | ✅ Complete (PHASE_09A.5) — ADR-043; PHASE_09B approved |
+| Enterprise Dashboard BI & Analytics | ✅ Complete (PHASE_09B) — ADR-044; SVG charts on `/dashboard` |
+| Enterprise Territory Map & Geo Visualization | ✅ Complete (PHASE_09C) — ADR-045; grid map on `/dashboard` |
 | Audit Log UI | ❌ Not built |
 | User Management | ❌ Not built |
 

@@ -22,7 +22,7 @@ export const NAV_SECTIONS: NavSection[] = [
       {
         id: "dashboard",
         labelKey: "nav.dashboard",
-        href: "/",
+        href: "/dashboard",
         icon: LayoutDashboard,
         permission: "dashboard:view",
       },

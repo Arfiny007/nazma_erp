@@ -1,998 +1,122 @@
-# CURRENT_PHASE.md
-
-
-
-Current Phase:
-
-
-
-PHASE_08E.1_TERRITORY_SECURITY_HOTFIX
-
-
-
-Status:
-
-
-
-COMPLETE
-
-
-
----
-
-# PHASE_08E.1_TERRITORY_SECURITY_HOTFIX
-
-Status: COMPLETE (2026-07-11)
-
-## Objectives
-
-Close cross-territory collection context visibility gap from PHASE_08E certification.
-
-* `canAccessDealerByCode` on `getDealerCollectionContext()`
-* Territory gate before any financial query
-* 9 unit tests
-
-## Completion Criteria
-
-* SR cannot access foreign dealer context: ✓
-* Manager / Accounts / Super Admin paths verified: ✓
-* No financial engine changes: ✓
-* Territory certification passes without warning: ✓
-* `npx vitest run` — all pass: ✓
-
-## Next Phase
-
-**Audit Log UI** or **Due Report Exports (PHASE_08F)**
-
----
-
-# PHASE_08E_ENTERPRISE_TERRITORY_DUE_CERTIFICATION
-
-Status: COMPLETE (2026-07-11)
-
-## Objectives
-
-Certify PHASE_08A–08D without modifying business logic.
-
-* `runTerritoryCertification()` — Rules 1–8
-* Subsystem scores: territory security, ownership integrity, due accuracy, financial boundary
-* Aging vs balance reconciliation (Rule 7)
-* Repository boundary scans (Rule 8)
-* ADR-041
-
-## Completion Criteria
-
-* Territory isolation certified: ✓
-* Ownership history certified: ✓
-* Due report accuracy certified: ✓
-* Financial boundaries intact: ✓
-* No business logic modified: ✓
-* 18 certification tests: ✓
-* `npx vitest run` — 317 passed / 7 skipped: ✓
-* ADR-041 + governance docs: ✓
-
-## Explicitly NOT Changed
-
-* Territory RBAC, ownership service, due report engine, financial posting
-
-## Next Phase
-
-**Audit Log UI** or **Due Report Exports (PHASE_08F)**
-
----
-
-# PHASE_08D_ENTERPRISE_DUE_REPORT_ENGINE
-
-Status: COMPLETE (2026-07-11)
-
-## Objectives
-
-Enterprise due reports consuming existing financial engines only.
-
-* `src/lib/reports/due/` — `getDueReport()`, `getDealerDueReport()`, `getTerritoryDueReport()`, `getSrDueReport()`, `getCompanyDueSummary()`, `getDueAgingReport()`
-* Invoice aging buckets (current, 1–30, 31–60, 61–90, 90+ days overdue)
-* Territory RBAC on all queries
-* Ownership history read-only joins for SR attribution
-* Server actions + `/reports/due` dev page
-* ADR-040
-
-## Completion Criteria
-
-* Company due viewable: ✓
-* Territory due viewable: ✓
-* SR due viewable: ✓
-* Aging reports work: ✓
-* No duplicate balance logic: ✓
-* Financial engine untouched: ✓
-* 18 unit tests: ✓
-* `npx vitest run` — 299 passed / 7 skipped: ✓
-* Governance docs + ADR-040: ✓
-
-## Explicitly NOT Changed
-
-* posting-service, LedgerEntry, Dealer.currentBalance writer
-* Statement, reconciliation, integrity monitor, certification engines
-* Dashboards, charts, analytics, PDF/Excel exports
-
-## Next Phase
-
-**PHASE_08E — Due Report Exports** or **Audit Log UI**
-
----
-
-# PHASE_08C_ENTERPRISE_DEALER_OWNERSHIP_MIGRATION
-
-Status: COMPLETE (2026-07-11)
-
-## Objectives
-
-Enterprise dealer ownership history, territory migration, dealer form integration.
-
-* `DealerOwnershipHistory` model
-* `assignDealerTerritory`, `transferDealer`, `backfillDealerOwnership`
-* Geography selects on dealer create/edit
-* `/dealers/[id]/ownership` timeline UI
-* ADR-039
-
-## Completion Criteria
-
-* Ownership history auditable: ✓
-* Single active ownership enforced: ✓
-* Transfer closes prior record: ✓
-* Legacy backfill with report: ✓
-* SR/Manager territory validation: ✓
-* Financial engine untouched: ✓
-* ADR-039 + governance docs: ✓
-
-## Next Phase
-
-**PHASE_08 — Due Reports**
-
----
-
-# PHASE_08B_ENTERPRISE_TERRITORY_RBAC_ENGINE
-
-Status: COMPLETE (2026-07-11)
-
-## Objectives
-
-Upgrade role-only RBAC into enterprise Territory RBAC. Authorization only.
-
-* `UserTerritoryAssignment` model
-* `buildTerritoryScope()` + `canAccess*` functions
-* Server-side scope on dealers, orders, collections, statements
-* `/settings/territory-assignments` admin UI
-* ADR-038
-
-## Completion Criteria
-
-* Territory-based access control works: ✓
-* SR isolation enforced server-side: ✓
-* Manager supervised territory scope: ✓
-* Accounts / Super_Admin global visibility: ✓
-* Financial engine untouched: ✓
-* No duplicated permission logic in pages: ✓
-* Unit tests: ✓
-* Governance docs + ADR-038: ✓
-
-## Explicitly NOT Changed
-
-* posting-service, LedgerEntry, Dealer.currentBalance
-* Invoice/collection/statement/reconciliation/certification engines
-
-## Next Phase
-
-**PHASE_08C — Dealer Territory Ownership**
-
----
-
-# PHASE_08A_ENTERPRISE_GEOGRAPHY_FOUNDATION
-
-Status: COMPLETE (2026-07-11)
-
-## Objectives
-
-Bangladesh geography hierarchy: Division → District → Territory.
-
-* Prisma models + seed (8/64/64)
-* Geography server actions + select components
-* `/settings/geography`, `/settings/territories`
-
----
-
-# PHASE_07F_ENTERPRISE_FINANCIAL_SYSTEM_CERTIFICATION
-
-
-
-| Phase | Description | Status |
-
-|-------|-------------|--------|
-
-| PHASE_04A_ORDER_BACKEND | Sales Order backend | ✅ COMPLETE |
-
-| PHASE_04B_ORDER_UI | Sales Order UI | ✅ COMPLETE |
-
-| PHASE_04C_ORDER_COMBOBOX_DIAGNOSTICS | DealerCombobox fix | ✅ COMPLETE |
-
-| PHASE_05A_DELIVERY_CHALLAN_BACKEND | Delivery Challan backend (validators, DTOs, workflow guards) | ✅ COMPLETE |
-
-| PHASE_05A1_DELIVERY_CHALLAN_SCHEMA | Delivery Challan Prisma schema + migration | ✅ COMPLETE |
-
-| PHASE_05A2_DELIVERY_CHALLAN_ACTIONS | Server actions, challan number generator, order integration | ✅ COMPLETE |
-
-| PHASE_05B_DELIVERY_CHALLAN_UI | Delivery Challan UI (create from order, list, detail, dispatch) | ✅ COMPLETE |
-
-| PHASE_05C1_INVOICE_ENGINE_BACKEND | Invoice backend from confirmed challan (+ mandatory InvoiceItem) | ✅ COMPLETE |
-
-| PHASE_05C2_FINANCIAL_INTEGRITY_AUDIT | Pre-production accounting review; ADR-015 | ✅ COMPLETE |
-
-| PHASE_05C2A_FINANCIAL_CONCURRENCY_HOTFIX | Dealer row lock, atomic balance, idempotency, concurrency tests | ✅ COMPLETE |
-
-| PHASE_05D1_ENTERPRISE_INVOICE_UI | Invoice list, detail, issue workflow (UI only — no PDF) | ✅ COMPLETE |
-
-| PHASE_05D2_ENTERPRISE_DOCUMENT_ENGINE | Printable invoice document engine (preview, print, PDF) | ✅ COMPLETE |
-
-| PHASE_05D3_ENTERPRISE_INVOICE_QA | Production QA certification before Collections | ✅ COMPLETE |
-
-| PHASE_06A1_COLLECTIONS_SCHEMA_FOUNDATION | Collections schema, DTOs, validators, ADR-019 | ✅ COMPLETE |
-
-| PHASE_06A2_COLLECTION_ENGINE_AND_ALLOCATION | Collection server actions, allocation engine, posting, reversal | ✅ COMPLETE |
-
-| PHASE_06A3_FINANCIAL_CONSISTENCY_AUDIT | Pre-UI financial certification; ADR-021 | ✅ COMPLETE |
-
-| PHASE_06B_ENTERPRISE_COLLECTIONS_UI | Collection list, workspace, allocation UI, reversal UX | ✅ COMPLETE |
-
-| PHASE_06C_ENTERPRISE_MONEY_RECEIPT_ENGINE | Document platform upgrade + Money Receipt printable | ✅ COMPLETE |
-
-| PHASE_06D_FINANCIAL_ARCHITECTURE_CERTIFICATION | Pre-ledger ERP financial architecture review; ADR-024 | ✅ COMPLETE |
-
-| **PHASE_06D.1_INVOICE_PDF_CLIENT_REVISION** | Client-approved invoice layout revision 2 (presentation only) | **✅ COMPLETE** |
-| **PHASE_06D.2_ENTERPRISE_DOCUMENT_PLATFORM_DESIGN_FREEZE** | Enterprise design system freeze — design tokens, header, title, financial summary grouping, single signature, professional notes, enterprise footer, rebalanced table, single dealer section | **✅ COMPLETE** |
-| **PHASE_07A_ENTERPRISE_LEDGER_FOUNDATION** | Ledger schema hardening + strongly typed posting-key abstraction + immutable ledger service + reconciliation + opening-balance builders (foundation only — no UI, no reports, no wired posting) | **✅ COMPLETE** |
-| **PHASE_07B_LEDGER_POSTING_INTEGRATION** | `createLedgerEntry` wired into `postReceivableIncrease` / `postReceivableDecrease` / `postReceivableDecreaseReversal`; `LedgerEntry.balance == Dealer.currentBalance` asserted every commit; append-only; compensating reversal; concurrency + idempotency tests | **✅ COMPLETE** |
-| **PHASE_07B.5_ENTERPRISE_FINANCIAL_INTEGRITY_CERTIFICATION** | Chief ERP architecture audit of full financial path; repository grep; reconciliation tests; `assertDealerLedgerReconciled` tightened; ADR-027; Opening Balance approved | **✅ COMPLETE** |
-| **PHASE_07C_ENTERPRISE_FINANCIAL_INITIALIZATION_ENGINE** | Financial Initialization Platform — Opening Balance workflow (state machine, `postOpeningBalance()`, enterprise wizard UI); reusable for future bulk import / ERP migration / company / branch / fiscal year initialization; ADR-028 | **✅ COMPLETE** |
-| **PHASE_07D1_ENTERPRISE_DEALER_SUBLEDGER_FOUNDATION** | Read-only Dealer Statement engine — `getDealerStatement()` / `getDealerStatementSummary()`; `LedgerEntry`-authoritative running balance; server actions; `/ledger/demo` dev verification; ADR-029 | **✅ COMPLETE** |
-| **PHASE_07D2_ENTERPRISE_DEALER_STATEMENT_UI** | Production Dealer Statement UI at `/ledger` — header, filters, summary cards, ledger table, integrity badge; consumes PHASE_07D1 read engine only; ADR-030 | **✅ COMPLETE** |
-| **PHASE_07D3_ENTERPRISE_DEALER_STATEMENT_DOCUMENT_PLATFORM** | Printable Dealer Statement via Document Platform — mapper, `DealerStatementPrintable`, print preview from `/ledger`; ADR-031 | **✅ COMPLETE** |
-| **PHASE_07E1_HISTORICAL_LEDGER_DISCOVERY_ENGINE** | Read-only `getLedgerBackfillCandidates()` — identifies dealers requiring historical ledger reconstruction; dev page `/ledger/backfill`; ADR-032 | **✅ COMPLETE** |
-| **PHASE_07E2_HISTORICAL_REPLAY_ENGINE** | Idempotent `replayDealerLedger()` — reconstructs missing `LedgerEntry` rows via `createLedgerEntry`; server actions; dev replay controls; ADR-033 | **✅ COMPLETE** |
-| **PHASE_07E3_ENTERPRISE_RECONCILIATION_ENGINE** | Read-only `reconcileDealer()` / `reconcileAllDealers()` — drift, missing ledger, corrupted chain detection; dev page `/ledger/reconciliation`; ADR-034 | **✅ COMPLETE** |
-| **PHASE_07E4_SCHEDULED_FINANCIAL_INTEGRITY_MONITOR** | `runFinancialIntegrityScan()` orchestrates reconciliation + persists `FinancialIntegrityScan` summaries; ADR-035 | **✅ COMPLETE** |
-| **PHASE_07E5_FINANCIAL_INTEGRITY_OPERATIONS_CONSOLE** | Production `/ledger/integrity` — header, summary cards, scan history, manual scan, dealer drill-down; ADR-036 | **✅ COMPLETE** |
-| **PHASE_07F_ENTERPRISE_FINANCIAL_SYSTEM_CERTIFICATION** | Full enterprise financial certification — `runFinancialCertification()`; Rules 1–10; ADR-037 | **✅ COMPLETE** |
-
-
-
----
-
-
-
-# PHASE_07F_ENTERPRISE_FINANCIAL_SYSTEM_CERTIFICATION
-
-Status: COMPLETE (2026-07-10)
-
-## Objectives
-
-Prove the entire accounting system behaves correctly under real-world ERP
-conditions. Verification only — no new business functionality.
-
-* `runFinancialCertification()` — repository-wide certification entry point
-* Rules 1–10 — ledger, posting, opening balance, statement, replay, audit, immutability
-* Concurrency, accounting sensitivity, immutability, performance measurement
-* ADR-037
-
-## Completion Criteria
-
-* `src/lib/finance/certification/` module (6 files): ✓
-* All 10 certification rules verified: ✓
-* Repository grep — no forbidden mutations: ✓
-* 12 unit tests: ✓
-* ADR-037 authored: ✓
-* Governance docs updated: ✓
-* `npx vitest run` — 245 passed / 7 skipped: ✓
-* PHASE_08 approved: ✓
-
-## Explicitly NOT Changed
-
-* posting-service, engines, document platform, permissions, Prisma schema
-
----
-
-## Next Phase
-
-**PHASE_08 — Due Reports**
-
----
-
-# PHASE_07E5_FINANCIAL_INTEGRITY_OPERATIONS_CONSOLE
-
-
-
-Status: COMPLETE
-
-
-
-## Objectives
-
-
-
-Revise the enterprise invoice printable layout per latest client feedback.
-Presentation-layer changes only — no accounting, posting, workflow, or schema changes.
-
-
-
-* Enlarge company name hierarchy (Nazma + WATER TAPS subtitle)
-
-* Dynamic product rows (no fixed 20-row padding)
-
-* Remove discount column, VAT row, and Due Date from print
-
-* Sales person = Sales Order creator (not dealer territory)
-
-* Blank signature areas (Prepared By / Checked By / Authorized Signature)
-
-* Maintain Preview = Print = PDF single pipeline
-
-
-
-### Completion Criteria
-
-
-
-* Company name enlarged; subtitle aligned: ✓
-
-* Dynamic row generation; no placeholder rows: ✓
-
-* Discount column removed from print: ✓
-
-* VAT row removed from print: ✓
-
-* Due Date removed from print: ✓
-
-* Sales person shows SR (order creator) name: ✓
-
-* Signature areas blank: ✓
-
-* Preview == Print == PDF: ✓
-
-* No business or financial logic changes: ✓
-
-* ADR-017 / ADR-018 updated: ✓
-
-* Governance docs updated: ✓
-
-
-
-### Explicitly NOT Changed
-
-
-
-* Prisma schema, PostingService, Invoice Engine, validators, workflow
-
-* Financial calculations (subtotal, grandTotal, previousDue, currentDue, outstanding)
-
-* Database fields and DTO monetary fields
-
-
-
----
-
-
-
----
-
-
-
-# PHASE_06D.2_ENTERPRISE_DOCUMENT_PLATFORM_DESIGN_FREEZE
-
-Status: COMPLETE
-
-## Objectives
-
-Production design freeze for the Enterprise Document Platform before the Ledger phase begins.
-Presentation-layer changes only — no accounting, posting, workflow, or schema changes.
-
-* Design tokens file — single source of truth for all document visual constants
-* Enterprise CompanyHeader redesign — enlarged company name (32pt black), improved hierarchy, vertical rule separator, professional address block (T/E/W prefix style)
-* Stronger DocumentTitle — 17pt font-black, 0.12em tracking, increased vertical spacing
-* Simplified dealer section — single "Dealer Information" block (B2B ERP; no redundant Ship To column)
-* Rebalanced product table — Product Name column expanded to 42% (was 34%); compact numeric columns
-* Tabular numerals — font-variant-numeric: tabular-nums on qty/price/amount/financial columns
-* Grouped financial summary — visual divider between Invoice Amount group and Due Summary group
-* Single Authorized By signature — replaces three-signature block (Prepared By, Checked By, Authorized Signature)
-* Professional notes — business-grade Terms & Conditions replacing consumer-oriented text
-* Enterprise footer — blue bar + left "Confidential" label + right thank-you message
-* PaymentTerms section removed — no orphan sections
-
-### Completion Criteria
-
-* Design tokens file created: ✓
-* Enterprise header improved: ✓
-* Document title strengthened: ✓
-* Dealer section simplified (single B2B block): ✓
-* Product table rebalanced (42% name column): ✓
-* Tabular numerals on numeric columns: ✓
-* Financial summary grouped (divider between Invoice Amount / Due Summary): ✓
-* Payment terms removed from invoice print: ✓
-* Professional notes (Terms & Conditions): ✓
-* Single Authorized By signature: ✓
-* Enterprise footer (blue bar + confidential + message): ✓
-* DocumentLabels updated (authorizedBy, dealerInfo fields): ✓
-* EN/BN localization updated: ✓
-* Preview == Print == PDF: ✓
-* No business or financial logic changes: ✓
-* `npx tsc --noEmit` — 0 errors: ✓
-* `npx eslint` — 0 errors: ✓
-* Governance docs updated: ✓
-
-### Explicitly NOT Changed
-
-* Prisma schema, PostingService, Invoice Engine, validators, workflow
-* Financial calculations (subtotal, grandTotal, previousDue, currentDue, outstanding)
-* Database fields and DTO monetary fields
-* Money Receipt pipeline (DocumentFinancialSummary changes are backward-compatible)
-
----
-
-
-
----
-
-# PHASE_07A_ENTERPRISE_LEDGER_FOUNDATION
-
-Status: COMPLETE (2026-07-09)
-
-## Objectives
-
-Deliver a permanent, extension-ready accounting foundation on top of the
-certified PHASE_06D pipeline. Foundation only — no posting wiring, no UI,
-no reports, no data migration.
-
-* Harden `LedgerEntry` model per ADR-024 §11 (enums, `postingKey`,
-  `postingType`, `postingDate`, `referenceNo`, `reversesEntryId`,
-  `createdById`, composite indexes)
-* Introduce strongly typed `PostingKey` abstraction with deterministic,
-  idempotent builder
-* Replace loose `String referenceType` with `FinancialReferenceType` enum;
-  extend enum with `Collection`
-* Introduce `LedgerPostingType` enum for accounting events
-* Prepare `posting-service.ts` inputs for ledger hooks (types extended;
-  bodies unchanged)
-* Ship immutable ledger posting contracts (`LedgerPostingInput`,
-  `LedgerEntryCreateData`, `buildReversalPosting`)
-* Ship `createLedgerEntry` — the SINGLE ledger write path (idempotent,
-  balance-asserting, append-only)
-* Ship reconciliation helpers (`reconcileDealerLedger`,
-  `replayDealerLedgerBalance`, `assertDealerLedgerReconciled`)
-* Ship opening-balance infrastructure (`buildOpeningBalancePosting`,
-  `buildOpeningBalancePostingKey`)
-* Document architecture, posting strategy, append-only policy, and future
-  extension points in ADR-025
-
-## Completion Criteria
-
-* `LedgerEntry` schema hardened + Prisma migration authored: ✓
-* `LedgerPostingType` enum + `FinancialReferenceType.Collection` added: ✓
-* `PostingKey` builder/parser/predicate: ✓
-* `createLedgerEntry` with `postingKey` idempotency + balance derivation: ✓
-* Compensating reversal contract (`buildReversalPosting`,
-  `reversesEntryId`): ✓
-* Reconciliation helpers (single-dealer scope): ✓
-* Opening balance builders (sign-aware, deterministic key): ✓
-* `posting-service.ts` inputs extended with optional ledger metadata: ✓
-* ADR-025 authored: ✓
-* Governance docs updated: ✓
-* `npx tsc --noEmit` — 0 errors: ✓
-* `npx eslint` — 0 errors: ✓
-* `npx vitest run` — 64 passed, 4 skipped (pre-existing DB integration
-  tests requiring `DATABASE_URL`): ✓
-
-## Explicitly NOT Changed
-
-* `posting-service.ts` function bodies — PHASE_07B wires
-  `createLedgerEntry`
-* Invoice Engine, Collection Engine, Delivery Engine, Order Engine
-* Document platform, UI, RBAC, localization
-* Financial calculations, dealer balance semantics
-* Existing enum members and allocation runtime guards
-
----
-
-## Next Phase
-
-**PHASE_07B_LEDGER_POSTING_INTEGRATION** — Call `createLedgerEntry` inside
-`postReceivableIncrease`, `postReceivableDecrease`, and
-`postReceivableDecreaseReversal`; assert `LedgerEntry.balance =
-Dealer.currentBalance` after each post. Integration tests mirror the
-PHASE_05C2A invoice concurrency suite.
-
----
-
-# PHASE_07B_LEDGER_POSTING_INTEGRATION
-
-Status: COMPLETE (2026-07-09)
-
-## Objectives
-
-Wire the PHASE_07A ledger foundation into the Financial Posting Service so
-that every receivable event permanently creates an immutable
-`LedgerEntry`, without changing any caller, business workflow, UI, or
-schema.
-
-* `createLedgerEntry` invoked from `postReceivableIncrease`,
-  `postReceivableDecrease`, and `postReceivableDecreaseReversal`
-* `LedgerEntry.balance == Dealer.currentBalance` asserted on every
-  commit via `assertLedgerBalanceMatchesCache`
-* Compensating reversal — collection reverse links `reversesEntryId` to
-  the canonical Collection posting when it exists
-* Semantic correction — collection cash-receipt postings now use
-  `FinancialReferenceType.Collection` (ADR-024 §10 low-priority item)
-* PostingService remains the sole mutation boundary for balances AND
-  the sole write path into `LedgerEntry`
-* Ledger append-only preserved — `assertLedgerAppendOnly` + reviewer
-  discipline; no `ledgerEntry.update` / `delete` in code
-* Idempotency preserved — deterministic `postingKey @unique` collapses
-  replays into no-ops
-* Concurrency invariants preserved — dealer row lock, atomic increment,
-  single-transaction commit
-* Audit rows carry `ledgerEntryId`, `ledgerPostingKey`,
-  `ledgerPostingType`, `ledgerIsNew`, `ledgerReversesEntryId`
-
-## Completion Criteria
-
-* Invoice creates LedgerEntry (postingType = Issue, Debit): ✓
-* Collection confirm creates LedgerEntry (postingType = Collection, Credit): ✓
-* Collection reverse creates compensating LedgerEntry (postingType = Reversal, Debit) with `reversesEntryId`: ✓
-* `LedgerEntry.balance == Dealer.currentBalance` asserted on every post: ✓
-* Duplicate posting prevented via `postingKey @unique`: ✓
-* Allocation continues to skip balance + ledger: ✓
-* Dealer row lock preserved: ✓
-* Decimal (18, 2) preserved: ✓
-* Transactions atomic: ✓
-* Concurrency + idempotency tests extended: ✓
-* `npx tsc --noEmit` — 0 errors: ✓
-* `npx eslint` — 0 errors: ✓
-* `npx vitest run` — 83 passed, 4 skipped (pre-existing DB integration tests): ✓
-* ADR-026 authored: ✓
-* Governance docs updated: ✓
-
-## Explicitly NOT Changed
-
-* Prisma schema, migrations
-* Invoice Engine, Collection Engine, Delivery Engine, Order Engine
-* Document platform, UI, RBAC, localization
-* Public caller signatures of `postReceivable*` functions
-* Financial calculations, dealer balance semantics
-* Allocation engine's balance semantics (allocation still skips balance path)
-
----
-
-## Next Phase
-
-**PHASE_07C_OPENING_BALANCE** — `openDealerBalance()` server action and
-`postOpeningBalance()` in `posting-service.ts` using the PHASE_07A
-opening-balance builders. **Approved by ADR-027.** Then PHASE_07D (Ledger UI +
-dealer statement), PHASE_07E (reconciliation + backfill).
-
----
-
-# PHASE_07B.5_ENTERPRISE_FINANCIAL_INTEGRITY_CERTIFICATION
-
-Status: COMPLETE (2026-07-09)
-
-## Objectives
-
-Chief ERP Architecture Audit before Opening Balance. Certify every financial
-path from Invoice through PostingService, LedgerEntry, Dealer.currentBalance,
-and Audit. No feature work.
-
-* Full repository grep for balance/ledger bypass and float arithmetic
-* Verify append-only ledger, PostingKey idempotency, running balance chain
-* Verify transaction atomicity, allocation non-posting, reversal compensating model
-* Stress/concurrency review (invoice integration tests + posting unit tests)
-* Implement repository-wide reconciliation tests
-* Remediate any architectural weakness found
-* Document certification in ADR-027
-
-## Completion Criteria
-
-* PostingService sole writer for `Dealer.currentBalance` and `LedgerEntry`: ✓
-* No ledger UPDATE/DELETE in application code: ✓
-* PostingKey deterministic; replay safe; drift rejected: ✓
-* Running balance = previous + debit − credit: ✓
-* Cache/ledger parity on every commit: ✓
-* Allocation skips balance and ledger: ✓
-* Decimal(18,2) in financial paths: ✓
-* `assertDealerLedgerReconciled` tightened (empty ledger only when cache = 0): ✓
-* `validateDealerLedgerChain`, `assertDealerLedgerIntegrity`, `reconcileAllDealers`: ✓
-* `ledger-reconciliation.test.ts` (9 unit tests): ✓
-* `ledger-reconciliation.integration.test.ts` (DB scan): ✓
-* ADR-027 authored: ✓
-* Governance docs updated: ✓
-* Opening Balance (PHASE_07C) approved: ✓
-
-## Explicitly NOT Changed
-
-* Prisma schema, migrations
-* Invoice Engine, Collection Engine, posting-service public API
-* UI, reports, opening balance implementation
-
----
-
-## Next Phase (superseded header retained for history)
-
-**PHASE_07C_OPENING_BALANCE** — see below.
-
----
-
-# PHASE_07C_ENTERPRISE_FINANCIAL_INITIALIZATION_ENGINE
-
-Status: COMPLETE (2026-07-09)
-
-## Objectives
-
-Build the Financial Initialization Platform, with Opening Balance as its
-first workflow. Never bypass `PostingService`. Design for reuse by future
-Bulk Opening Balance Import, ERP Migration, Company Initialization, Branch
-Initialization, and Fiscal Year Initialization workflows.
-
-* Permanent state machine: `NotInitialized → Draft → Validated →
-  Posted+Locked`
-* `OpeningBalance` model (`dealerCode @unique` — every dealer initialized
-  exactly once); `OpeningBalanceStatus` / `OpeningBalanceSource` enums
-* `postOpeningBalance()` in `posting-service.ts` — reuses `createLedgerEntry`,
-  `assertLedgerBalanceMatchesCache`, dealer row lock, and audit logging;
-  zero new mutation primitives
-* Producer-agnostic core engine (`src/lib/finance/initialization/`) —
-  `source: Manual | CsvImport | ExcelImport | ErpMigration` designed in from
-  day one; `postOpeningBalanceBatch()` shipped for future bulk import
-* Idempotency via `postingKey`; initialization lock via `dealerCode @unique`
-  + `assertDealerNotInitialized`
-* Five server actions: `createOpeningBalanceDraft`, `validateOpeningBalance`,
-  `postOpeningBalance`, `getInitializationStatus`, `listUninitializedDealers`
-* Enterprise wizard UI (`/opening-balances`, `/opening-balances/new`) — Dealer
-  Selection → Entry → Validation → Confirmation → Posting → Success
-* Live-database concurrency tests found and fixed a real race condition in
-  `postOpeningBalanceRecord()` (see ADR-028 §6.2) before production
-
-## Completion Criteria
-
-* `OpeningBalance` model + enums + migration: ✓
-* `postOpeningBalance()` posts exactly one `LedgerEntry` (or none for
-  amount = 0): ✓
-* `PostingService` remains sole mutation boundary: ✓
-* `Dealer.currentBalance` matches Ledger on every commit: ✓
-* Initialization occurs only once (app + DB level, proven under
-  concurrency): ✓
-* PostingKey prevents duplicates (proven under concurrency): ✓
-* Draft / Validation never touch balance or ledger: ✓
-* Audit created on every post, including zero-amount: ✓
-* Enterprise wizard UI — 6-step accountant workflow: ✓
-* RBAC reuses `invoices:create` (no `permissions.ts` change): ✓
-* EN/BN localization: ✓
-* `npx tsc --noEmit` — 0 errors: ✓
-* `npx eslint .` — 0 errors: ✓
-* `npx vitest run` — 141 passed / 5 skipped (pre-existing, unrelated): ✓
-* `npx next build` — succeeds; `/opening-balances*` routes compile: ✓
-* Live end-to-end smoke test against real PostgreSQL: ✓
-* ADR-028 authored: ✓
-* Governance docs updated: ✓
-
-## Explicitly NOT Changed
-
-* Invoice Engine, Collection Engine, Order Engine, Delivery Engine
-* `posting-service.ts`'s three existing functions (byte-for-byte unchanged)
-* `src/lib/ledger/` posting/validation functions
-* Document Platform, RBAC matrix (`permissions.ts`), Reporting, Dashboard
-
----
-
-# PHASE_07D1_ENTERPRISE_DEALER_SUBLEDGER_FOUNDATION
-
-Status: COMPLETE (2026-07-09)
-
-## Objectives
-
-Build the read-only Dealer Subledger Foundation — a reusable statement engine
-that every future UI, PDF, Excel, Email, and Reporting module consumes
-without redesign. Never mutate financial data; never call posting functions.
-
-* `src/lib/ledger/statement/` — `getDealerStatement()`, `getDealerStatementSummary()`
-* Running balance copied verbatim from `LedgerEntry.balance` — never recomputed
-* Opening Balance visible as first `LedgerEntry` when dealer is initialized
-* Ledger integrity validated read-only via `validateDealerLedgerChain()`
-* Server actions with `ledger:view` RBAC and transport-safe DTOs
-* Lightweight dev verification page at `/ledger/demo`
-* Unit tests for all required scenarios
-
-## Completion Criteria
-
-* Read-only architecture — no writes in statement module: ✓
-* No balance mutation / no `LedgerEntry` creation: ✓
-* Running balance from `LedgerEntry.balance`: ✓
-* Opening Balance row visible when initialized: ✓
-* Invoice + Collection row mapping from ledger: ✓
-* Date filtering + pagination + totals: ✓
-* Empty ledger / future dealer handled gracefully: ✓
-* Server actions `getDealerStatement` + `getDealerStatementSummary`: ✓
-* `/ledger/demo` dev verification page: ✓
-* ADR-029 authored: ✓
-* Governance docs updated: ✓
-* `npx tsc --noEmit` — 0 errors: ✓
-* `npx eslint .` — 0 errors: ✓
-* `npx vitest run` — 158 passed / 7 skipped: ✓
-
-## Explicitly NOT Changed
-
-* Invoice Engine, Collection Engine, PostingService, Delivery, Order
-* Document Platform (production statement composer deferred to PHASE_07D2)
-* RBAC matrix (`permissions.ts`)
-* Reconciliation jobs, PDF, Excel, exports, dashboards, reports
-
----
-
----
-
-# PHASE_07D2_ENTERPRISE_DEALER_STATEMENT_UI
-
-Status: COMPLETE (2026-07-09)
-
-## Objectives
-
-Convert the PHASE_07D1 Dealer Statement engine into a production-grade
-enterprise screen. Presentation only — no accounting logic, financial
-mutations, posting changes, or LedgerEntry modifications.
-
-* Production route `/ledger` (not demo)
-* Header — dealer identity, current balance, period, ledger integrity badge
-* Filters — dealer, date range, quick presets; future-ready posting/reference/search
-* Summary cards — opening, debit, credit, closing, transaction count (DTO only)
-* Enterprise ledger table — running balance verbatim from DTO
-* Row accents, posting/reference badges, skeletons, empty states, alerts
-* EN/BN localization; accessibility; dense ERP layout
-* Remove obsolete `/ledger/demo`
-
-## Completion Criteria
-
-* UI consumes `getDealerStatement()` only: ✓
-* No duplicated business logic / no money calculations: ✓
-* Running balance untouched: ✓
-* Ledger integrity badge: ✓
-* Responsive dense ERP layout: ✓
-* `/ledger/demo` removed: ✓
-* ADR-030 authored: ✓
-* Governance docs updated: ✓
-* `npx tsc --noEmit` — 0 errors: ✓
-* `npx eslint` on new ledger UI files — 0 errors: ✓
-* `npx vitest run` — 171 passed / 7 skipped: ✓
-
-## Explicitly NOT Changed
-
-* PostingService, Invoice Engine, Collection Engine, Opening Balance Engine
-* Delivery, Order, Money Receipt, Document Platform
-* Financial calculations, LedgerEntry, Prisma schema, permissions
-* Print / PDF / Excel / exports / reports (deferred)
-
----
-
-## Next Phase
-
-**Statement Excel / Email Export** or **PHASE_08 Due Reports** — presentation
-and reporting follow-ons. No repair tooling.
-
----
-
-# PHASE_07E5_FINANCIAL_INTEGRITY_OPERATIONS_CONSOLE
-
-Status: COMPLETE (2026-07-10)
-
-## Objectives
-
-Build production Financial Integrity Console at `/ledger/integrity`.
-Presentation only — answers "Is the accounting system healthy?"
-
-* Header — last scan time, duration, total dealers, GREEN/YELLOW status
-* Summary cards from `FinancialIntegrityScan` only
-* Scan history table + manual scan via `runFinancialIntegrityScan()`
-* Dealer drill-down via `getReconciliationSummary()` (reconcileAllDealers)
-* Client-side filters (status, search; date future-ready)
-* ADR-036
-
-## Completion Criteria
-
-* Production route replaces dev tooling: ✓
-* No duplicated accounting logic: ✓
-* Existing monitor + reconciliation reused: ✓
-* EN/BN localization: ✓
-* 11 presentation tests: ✓
-* `npx vitest run` — 233 passed / 7 skipped: ✓
-
-## Explicitly NOT Changed
-
-* posting-service, reconciliation engine, monitor engine, Prisma schema, permissions
-
----
-
-# PHASE_07E4_SCHEDULED_FINANCIAL_INTEGRITY_MONITOR
-
-Status: COMPLETE (2026-07-10)
-
-## Objectives
-
-Build automated financial integrity monitor. Run reconciliation automatically
-and persist scan results. Orchestration only — no dashboards, notifications,
-repair tools, exports, or cron configuration.
-
-* `runFinancialIntegrityScan()` — calls `reconcileAllDealers()`, persists summary
-* `FinancialIntegrityScan` Prisma model — scan history
-* Server actions + dev page `/ledger/integrity`
-* ADR-035
-
-## Completion Criteria
-
-* Existing reconciliation engine reused — no duplicated Rules A/B/C: ✓
-* Scan summary persisted — no per-dealer rows: ✓
-* No financial mutation / no ledger creation: ✓
-* `getLatestIntegrityScan()` + `listIntegrityScans()`: ✓
-* Financial administration RBAC (`invoices:create`): ✓
-* 11 unit tests: ✓
-* ADR-035 authored: ✓
-* `npx vitest run` — 222 passed / 7 skipped: ✓
-
-## Explicitly NOT Changed
-
-* posting-service, invoice/collection/opening balance engines, reconciliation engine
-* backfill replay, statement engine, document platform, permissions
-
----
-
-# PHASE_07E3_ENTERPRISE_RECONCILIATION_ENGINE
-
-Status: COMPLETE (2026-07-10)
-
-## Objectives
-
-Build read-only enterprise reconciliation engine. Detect integrity problems
-without modifying financial data.
-
-* `reconcileDealer()` — per-dealer integrity verification
-* `reconcileAllDealers()` — repository-wide summary
-* Rules A/B/C — cache parity, sum parity, chain integrity
-* Server actions + dev page `/ledger/reconciliation`
-* ADR-034
-
-## Completion Criteria
-
-* Read-only — no mutations: ✓
-* `reconcileDealer()` + `reconcileAllDealers()` + `getReconciliationSummary()`: ✓
-* Status classification — CONSISTENT / DRIFT / MISSING_LEDGER / CORRUPTED_CHAIN: ✓
-* Dev page with summary cards + dealer table: ✓
-* 10 unit tests: ✓
-* ADR-034 authored: ✓
-* `npx vitest run` — 211 passed / 7 skipped: ✓
-
-## Explicitly NOT Changed
-
-* posting-service, invoice/collection/opening balance engines, backfill replay
-* statement engine, document platform, Prisma schema, permissions
-
----
-
-# PHASE_07E2_HISTORICAL_REPLAY_ENGINE
-
-Status: COMPLETE (2026-07-10)
-
-## Objectives
-
-Build the Historical Replay Engine consuming PHASE_07E1 discovery results.
-Reconstruct missing `LedgerEntry` rows idempotently. No dashboards, cron,
-exports, or balance mutation.
-
-* `replayDealerLedger()` — chronological replay via `createLedgerEntry()`
-* Strict order: Opening Balance → Invoices → Collections → Reversals
-* Eligibility: `NO_LEDGER`, `PARTIAL_LEDGER`; reject `CACHE_DRIFT`, corrupted chains
-* Parity check: `LedgerEntry.balance == Dealer.currentBalance`; rollback on mismatch
-* Server actions: `executeLedgerBackfill`, `previewLedgerReplay`, `getReplayStatus`
-* Dev page `/ledger/backfill` — Replay button, status badge, result panel
-* ADR-033
-
-## Completion Criteria
-
-* Replay uses `createLedgerEntry()` + `buildLedgerPostingKey()`: ✓
-* Idempotent — safe to run twice: ✓
-* No duplicate rows: ✓
-* Chronological ordering preserved: ✓
-* Only eligible dealers replay: ✓
-* Ledger parity verified: ✓
-* No financial workflows modified: ✓
-* 15 new unit tests: ✓
-* ADR-033 authored: ✓
-* Governance docs updated: ✓
-* `npx tsc --noEmit` — 0 errors: ✓
-* `npx eslint` — 0 errors: ✓
-* `npx vitest run` — 201 passed / 7 skipped: ✓
-
-## Explicitly NOT Changed
-
-* PostingService, Invoice Engine, Collection Engine, Opening Balance Engine
-* Dealer Statement read engine, Document Platform, Prisma schema, permissions
-* Reconciliation scheduled job, exports, dashboards (PHASE_07E3)
-
----
-
-# PHASE_07E1_HISTORICAL_LEDGER_DISCOVERY_ENGINE
-
-Status: COMPLETE (2026-07-10)
-
-## Objectives
-
-Build a read-only discovery module that answers: "Which dealers require
-historical ledger reconstruction?" No repair, no replay, no scheduled jobs.
-
-* `src/lib/ledger/backfill/` — `getLedgerBackfillCandidates()`
-* Classification rules: `NO_LEDGER`, `PARTIAL_LEDGER`, `CACHE_DRIFT`, `RECONCILED`
-* Server action with `ledger:view` RBAC
-* Dev verification page `/ledger/backfill` — simple table
-* Unit tests for all required scenarios
-* ADR-032
-
-## Completion Criteria
-
-* Read-only architecture — no writes in backfill module: ✓
-* No balance mutation / no `LedgerEntry` creation: ✓
-* No `posting-service.ts` import: ✓
-* Rule A / B / C classification correct: ✓
-* Server action `getLedgerBackfillCandidates`: ✓
-* `/ledger/backfill` dev page: ✓
-* ADR-032 authored: ✓
-* Governance docs updated: ✓
-* `npx tsc --noEmit` — 0 errors: ✓
-* `npx eslint` — 0 errors: ✓
-* `npx vitest run` — 186 passed / 7 skipped: ✓
-
-## Explicitly NOT Changed
-
-* PostingService, Invoice Engine, Collection Engine, Opening Balance Engine
-* Dealer Statement read engine, Document Platform
-* Financial calculations, LedgerEntry writes, Prisma schema, permissions
-* Reconciliation jobs, replay, backfill execution
-
----
-
-# PHASE_07D3_ENTERPRISE_DEALER_STATEMENT_DOCUMENT_PLATFORM
-
-Status: COMPLETE (2026-07-10)
-
-## Objectives
-
-Create printable Dealer Statements using the existing Document Platform and
-`DealerStatementDTO`. Document composition only — no financial logic,
-posting changes, or read-engine redesign.
-
-* Statement mapper — `DealerStatementDTO` → printable document payload
-* `DealerStatementPrintable` — composes shared document primitives
-* Statement table, summary, notes sections
-* Print preview modal + **Print Statement** button on `/ledger`
-* Multi-page A4 print via natural table pagination
-* EN/BN localization; presentation tests; ADR-031
-
-## Completion Criteria
-
-* Document platform reused — no duplicate CSS/layout/components: ✓
-* DTO consumed directly — no Prisma, no money math: ✓
-* Running balance verbatim from DTO: ✓
-* Preview == Print == PDF single pipeline: ✓
-* Print Statement button on `/ledger`: ✓
-* ADR-031 authored: ✓
-* Governance docs updated: ✓
-* `npx tsc --noEmit` — 0 errors: ✓
-* `npx eslint` — 0 errors: ✓
-* `npx vitest run` — 178 passed / 7 skipped: ✓
-
-## Explicitly NOT Changed
-
-* PostingService, Invoice Engine, Collection Engine, Opening Balance Engine
-* Dealer Statement read engine (`getDealerStatement()`)
-* Financial calculations, LedgerEntry, Prisma schema, permissions
-* Excel / email / CSV export (deferred)
+# CURRENT_PHASE.md
+
+Current Phase:
+
+PHASE_09C_ENTERPRISE_TERRITORY_MAP_GEO_VISUALIZATION
+
+Status:
+
+COMPLETE
+
+---
+
+# PHASE_09C_ENTERPRISE_TERRITORY_MAP_GEO_VISUALIZATION
+
+Status: COMPLETE (2026-07-13)
+
+## Objectives
+
+Interactive enterprise territory visualization on certified dashboard — presentation only.
+
+* `src/lib/dashboard/maps/` — `TerritoryMapNode` contract, batched map service
+* `src/components/dashboard/maps/` — grid visualization, filters, legend, tooltip
+* Server actions: `getTerritoryMap()`, `getManagerTerritoryMap()`, `getAccountsTerritoryMap()`, `getAdminTerritoryMap()`
+* Parallel dashboard + analytics + map fetch on `/dashboard`
+* ADR-045
+
+## Completion Criteria
+
+* Super Admin: all territories, division/district filters, risk highlight: ✓
+* Manager: assigned territories only, ranking widgets: ✓
+* Accounts: financial exposure, due/collection concentration: ✓
+* SR: own territories, simplified map: ✓
+* Territory RBAC via `buildTerritoryScope()`: ✓
+* Analytics DTO reuse (no duplicate balance calculations): ✓
+* Batched Prisma queries (no N+1): ✓
+* Risk classification (visualization only): ✓
+* `map.test.ts` + `map-actions.test.ts`: ✓
+* Governance docs + ADR-045: ✓
+
+## Explicitly NOT Changed
+
+* posting-service, due engine, dashboard analytics service, territory RBAC, certification modules
+
+## Next Phase
+
+**Audit Log UI** or **PHASE_09D — Dashboard Exports / Forecasting**
+
+---
+
+# PHASE_09B_ENTERPRISE_DASHBOARD_BI_ANALYTICS
+
+Status: COMPLETE (2026-07-11)
+
+## Objectives
+
+Enterprise BI visualizations on certified dashboard foundation — read-only charts consuming existing engines.
+
+* `src/lib/dashboard/analytics/` — `DashboardChart` contract, role-specific analytics builders
+* `src/components/dashboard/charts/` — lightweight SVG chart system
+* Server actions: `getDashboardAnalytics()`, `getSrAnalytics()`, `getManagerAnalytics()`, `getAccountsAnalytics()`, `getAdminAnalytics()`
+* Parallel dashboard + analytics fetch on `/dashboard`
+* ADR-044
+
+## Completion Criteria
+
+* SR charts: monthly sales, collection, outstanding, dealer growth: ✓
+* Manager charts: territory comparison, SR leaderboard, risk dealers, aging: ✓
+* Accounts charts: receivable trend, collection efficiency, integrity overview: ✓
+* Admin charts: revenue trend, company growth + territory heatmap DTO: ✓
+* Territory RBAC on all analytics queries: ✓
+* No financial engine modifications: ✓
+* No duplicate balance calculations: ✓
+* Chart DTO validation tests: ✓
+* `analytics.test.ts` + `analytics-actions.test.ts` — 14 tests: ✓
+* Governance docs + ADR-044: ✓
+
+## Explicitly NOT Changed
+
+* posting-service, due engine, dashboard foundation service, territory RBAC, certification modules
+
+## Next Phase
+
+**PHASE_09C — Territory Map UI** (approved upon certification pass)
+
+---
+
+# PHASE_09A.5_ENTERPRISE_DASHBOARD_CERTIFICATION
+
+Status: COMPLETE (2026-07-11)
+
+## Objectives
+
+Certify PHASE_09A dashboard layer before PHASE_09B (charts/BI).
+
+* `src/lib/certification/dashboard/` — `runDashboardCertification()` Rules 1–9
+* Subsystem scores: security, financial, performance, architecture
+* Repository boundary scans (financial authority, territory leakage, architecture)
+* Live performance audit when DATABASE_URL + demo seed available
+* ADR-043
+
+## Completion Criteria
+
+* SR isolation certified: ✓
+* Manager isolation certified: ✓
+* Accounts global access certified: ✓
+* Super Admin global access certified: ✓
+* KPI parity with due engine certified: ✓
+* Financial boundaries intact: ✓
+* Territory leakage scan clean: ✓
+* No business logic modified: ✓
+* 20 certification tests: ✓
+* ADR-043 + governance docs: ✓
+
+## Explicitly NOT Changed
+
+* Dashboard service, due engine, posting, territory RBAC, all financial engines
+
+## Next Phase
+
+**PHASE_09B — Dashboard BI & Charts** (approved upon certification pass)
+
+---

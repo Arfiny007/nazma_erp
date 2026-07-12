@@ -28,6 +28,7 @@ const ROUTE_PERMISSIONS: ReadonlyArray<{
   permission: Permission;
 }> = [
   // More specific dealer routes must come before the general /dealers prefix
+  { prefix: "/dashboard", permission: "dashboard:view" },
   { prefix: "/dealers/new", permission: "dealers:create" },
   // More specific product routes must come before the general /products prefix
   { prefix: "/products/new", permission: "products:create" },
