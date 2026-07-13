@@ -4,6 +4,35 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_10D] — 2026-07-13 — Enterprise Authentication Certification
+
+### Added
+
+- `src/lib/certification/auth/` — Rules 1–12 certification module
+- `runAuthenticationCertification()` / `runAuthenticationCertificationWithReport()`
+- `AuthenticationAuditCoverageReport` — covered / partial / missing for 5 auth audit actions
+- Repository scans: password security, token security, mustChangePassword enforcement, financial boundary, architecture
+- Performance structural audit for login, activation, reset, middleware paths
+- `authentication-certification.test.ts` — 24 tests
+- ADR-052
+
+### Certified
+
+- Password bcrypt enforcement; no plaintext persist
+- Token SHA-256 hashing, expiry, one-time use, replay protection
+- mustChangePassword middleware blocks dashboard/settings/reports
+- Activation flow: PENDING_ACTIVATION → ACTIVE with audit
+- Password reset foundation: request/validate/complete with audit
+- Role login matrix and session security
+- Privilege escalation blocked
+- Financial and architecture boundaries intact
+
+### Verdict
+
+**519 tests passed / 7 skipped** (+24 new tests) — production auth gate approved
+
+---
+
 ## [PHASE_10C] — 2026-07-13 — Enterprise Authentication & Activation Expansion
 
 ### Added

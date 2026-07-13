@@ -14,8 +14,6 @@ import { buildUserCertificationResult } from "./user-certification-service";
  */
 
 const REMAINING_RISKS = [
-  "mustChangePassword is set on provisioning but not yet enforced at login — PHASE_10C scope.",
-  "UserActivationToken model exists but token issuance flow is reserved for PHASE_10C.",
   "Email invitation dispatch is not implemented — Super Admin receives temporary password in UI only.",
   "Live performance audit requires demo seed users and DATABASE_URL.",
   "Territory-only updates share USER_UPDATED audit action without dedicated TERRITORY_ASSIGNED event.",

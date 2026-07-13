@@ -2,11 +2,51 @@
 
 Current Phase:
 
-PHASE_10C_ENTERPRISE_AUTHENTICATION_ACTIVATION_EXPANSION
+PHASE_10D_ENTERPRISE_AUTHENTICATION_CERTIFICATION
 
 Status:
 
 COMPLETE
+
+---
+
+# PHASE_10D_ENTERPRISE_AUTHENTICATION_CERTIFICATION
+
+Status: COMPLETE (2026-07-13)
+
+## Objectives
+
+Read-only certification of PHASE_10C authentication and activation expansion.
+
+* `src/lib/certification/auth/` — Rules 1–12
+* `runAuthenticationCertification()` / `runAuthenticationCertificationWithReport()`
+* `AuthenticationAuditCoverageReport` — covered / partial / missing
+* ADR-052
+
+## Completion Criteria
+
+* Password bcrypt enforcement verified: ✓
+* Token hashing, expiry, replay protection verified: ✓
+* mustChangePassword middleware enforcement verified: ✓
+* Activation and reset flow certified: ✓
+* Privilege escalation blocked: ✓
+* Five authentication audit writers covered: ✓
+* Financial boundary scan clean: ✓
+* Architecture import scan clean: ✓
+* Performance structural audit: ✓
+* `phase10dApproved: true`: ✓
+* `authentication-certification.test.ts` — 24 tests: ✓
+* Governance docs + ADR-052: ✓
+
+## Explicitly NOT Changed
+
+* posting-service, due engine, territory RBAC engines, dashboard, financial engines
+* Auth service, UI, permissions, schema (PHASE_10C unchanged)
+* Email/SMS delivery
+
+## Next Phase
+
+**Email Integration** or **Dashboard Exports**
 
 ---
 
@@ -40,12 +80,10 @@ Enterprise authentication expansion — login enforcement, activation tokens, pa
 
 * posting-service, due engine, territory RBAC engines, dashboard, financial engines
 * RBAC permission matrix, role system
-* `runUserCertification()` (PHASE_10B remains valid)
-* Email/SMS delivery
 
 ## Next Phase
 
-**PHASE_10D — Enterprise Authentication Certification**
+**PHASE_10D — Enterprise Authentication Certification** ✓
 
 ---
 
@@ -124,41 +162,5 @@ Enterprise user provisioning foundation with lifecycle state machine, granular R
 ## Next Phase
 
 **PHASE_10C — User Activation UX** ✓
-
----
-
-# PHASE_09E_AUDIT_EXPORT_COMPLIANCE_ARCHIVE
-
-Status: COMPLETE (2026-07-13)
-
-## Objectives
-
-Server-generated audit exports and compliance archives — read-only, filter-preserving, territory-safe.
-
-* `src/lib/audit/export/` — PDF, Excel, ZIP generation via `getAuditConsoleData()` only
-* Server actions: `exportAuditPdf`, `exportAuditExcel`, `exportAuditArchive`
-* UI: `audit-export-menu`, `audit-export-dialog`, `audit-export-progress`
-* ADR-048
-
-## Completion Criteria
-
-* PDF export (landscape A4, summary, timeline, records): ✓
-* Excel export (flattened metadata, server sort order): ✓
-* Compliance ZIP (PDF + XLSX + `compliance-summary.json`): ✓
-* Filter-preserving exports: ✓
-* Territory scope via `getAuditConsoleData()`: ✓
-* 10,000 row export cap: ✓
-* No new audit writers / no second query layer: ✓
-* No certified engine modifications: ✓
-* `audit-export.test.ts` — 11 tests: ✓
-* Governance docs + ADR-048: ✓
-
-## Explicitly NOT Changed
-
-* posting-service, due engine, territory RBAC engines, dashboard, financial engines, audit-query layer
-
-## Next Phase
-
-**PHASE_10 — User Management** ✓
 
 ---

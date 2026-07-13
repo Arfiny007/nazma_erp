@@ -755,15 +755,15 @@ export function verifyUserPasswordSecurity(): { ok: boolean; warnings: string[];
     failures.push("UserActivationToken.tokenHash missing from schema");
   }
 
-  if (!serviceModule.includes("UserActivationToken")) {
-    warnings.push(
-      "UserActivationToken writer not implemented — hashed activation tokens reserved for PHASE_10C",
-    );
+  if (!serviceModule.includes("issueActivationToken")) {
+    failures.push("issueActivationToken not called from user provisioning");
   }
 
   const authPaths = [
     "src/lib/actions/auth",
-    "src/auth.ts",
+    "src/lib/auth",
+    "auth.ts",
+    "middleware.ts",
     "src/app/api/auth",
   ];
   let loginEnforcesMustChange = false;
@@ -782,9 +782,7 @@ export function verifyUserPasswordSecurity(): { ok: boolean; warnings: string[];
     }
   }
   if (!loginEnforcesMustChange) {
-    warnings.push(
-      "mustChangePassword not enforced at login — deferred to PHASE_10C per ADR-049",
-    );
+    failures.push("mustChangePassword not enforced at login");
   }
 
   return { ok: failures.length === 0, warnings, failures };
