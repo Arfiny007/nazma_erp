@@ -97,7 +97,7 @@ const AUTH_AUDIT_ACTION_SPECS = [
     id: "USER_ACTIVATION_STARTED",
     label: "Activation started",
     signals: ['action: "USER_ACTIVATION_STARTED"', "action: 'USER_ACTIVATION_STARTED'"],
-    files: ["user-activation-service.ts"],
+    files: ["user-activation-service.ts", "auth-notifications.ts"],
   },
   {
     id: "USER_ACTIVATION_COMPLETED",
@@ -119,6 +119,7 @@ const ALLOWED_AUTH_MODULE_IMPORTS = [
   "@/types/",
   "@/lib/users",
   "@/lib/auth",
+  "@/lib/notifications",
   "@prisma/",
   "node:",
   "bcryptjs",
@@ -299,6 +300,13 @@ function fileExists(relativeFile: string): boolean {
 
 function readUserAuthFile(filename: string): string {
   return readFileSync(path.join(USERS_ROOT, filename), "utf8");
+}
+
+function readAuthAuditCorpusFile(filename: string): string {
+  if (filename === "auth-notifications.ts") {
+    return readSourceFile("src/lib/notifications/auth-notifications.ts");
+  }
+  return readUserAuthFile(filename);
 }
 
 function collectAuthScanFiles(): string[] {
@@ -679,11 +687,15 @@ export function verifyActivationFlow(): { ok: boolean; failures: string[] } {
   if (!activationModule.includes("PENDING_ACTIVATION")) {
     failures.push("activation flow missing PENDING_ACTIVATION handling");
   }
-  if (!activationModule.includes("USER_ACTIVATION_STARTED")) {
-    failures.push("USER_ACTIVATION_STARTED audit missing");
-  }
   if (!activationModule.includes("USER_ACTIVATION_COMPLETED")) {
     failures.push("USER_ACTIVATION_COMPLETED audit missing");
+  }
+
+  const authNotifications = fileExists("src/lib/notifications/auth-notifications.ts")
+    ? readSourceFile("src/lib/notifications/auth-notifications.ts")
+    : "";
+  if (!authNotifications.includes("USER_ACTIVATION_STARTED")) {
+    failures.push("USER_ACTIVATION_STARTED audit missing from auth-notifications.ts");
   }
 
   const activateAction = fileExists("src/lib/actions/auth/activate-user-account.ts")
@@ -785,7 +797,7 @@ export function buildAuthenticationAuditCoverageReport(): AuthenticationAuditCov
 
   for (const spec of AUTH_AUDIT_ACTION_SPECS) {
     const corpus = spec.files
-      .map((filename) => readUserAuthFile(filename))
+      .map((filename) => readAuthAuditCorpusFile(filename))
       .join("\n");
     const hasWriter = spec.signals.some((signal) => corpus.includes(signal));
     const inAuditTypes =

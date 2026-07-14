@@ -39,6 +39,10 @@ Priority Order:
 14. User Management Certification ✅ (PHASE_10B)
 15. Authentication & Activation Expansion ✅ (PHASE_10C)
 16. Authentication Certification ✅ (PHASE_10D)
+17. Notification Foundation ✅ (PHASE_11A)
+18. Authentication Notification Integration ✅ (PHASE_11B)
+19. Notification Delivery & Queue Engine ✅ (PHASE_11C)
+20. Notification Certification ✅ (PHASE_11D)
 
 ---
 
@@ -640,6 +644,12 @@ TIER 3 — OPERATIONAL CACHE
 | Audit Export & Compliance Archive | ✅ Complete (PHASE_09E) — ADR-048; PDF/Excel/ZIP |
 | User Management Foundation | ✅ Complete (PHASE_10A) — ADR-049; `/settings/users` |
 | User Management Certification | ✅ Complete (PHASE_10B) — ADR-050; `runUserCertification()` |
+| Authentication & Activation Expansion | ✅ Complete (PHASE_10C) — ADR-051 |
+| Authentication Certification | ✅ Complete (PHASE_10D) — ADR-052; `runAuthenticationCertification()` |
+| Notification Foundation | ✅ Complete (PHASE_11A) — ADR-053; `/settings/notifications` |
+| Authentication Notification Integration | ✅ Complete (PHASE_11B) — ADR-054; auth → notification dispatch |
+| Notification Delivery & Queue Engine | ✅ Complete (PHASE_11C) — ADR-055; SMTP worker + queue ops |
+| Notification Certification | ✅ Complete (PHASE_11D) — ADR-056; `runNotificationCertification()` |
 
 ---
 

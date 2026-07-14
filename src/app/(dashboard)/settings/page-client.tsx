@@ -1,12 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { Map, MapPin, Users } from "lucide-react";
+import { Bell, Map, MapPin, Users } from "lucide-react";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { hasPermission } from "@/lib/permissions";
+import type { UserRole } from "@prisma/client";
 
-export function SettingsPageClient() {
+interface SettingsPageClientProps {
+  role: UserRole;
+}
+
+export function SettingsPageClient({ role }: SettingsPageClientProps) {
   const { t } = useLanguage();
 
   const cards = [
@@ -35,6 +41,15 @@ export function SettingsPageClient() {
       icon: Users,
     },
   ];
+
+  if (hasPermission(role, "notifications:view")) {
+    cards.push({
+      href: "/settings/notifications",
+      title: t("settings.card.notifications.title"),
+      description: t("settings.card.notifications.description"),
+      icon: Bell,
+    });
+  }
 
   return (
     <PageContainer title={t("settings.title")} description={t("settings.subtitle")}>

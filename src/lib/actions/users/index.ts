@@ -5,3 +5,5 @@ export { disableUser } from "./disable-user";
 export { listUsers } from "./list-users";
 export { getUser } from "./get-user";
 export { searchUsers } from "./search-users";
+export { resendActivationEmail } from "./resend-activation-notification";
+export { resendPasswordResetEmail } from "./resend-password-reset-notification";

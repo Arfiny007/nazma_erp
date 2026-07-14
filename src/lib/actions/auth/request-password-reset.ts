@@ -1,8 +1,13 @@
 "use server";
 
+import { dispatchPasswordResetNotification } from "@/lib/notifications/auth-notifications";
 import { requestPasswordResetSchema } from "@/lib/validators/auth.schema";
 import { requestPasswordReset } from "@/lib/users/user-password-reset-service";
-import { buildPasswordResetUrl } from "@/lib/users/user-tokens";
+import {
+  buildPasswordResetUrl,
+  PASSWORD_RESET_TOKEN_TTL_MS,
+} from "@/lib/users/user-tokens";
+import { prisma } from "@/lib/prisma";
 import type {
   AuthActionResult,
   PasswordResetRequestDTO,
@@ -11,8 +16,8 @@ import type {
 import { authOk, fromAuthZodError } from "./helpers";
 
 /**
- * Password reset request — infrastructure only (no email delivery).
- * Always returns success to prevent email enumeration.
+ * Password reset request — always returns success to prevent email enumeration.
+ * Notification dispatched via PHASE_11B notification service when user exists.
  */
 export async function requestPasswordResetAction(
   input: unknown,
@@ -24,7 +29,28 @@ export async function requestPasswordResetAction(
 
   const resetToken = await requestPasswordReset(parsed.data.email);
 
+  if (resetToken) {
+    const user = await prisma.user.findUnique({
+      where: { email: parsed.data.email },
+      select: { id: true, name: true, email: true },
+    });
+
+    if (user) {
+      await dispatchPasswordResetNotification({
+        actorId: user.id,
+        userId: user.id,
+        name: user.name,
+        email: user.email,
+        resetLink: buildPasswordResetUrl(resetToken),
+        expirationAt: new Date(Date.now() + PASSWORD_RESET_TOKEN_TTL_MS),
+      });
+    }
+  }
+
   return authOk({
-    resetToken: resetToken ? buildPasswordResetUrl(resetToken) : null,
+    resetToken:
+      process.env.NODE_ENV === "development" && resetToken
+        ? buildPasswordResetUrl(resetToken)
+        : null,
   });
 }

@@ -4,6 +4,120 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_11D] — 2026-07-13 — Enterprise Notification Certification
+
+### Added
+
+- `src/lib/certification/notifications/` — certification module (7 files)
+- `runNotificationCertification()` / `runNotificationCertificationWithReport()`
+- `NotificationAuditCoverageReport` — 10 notification audit actions
+- Rules 1–12: immutability, queue integrity, retry policy, provider isolation, auth integration, security, queue safety, SMTP abstraction, financial boundary, audit completeness, architecture, performance
+- `notification-certification.test.ts` — 21 tests
+- ADR-056
+
+### Explicitly NOT Changed
+
+- posting-service, ledger, due engine, territory RBAC, dashboard
+- notification-service, auth-notifications, queue worker (PHASE_11A–11C unchanged)
+
+### Verdict
+
+**571 tests passed / 7 skipped** (+21 new tests) — `phase11dApproved: true`, overall score 10/10
+
+---
+
+## [PHASE_11C] — 2026-07-13 — Enterprise Notification Delivery & Queue Engine
+
+### Added
+
+- `src/lib/notifications/providers/` — `smtp-provider`, `console-provider`, `provider-factory`
+- `src/lib/notifications/worker/` — worker, batch claim, scheduler, queue config
+- Prisma: `Notification` queue fields (`queuedAt`, `nextRetryAt`, `provider`, etc.) + indexes
+- `NotificationQueueConfig` singleton for pause state and last run timestamp
+- Server actions: `processNotificationQueue`, `getNotificationMetricsAction`, `retryFailedNotificationsAction`, `setNotificationQueuePaused`
+- Permission: `notifications:manage` (Super_Admin only)
+- `/settings/notifications` — queue metrics, delivery health, queue controls
+- `scripts/process-notifications.ts` — Docker-safe background worker
+- Audit actions: `NOTIFICATION_PROCESSING_STARTED`, `NOTIFICATION_PROVIDER_SENT`, `NOTIFICATION_PROVIDER_FAILED`, `NOTIFICATION_QUEUE_PROCESSED`, `NOTIFICATION_BATCH_RETRIED`
+- `notification-worker.test.ts`, `notification-queue.test.ts`
+- ADR-055
+- `nodemailer` dependency
+
+### Changed
+
+- Auth notification dispatch queues only — worker delivers asynchronously
+- `queueNotification` sets `queuedAt` timestamp
+- `sendNotification` / worker record `nextRetryAt` on failure with retry policy
+
+### Explicitly NOT Changed
+
+- posting-service, ledger, due engine, territory RBAC, dashboard
+- authentication token security, certification modules
+
+### Verdict
+
+**550 tests passed / 7 skipped** (+10 new tests) — notification delivery infrastructure complete
+
+---
+
+## [PHASE_11B] — 2026-07-13 — Enterprise Authentication Notification Integration
+
+### Added
+
+- `src/lib/notifications/auth-notifications.ts` — dispatch + resend for activation/reset
+- `src/lib/notifications/auth-template-mappers.ts` — auth payload → template variables
+- `src/lib/notifications/auth-notification-errors.ts` — typed eligibility errors
+- `auth-notification.test.ts` — 9 tests
+- Admin resend actions: `resendActivationEmail`, `resendPasswordResetEmail`
+- Super_Admin resend buttons on `/settings/users` user details panel
+- ADR-054
+
+### Changed
+
+- `createUserRecord` — dispatches activation notification after token issuance
+- `requestPasswordReset` — dispatches reset notification after token issuance
+- `USER_ACTIVATION_STARTED` audit moved to notification dispatch (from completion)
+- `requestPasswordResetAction` — dev-only reset URL exposure
+
+### Explicitly NOT Changed
+
+- posting-service, ledger, due engine, territory RBAC, dashboard
+- notification-service lifecycle, authentication token security
+- Certification modules
+
+### Verdict
+
+**552 tests passed / 7 skipped** (+9 new tests) — auth notification integration complete
+
+---
+
+## [PHASE_11A] — 2026-07-13 — Enterprise Notification Foundation
+
+### Added
+
+- `NotificationChannel`, `NotificationStatus`, `NotificationType` enums
+- `Notification`, `NotificationTemplate`, `NotificationDeliveryAttempt` models + migration
+- `src/lib/notifications/` — service, provider, templates, audit, queue, query
+- `ConsoleEmailProvider` — log-only email delivery (no external APIs)
+- Bilingual template seeds: `USER_ACTIVATION_EMAIL`, `PASSWORD_RESET_EMAIL`, `DUE_REMINDER_EMAIL`, `INTEGRITY_ALERT_EMAIL`
+- Server actions: create, retry, cancel, get, search notifications + templates
+- Permissions: `notifications:view`, `notifications:create`, `notifications:retry` (Super_Admin + Accounts)
+- `/settings/notifications` — read-only notifications + templates console
+- Audit actions: `NOTIFICATION_CREATED`, `NOTIFICATION_SENT`, `NOTIFICATION_FAILED`, `NOTIFICATION_RETRIED`, `NOTIFICATION_CANCELLED`
+- `notification.test.ts` — 12 tests
+- ADR-053
+
+### Explicitly NOT Changed
+
+- posting-service, ledger, due engine, territory RBAC, dashboard, authentication flows
+- All certification modules
+
+### Verdict
+
+**543 tests passed / 7 skipped** (+12 new tests) — notification infrastructure ready for PHASE_11B
+
+---
+
 ## [PHASE_10D] — 2026-07-13 — Enterprise Authentication Certification
 
 ### Added

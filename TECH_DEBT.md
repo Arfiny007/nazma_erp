@@ -2,7 +2,7 @@
 
 Known deferred improvements categorized by priority. Each item includes rationale for deferral.
 
-**Last updated:** 2026-07-10 (PHASE_07F — Enterprise Financial System Certification)
+**Last updated:** 2026-07-13 (PHASE_11D — Enterprise Notification Certification)
 
 ---
 
@@ -52,7 +52,8 @@ Known deferred improvements categorized by priority. Each item includes rational
 | L3 | Digital signatures | Placeholder only | Future |
 | L4 | Company seal image | Placeholder only | Future |
 | L5 | Full modal focus trap | Tab can escape preview modal | A11y polish |
-| L6 | Email/SMS document delivery | Not scoped | Post-07 |
+| L6 | Email/SMS document delivery | PHASE_11C delivers auth emails via SMTP worker; certified PHASE_11D; SMS deferred | PHASE_12+ |
+| L16 | Notification worker cron scheduling | Manual script + UI process queue; no built-in cron sidecar | Production ops must schedule `process-notifications.ts` |
 | L7 | Denormalized invoice headers | `dealerName`, `orderNo` on header | Future |
 | L8 | Proper SR mapping | `salesPerson` = territory approximation | Reporting |
 | L9 | Separate ship-to address | Bill To = Ship To in v1 | Future |

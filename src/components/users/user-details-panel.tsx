@@ -11,8 +11,13 @@ interface UserDetailsPanelProps {
   loading?: boolean;
   onActivate?: () => void;
   onDisable?: () => void;
+  onResendActivation?: () => void;
+  onResendPasswordReset?: () => void;
   canActivate?: boolean;
   canDisable?: boolean;
+  canResendActivation?: boolean;
+  canResendPasswordReset?: boolean;
+  resendLoading?: boolean;
 }
 
 export function UserDetailsPanel({
@@ -20,8 +25,13 @@ export function UserDetailsPanel({
   loading = false,
   onActivate,
   onDisable,
+  onResendActivation,
+  onResendPasswordReset,
   canActivate = false,
   canDisable = false,
+  canResendActivation = false,
+  canResendPasswordReset = false,
+  resendLoading = false,
 }: UserDetailsPanelProps) {
   const { t } = useLanguage();
 
@@ -133,8 +143,28 @@ export function UserDetailsPanel({
         </div>
       ) : null}
 
-      {(canActivate || canDisable) && (
+      {(canActivate || canDisable || canResendActivation || canResendPasswordReset) && (
         <div className="flex flex-wrap gap-2 border-t border-slate-100 px-5 py-4 dark:border-slate-800">
+          {canResendActivation ? (
+            <button
+              type="button"
+              disabled={resendLoading}
+              onClick={onResendActivation}
+              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+            >
+              {t("userManagement.actions.resendActivation")}
+            </button>
+          ) : null}
+          {canResendPasswordReset ? (
+            <button
+              type="button"
+              disabled={resendLoading}
+              onClick={onResendPasswordReset}
+              className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200"
+            >
+              {t("userManagement.actions.resendPasswordReset")}
+            </button>
+          ) : null}
           {canActivate ? (
             <button
               type="button"

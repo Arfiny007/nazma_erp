@@ -139,6 +139,32 @@ enum FinancialIntegrityScanStatus {
   Failed
 }
 
+/// Notification delivery channel. See PHASE_11A / ADR-053.
+enum NotificationChannel {
+  EMAIL
+  SMS
+  IN_APP
+}
+
+/// Notification lifecycle state. See PHASE_11A / ADR-053.
+enum NotificationStatus {
+  PENDING
+  PROCESSING
+  SENT
+  FAILED
+  CANCELLED
+}
+
+/// Notification event taxonomy. See PHASE_11A / ADR-053.
+enum NotificationType {
+  USER_ACTIVATION
+  PASSWORD_RESET
+  FINANCIAL_ALERT
+  INTEGRITY_ALERT
+  DUE_REMINDER
+  SYSTEM
+}
+
 model User {
   id       String   @id @default(uuid())
   name     String
@@ -979,4 +1005,113 @@ model AuditLog {
   @@index([userId])
   @@index([entityType, entityId])
   @@index([createdAt])
+}
+
+/// Singleton queue operations state (pause, last run). PHASE_11C.
+model NotificationQueueConfig {
+  id String @id @default("default")
+
+  paused Boolean @default(false)
+
+  lastProcessedAt DateTime?
+
+  updatedAt DateTime @updatedAt
+}
+
+/// Enterprise notification record. Infrastructure only — no real delivery in PHASE_11A.
+/// See PHASE_11A / ADR-053. Queue delivery fields added in PHASE_11C.
+model Notification {
+  id String @id @default(cuid())
+
+  type NotificationType
+
+  channel NotificationChannel
+
+  status NotificationStatus
+
+  recipient String
+
+  subject String?
+
+  payload Json
+
+  retryCount Int @default(0)
+
+  maxRetries Int @default(3)
+
+  queuedAt DateTime?
+
+  processingStartedAt DateTime?
+
+  nextRetryAt DateTime?
+
+  lastAttemptAt DateTime?
+
+  provider String?
+
+  providerMessageId String?
+
+  sentAt DateTime?
+
+  failedAt DateTime?
+
+  cancelledAt DateTime?
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  attempts NotificationDeliveryAttempt[]
+
+  @@index([status])
+  @@index([status, nextRetryAt])
+  @@index([status, createdAt])
+  @@index([recipient])
+  @@index([type])
+  @@index([createdAt])
+}
+
+/// Bilingual notification templates keyed by locale and channel.
+model NotificationTemplate {
+  id String @id @default(cuid())
+
+  key String
+
+  channel NotificationChannel
+
+  locale String
+
+  subject String
+
+  body String
+
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, locale, channel])
+  @@index([key])
+  @@index([locale])
+}
+
+/// Immutable delivery attempt log for a notification.
+model NotificationDeliveryAttempt {
+  id String @id @default(cuid())
+
+  notificationId String
+
+  notification Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  provider String
+
+  status NotificationStatus
+
+  error String?
+
+  attemptedAt DateTime @default(now())
+
+  @@index([notificationId])
+  @@index([attemptedAt])
 }

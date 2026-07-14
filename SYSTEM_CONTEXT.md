@@ -4,9 +4,9 @@ Definitive engineering context for AI sessions and new maintainers.
 
 Read this document first. Then consult `PROJECT_BRAIN.md`, `CURRENT_PHASE.md`, and relevant ADRs.
 
-**Last updated:** 2026-07-13 (PHASE_10D — Enterprise Authentication Certification)
-**Current phase:** PHASE_10D complete → Next: Email Integration or Dashboard Exports
-**Production readiness:** 9.8 / 10 (ADR-041 through ADR-052)
+**Last updated:** 2026-07-13 (PHASE_11D — Enterprise Notification Certification)
+**Current phase:** PHASE_11D complete → Next: PHASE_12 or Dashboard Exports
+**Production readiness:** 9.8 / 10 (ADR-041 through ADR-056)
 
 ---
 
@@ -152,6 +152,12 @@ See ADR-011 for fulfillment architecture.
 | Audit Export & Compliance Archive | ✅ Complete (PHASE_09E) — PDF/Excel/ZIP; ADR-048 | `src/lib/audit/export/` |
 | User Management Foundation | ✅ Complete (PHASE_10A) — lifecycle, RBAC, `/settings/users`; ADR-049 | `src/lib/users/`, `src/lib/actions/users/` |
 | User Management Certification | ✅ Complete (PHASE_10B) — `runUserCertification()`; Rules 1–12; ADR-050 | `src/lib/certification/users/` |
+| Authentication & Activation Expansion | ✅ Complete (PHASE_10C) — mustChangePassword, activation, reset; ADR-051 | `src/lib/users/`, `src/lib/auth/` |
+| Authentication Certification | ✅ Complete (PHASE_10D) — `runAuthenticationCertification()`; ADR-052 | `src/lib/certification/auth/` |
+| Notification Foundation | ✅ Complete (PHASE_11A) — provider-agnostic queue + templates; ADR-053 | `src/lib/notifications/`, `/settings/notifications` |
+| Authentication Notification Integration | ✅ Complete (PHASE_11B) — activation/reset dispatch; ADR-054 | `src/lib/notifications/auth-notifications.ts` |
+| Notification Delivery & Queue Engine | ✅ Complete (PHASE_11C) — SMTP worker, retry, ops UI; ADR-055 | `src/lib/notifications/worker/`, `scripts/process-notifications.ts` |
+| Notification Certification | ✅ Complete (PHASE_11D) — `runNotificationCertification()`; Rules 1–12; ADR-056 | `src/lib/certification/notifications/` |
 
 ---
 
@@ -590,6 +596,12 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 | ADR-048 | Enterprise Audit Export & Compliance Archive (PHASE_09E) |
 | ADR-049 | Enterprise User Management Foundation (PHASE_10A) |
 | ADR-050 | Enterprise User Management Certification (PHASE_10B) |
+| ADR-051 | Enterprise Authentication & Activation Expansion (PHASE_10C) |
+| ADR-052 | Enterprise Authentication Certification (PHASE_10D) |
+| ADR-053 | Enterprise Notification Foundation (PHASE_11A) |
+| ADR-054 | Enterprise Authentication Notification Integration (PHASE_11B) |
+| ADR-055 | Enterprise Notification Delivery & Queue Engine (PHASE_11C) |
+| ADR-056 | Enterprise Notification Certification (PHASE_11D) |
 
 ---
 

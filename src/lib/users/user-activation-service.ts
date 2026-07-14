@@ -175,13 +175,6 @@ export async function completeAccountActivation(
     await recordUserAudit(tx, {
       actorId: record.user.id,
       targetUserId: record.user.id,
-      action: "USER_ACTIVATION_STARTED",
-      newValue: { lifecycleStatus: record.user.lifecycleStatus },
-    });
-
-    await recordUserAudit(tx, {
-      actorId: record.user.id,
-      targetUserId: record.user.id,
       action: "USER_ACTIVATION_COMPLETED",
       oldValue: { lifecycleStatus: record.user.lifecycleStatus },
       newValue: { lifecycleStatus: "ACTIVE", mustChangePassword: false },

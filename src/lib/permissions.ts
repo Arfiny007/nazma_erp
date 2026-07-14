@@ -27,7 +27,8 @@ export type Resource =
   | "reports"
   | "audit"
   | "settings"
-  | "users";
+  | "users"
+  | "notifications";
 
 // ---------------------------------------------------------------------------
 // Action taxonomy
@@ -84,7 +85,12 @@ export type Permission =
   | "users:create"
   | "users:update"
   | "users:disable"
-  | "users:activate";
+  | "users:activate"
+  // Notifications
+  | "notifications:view"
+  | "notifications:create"
+  | "notifications:retry"
+  | "notifications:manage";
 
 // ---------------------------------------------------------------------------
 // Permission matrix
@@ -145,6 +151,11 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     "users:update",
     "users:disable",
     "users:activate",
+    // Notifications — Full
+    "notifications:view",
+    "notifications:create",
+    "notifications:retry",
+    "notifications:manage",
   ],
 
   Manager: [
@@ -213,6 +224,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     "audit:view",
     // Users — read-only visibility
     "users:view",
+    // Notifications — read + retry
+    "notifications:view",
+    "notifications:create",
+    "notifications:retry",
   ],
 
   SR: [

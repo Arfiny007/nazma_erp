@@ -15,6 +15,8 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { activateUser } from "@/lib/actions/users/activate-user";
 import { getUser } from "@/lib/actions/users/get-user";
 import { listUsers } from "@/lib/actions/users/list-users";
+import { resendActivationEmail } from "@/lib/actions/users/resend-activation-notification";
+import { resendPasswordResetEmail } from "@/lib/actions/users/resend-password-reset-notification";
 import { hasPermission } from "@/lib/permissions";
 import type { AuthUser } from "@/types/auth";
 import type { PaginatedResult, UserDetailDTO, UserSummaryDTO } from "@/types/user-management";
@@ -54,11 +56,14 @@ export function UsersConsole({ actor, territoryOptions }: UsersConsoleProps) {
   const [reloadToken, setReloadToken] = useState(0);
   const [createOpen, setCreateOpen] = useState(false);
   const [disableOpen, setDisableOpen] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendNotice, setResendNotice] = useState<string | null>(null);
   const [tempPasswordNotice, setTempPasswordNotice] = useState<string | null>(null);
 
   const canCreate = hasPermission(actor.role, "users:create");
   const canActivate = hasPermission(actor.role, "users:activate");
   const canDisable = hasPermission(actor.role, "users:disable");
+  const canResendNotifications = actor.role === "Super_Admin";
 
   const allowedRoles: UserRole[] = useMemo(() => {
     if (actor.role === "Super_Admin") {
@@ -163,8 +168,43 @@ export function UsersConsole({ actor, territoryOptions }: UsersConsoleProps) {
     }
   }
 
+  async function handleResendActivation() {
+    if (!selectedUser) return;
+    setResendLoading(true);
+    setResendNotice(null);
+    const response = await resendActivationEmail(selectedUser.id);
+    setResendLoading(false);
+    if (response.success) {
+      setResendNotice("userManagement.notice.activationResent");
+    } else {
+      setResendNotice(response.error.messageKey);
+    }
+  }
+
+  async function handleResendPasswordReset() {
+    if (!selectedUser) return;
+    setResendLoading(true);
+    setResendNotice(null);
+    const response = await resendPasswordResetEmail(selectedUser.id);
+    setResendLoading(false);
+    if (response.success) {
+      setResendNotice("userManagement.notice.passwordResetResent");
+    } else {
+      setResendNotice(response.error.messageKey);
+    }
+  }
+
   return (
     <div className="space-y-6">
+      {resendNotice ? (
+        <div
+          role="status"
+          className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-200"
+        >
+          {t(resendNotice)}
+        </div>
+      ) : null}
+
       {tempPasswordNotice ? (
         <div
           role="status"
@@ -357,8 +397,22 @@ export function UsersConsole({ actor, territoryOptions }: UsersConsoleProps) {
             selectedUser !== null &&
             selectedUser.lifecycleStatus === "ACTIVE"
           }
+          canResendActivation={
+            canResendNotifications &&
+            selectedUser !== null &&
+            (selectedUser.lifecycleStatus === "INVITED" ||
+              selectedUser.lifecycleStatus === "PENDING_ACTIVATION")
+          }
+          canResendPasswordReset={
+            canResendNotifications &&
+            selectedUser !== null &&
+            selectedUser.lifecycleStatus === "ACTIVE"
+          }
+          resendLoading={resendLoading}
           onActivate={() => void handleActivate()}
           onDisable={() => setDisableOpen(true)}
+          onResendActivation={() => void handleResendActivation()}
+          onResendPasswordReset={() => void handleResendPasswordReset()}
         />
       </div>
 

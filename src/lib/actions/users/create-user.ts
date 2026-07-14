@@ -3,7 +3,9 @@
 import { revalidatePath } from "next/cache";
 
 import { requireUser } from "@/lib/auth/helpers";
+import { dispatchActivationNotification } from "@/lib/notifications/auth-notifications";
 import { createUserRecord } from "@/lib/users";
+import { ACTIVATION_TOKEN_TTL_MS } from "@/lib/users/user-tokens";
 import { createUserSchema } from "@/lib/validators/user-management.schema";
 import type { ActionResult, CreateUserResultDTO } from "@/types/user-management";
 
@@ -20,6 +22,18 @@ export async function createUser(
     }
 
     const data = await createUserRecord(actor, parsed.data);
+
+    if (data.activationToken && data.activationUrl) {
+      await dispatchActivationNotification({
+        actorId: actor.id,
+        userId: data.user.id,
+        name: data.user.name,
+        email: data.user.email,
+        activationLink: data.activationUrl,
+        expirationAt: new Date(Date.now() + ACTIVATION_TOKEN_TTL_MS),
+      });
+    }
+
     revalidatePath("/settings/users");
     return ok(data);
   } catch (error) {

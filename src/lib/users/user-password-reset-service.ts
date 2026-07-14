@@ -64,7 +64,7 @@ export async function changeUserPassword(
 export async function requestPasswordReset(email: string): Promise<string | null> {
   const user = await prisma.user.findUnique({
     where: { email },
-    select: { id: true, isActive: true, lifecycleStatus: true },
+    select: { id: true, name: true, email: true, isActive: true, lifecycleStatus: true },
   });
 
   if (!user || !user.isActive || user.lifecycleStatus !== "ACTIVE") {

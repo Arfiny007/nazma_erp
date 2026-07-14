@@ -241,9 +241,8 @@ describe("activation completion", () => {
         }),
       }),
     );
-    expect(mockAuditCreate).toHaveBeenCalledTimes(2);
-    expect(mockAuditCreate.mock.calls[0]![0].data.action).toBe("USER_ACTIVATION_STARTED");
-    expect(mockAuditCreate.mock.calls[1]![0].data.action).toBe("USER_ACTIVATION_COMPLETED");
+    expect(mockAuditCreate).toHaveBeenCalledTimes(1);
+    expect(mockAuditCreate.mock.calls[0]![0].data.action).toBe("USER_ACTIVATION_COMPLETED");
     expect(tokenHash).toHaveLength(64);
   });
 

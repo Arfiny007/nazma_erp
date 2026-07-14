@@ -1,5 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
+import { seedNotificationTemplates } from "./seeds/notification-templates";
 import { seedAdminUser } from "./seeds/admin-user";
 import { seedBangladeshGeography } from "./seeds/bangladesh-geography";
 import { seedProductCategories } from "./seeds/product-categories";
@@ -25,6 +26,9 @@ async function main(): Promise<void> {
 
   console.log("\n[Territories]");
   await seedTerritories(prisma, districtIdByCode);
+
+  console.log("\n[Notification Templates]");
+  await seedNotificationTemplates(prisma);
 
   console.log("\nDone.");
 }

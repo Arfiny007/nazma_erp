@@ -49,6 +49,7 @@ const ROUTE_PERMISSIONS: ReadonlyArray<{
   { prefix: "/ledger", permission: "ledger:view" },
   { prefix: "/reports", permission: "reports:view" },
   { prefix: "/audit", permission: "audit:view" },
+  { prefix: "/settings/notifications", permission: "notifications:view" },
   { prefix: "/settings/users", permission: "users:view" },
   { prefix: "/settings", permission: "settings:view" },
 ];

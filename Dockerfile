@@ -30,6 +30,7 @@ COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/scripts/start-app.sh ./scripts/start-app.sh
+COPY --from=builder /app/scripts/process-notifications.ts ./scripts/process-notifications.ts
 
 RUN chmod +x ./scripts/start-app.sh
 

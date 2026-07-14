@@ -2,33 +2,39 @@
 
 ## Current State
 
-PHASE_10D_ENTERPRISE_AUTHENTICATION_CERTIFICATION is **complete** (2026-07-13):
+PHASE_11D_ENTERPRISE_NOTIFICATION_CERTIFICATION is **complete** (2026-07-13):
 
-- `src/lib/certification/auth/` — Rules 1–12, repository scans, performance audit
-- `runAuthenticationCertification()` / `runAuthenticationCertificationWithReport()` — `phase10dApproved: true`
-- `AuthenticationAuditCoverageReport` — all 5 authentication audit actions covered
-- ADR-052 authored; `authentication-certification.test.ts` — 24 tests
+- Read-only certification module for PHASE_11A–11C notification layer
+- Rules 1–12 verified: immutability, queue integrity, retry policy, provider isolation, auth integration, security, financial boundary, audit completeness, architecture, performance
+- `runNotificationCertification()` / `runNotificationCertificationWithReport()` public entry points
+- `phase11dApproved: true` — overall score 10/10
+- ADR-056 authored; `notification-certification.test.ts` — 21 tests
 
-PHASE_10C authentication expansion remains certified and unchanged.
+All prior certifications remain frozen.
 
 ---
 
 ## Next Steps
 
-### 1. Email Integration (follow-on)
+### 1. PHASE_12 — Next development phase (approved)
 
-- Wire activation + password reset tokens to email dispatch
-- Remove dev-only reset link exposure
+- Notification layer certified; proceed with next roadmap item
 
 ### 2. Dashboard Exports (follow-on)
 
 - PDF / Excel exports for dashboard + map data
 
+### 3. Production SMTP + worker scheduling
+
+- Configure `SMTP_*` env vars in `.env` / Docker
+- Schedule `process-notifications.ts` via cron or orchestrator
+
 ### Explicitly Out of Scope (until respective phase)
 
-- Audit replay / repair tooling
-- Chart of Accounts / full GL
-- MFA / OTP
+- SMS / Twilio delivery
+- Push / in-app notification center
+- Template editor UI
+- Redis / BullMQ queues
 
 ---
 
@@ -49,5 +55,7 @@ PHASE_10C authentication expansion remains certified and unchanged.
 - `runAuditCertification()` is the pre-export audit gate
 - `runUserCertification()` is the user management gate (PHASE_10B)
 - `runAuthenticationCertification()` is the pre-production auth gate (PHASE_10D)
+- `runNotificationCertification()` is the pre-production notification gate (PHASE_11D)
 - User lifecycle: `INVITED → PENDING_ACTIVATION → ACTIVE → DISABLED → ARCHIVED`
 - All balance mutations continue through `posting-service.ts` only
+- Notification delivery requires worker: `npm run process-notifications` or Super Admin "Process queue" in UI
