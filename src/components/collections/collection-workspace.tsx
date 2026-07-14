@@ -201,7 +201,9 @@ export function CollectionWorkspace({
     void refreshAllocationPreview(next);
   };
 
-  const persistDraft = async (): Promise<CollectionDetailDTO | null> => {
+  const persistDraft = async (options?: {
+    navigateOnCreate?: boolean;
+  }): Promise<CollectionDetailDTO | null> => {
     if (!dealer && !collection && !initialCollection) {
       setError(t("collection.workspace.dealerRequired"));
       return null;
@@ -241,7 +243,9 @@ export function CollectionWorkspace({
       return null;
     }
     setCollection(result.data);
-    router.replace(`/collections/${result.data.id}/edit`);
+    if (options?.navigateOnCreate !== false) {
+      router.replace(`/collections/${result.data.id}/edit`);
+    }
     return result.data;
   };
 
@@ -277,11 +281,11 @@ export function CollectionWorkspace({
   };
 
   const handleConfirm = async () => {
-    if (!canEdit) return;
+    if (!canCreate && !canEdit) return;
     setSubmitting(true);
     setError(null);
 
-    const saved = await persistDraft();
+    const saved = await persistDraft({ navigateOnCreate: false });
     if (!saved) {
       setSubmitting(false);
       return;

@@ -1,7 +1,9 @@
 import { getChallanDetailLines } from "@/lib/actions/delivery-challans/get-challan-detail-lines";
 import { getDeliveryChallan } from "@/lib/actions/delivery-challans/get-delivery-challan";
 import { getOrder } from "@/lib/actions/orders/get-order";
+import { getCurrentUser } from "@/lib/auth/helpers";
 import { enforcePermission } from "@/lib/rbac/guards";
+import type { UserRole } from "@prisma/client";
 
 import { ChallanDetailPageClient } from "./page-client";
 
@@ -13,6 +15,8 @@ export default async function ChallanDetailPage({ params }: ChallanDetailPagePro
   await enforcePermission("orders:view");
 
   const { id } = await params;
+  const user = await getCurrentUser();
+  const userRole = (user?.role ?? "SR") as UserRole;
   const challanResult = await getDeliveryChallan({ id });
 
   if (!challanResult.success) {
@@ -22,6 +26,7 @@ export default async function ChallanDetailPage({ params }: ChallanDetailPagePro
         detailLines={[]}
         fulfillment={null}
         orderStatus={null}
+        userRole={userRole}
       />
     );
   }
@@ -39,6 +44,7 @@ export default async function ChallanDetailPage({ params }: ChallanDetailPagePro
       detailLines={linesResult.success ? linesResult.data : []}
       fulfillment={orderResult.success ? orderResult.data.fulfillment ?? null : null}
       orderStatus={orderResult.success ? orderResult.data.status : null}
+      userRole={userRole}
     />
   );
 }

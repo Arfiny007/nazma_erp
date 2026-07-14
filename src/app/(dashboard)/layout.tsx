@@ -16,5 +16,19 @@ export default async function DashboardLayout({
   // Fallback to the most restrictive role as a defensive measure.
   const userRole = (user?.role ?? "SR") as UserRole;
 
-  return <DashboardShell userRole={userRole}>{children}</DashboardShell>;
+  return (
+    <DashboardShell
+      userRole={userRole}
+      user={
+        user
+          ? {
+              name: user.name,
+              email: user.email,
+            }
+          : null
+      }
+    >
+      {children}
+    </DashboardShell>
+  );
 }

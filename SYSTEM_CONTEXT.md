@@ -4,8 +4,8 @@ Definitive engineering context for AI sessions and new maintainers.
 
 Read this document first. Then consult `PROJECT_BRAIN.md`, `CURRENT_PHASE.md`, and relevant ADRs.
 
-**Last updated:** 2026-07-13 (PHASE_11D — Enterprise Notification Certification)
-**Current phase:** PHASE_11D complete → Next: PHASE_12 or Dashboard Exports
+**Last updated:** 2026-07-14 (PHASE_11E.1 — UI Stabilization Patch)
+**Current phase:** PHASE_11E.1 complete → Next: PHASE_11F certification + client demo
 **Production readiness:** 9.8 / 10 (ADR-041 through ADR-056)
 
 ---
@@ -37,7 +37,7 @@ Nazma Water Taps ERP is a production-grade B2B ERP for **Nazma Metal Industries*
 | Auth | Auth.js v5, JWT sessions, bcrypt |
 | Money | Prisma `Decimal(18,2)` — never JS `number` |
 | Testing | Vitest |
-| i18n | `public/locales/{en,bn}/common.json` |
+| i18n | `public/locales/{en,bn}/common.json` — bundled via `src/lib/i18n/translations.ts`; locale cookie `nazma-locale` for SSR |
 
 ---
 
@@ -158,6 +158,7 @@ See ADR-011 for fulfillment architecture.
 | Authentication Notification Integration | ✅ Complete (PHASE_11B) — activation/reset dispatch; ADR-054 | `src/lib/notifications/auth-notifications.ts` |
 | Notification Delivery & Queue Engine | ✅ Complete (PHASE_11C) — SMTP worker, retry, ops UI; ADR-055 | `src/lib/notifications/worker/`, `scripts/process-notifications.ts` |
 | Notification Certification | ✅ Complete (PHASE_11D) — `runNotificationCertification()`; Rules 1–12; ADR-056 | `src/lib/certification/notifications/` |
+| Client Stabilization Patch | ✅ Complete (PHASE_11E) — logout, challan print, collection confirm; ADR-057 | `src/components/layout/user-profile-menu.tsx`, `src/components/documents/challan/` |
 
 ---
 
@@ -174,6 +175,7 @@ See ADR-011 for fulfillment architecture.
 | Document | Component | Route |
 |----------|-----------|-------|
 | Invoice | `InvoicePrintable` | `/invoices/[id]/print` |
+| Delivery Challan | `ChallanPrintable` | `/delivery-challans/[id]/print` |
 | Money Receipt | `MoneyReceiptPrintable` | `/collections/[id]/receipt` |
 | Dealer Statement | `DealerStatementPrintable` | `/ledger` (print preview modal) |
 
@@ -187,11 +189,11 @@ Server DTO → mapper → Printable component → preview modal / print route �
 
 ### Branding
 
-- `src/lib/documents/company-branding.ts` → `getCompanyBranding()`
-- Logo: `public/branding/nazma-logo.png`
+- `src/lib/documents/company-branding.ts` → `getCompanyBranding()` — single source of truth for logo path and company contact details
+- Logo: `public/branding/nazma-logo.png` — used by `CompanyLogoImage` (ERP shell) and `CompanyHeader` (printables)
 - Enterprise blue: `#1a5dad` (`--doc-enterprise-blue`)
 
-See ADR-017, ADR-023.
+See ADR-017, ADR-023, ADR-058.
 
 ---
 
@@ -602,6 +604,7 @@ See `FINANCIAL_INVARIANTS.md` for full rulebook.
 | ADR-054 | Enterprise Authentication Notification Integration (PHASE_11B) |
 | ADR-055 | Enterprise Notification Delivery & Queue Engine (PHASE_11C) |
 | ADR-056 | Enterprise Notification Certification (PHASE_11D) |
+| ADR-057 | Client Stabilization Patch (PHASE_11E) |
 
 ---
 

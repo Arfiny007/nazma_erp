@@ -8,10 +8,16 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { useTheme } from "@/components/providers/theme-provider";
 import { cn } from "@/lib/utils";
 
+import {
+  UserProfileMenu,
+  type UserProfileSummary,
+} from "./user-profile-menu";
+
 interface HeaderProps {
   onMenuClick: () => void;
   sidebarCollapsed: boolean;
   onSidebarToggle: () => void;
+  user?: UserProfileSummary | null;
   className?: string;
 }
 
@@ -19,6 +25,7 @@ export function Header({
   onMenuClick,
   sidebarCollapsed,
   onSidebarToggle,
+  user,
   className,
 }: HeaderProps) {
   const { t } = useLanguage();
@@ -117,13 +124,16 @@ export function Header({
           <span className="absolute right-2 top-2 size-1.5 rounded-full bg-brand-500" />
         </button>
 
-        <button
-          type="button"
-          aria-label={t("header.profile")}
-          className="inline-flex size-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 transition-colors hover:bg-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:hover:bg-slate-700"
-        >
-          <User aria-hidden="true" className="size-4" />
-        </button>
+        {user ? (
+          <UserProfileMenu user={user} />
+        ) : (
+          <span
+            aria-hidden="true"
+            className="inline-flex size-9 items-center justify-center rounded-lg bg-slate-100 text-slate-600 dark:bg-slate-800 dark:text-slate-300"
+          >
+            <User className="size-4" />
+          </span>
+        )}
       </div>
 
       <span className="sr-only">

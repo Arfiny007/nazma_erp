@@ -7,23 +7,14 @@ import type { UserRole } from "@prisma/client";
 
 import { InvoiceTable } from "@/components/invoices/invoice-table";
 import { PageContainer } from "@/components/layout/page-container";
-import { InvoiceSkeleton } from "@/components/invoices/invoice-skeleton";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { hasPermission } from "@/lib/permissions";
 
 export default function InvoicesPage() {
-  const { t, isLoading } = useLanguage();
+  const { t } = useLanguage();
   const { data: session } = useSession();
   const userRole = session?.user?.role as UserRole | undefined;
   const canIssue = userRole ? hasPermission(userRole, "invoices:create") : false;
-
-  if (isLoading) {
-    return (
-      <PageContainer title={t("invoice.title")} description={t("common.loading")}>
-        <InvoiceSkeleton />
-      </PageContainer>
-    );
-  }
 
   return (
     <PageContainer

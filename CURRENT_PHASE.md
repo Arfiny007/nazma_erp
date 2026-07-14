@@ -6,7 +6,7 @@ Current Phase:
 
 
 
-PHASE_11D_ENTERPRISE_NOTIFICATION_CERTIFICATION
+PHASE_11E.1_UI_STABILIZATION_PATCH
 
 
 
@@ -15,6 +15,134 @@ Status:
 
 
 COMPLETE
+
+
+
+---
+
+
+
+# PHASE_11E.1_UI_STABILIZATION_PATCH
+
+
+
+Status: COMPLETE (2026-07-14)
+
+
+
+## Objectives
+
+
+
+Pre-demo UI stabilization — translation flicker and branding unification only. No financial or architecture changes.
+
+
+
+* **PATCH 1** — Synchronous bundled i18n; locale cookie SSR; no raw translation keys on first paint
+
+* **PATCH 2** — `CompanyLogoImage` via `getCompanyBranding()` — ERP shell matches invoice/document logo
+
+
+
+## Completion Criteria
+
+
+
+* Translation keys never flash on hard refresh: ✓
+
+* EN/BN locale switching without fetch race: ✓
+
+* Sidebar, login, auth pages use `/branding/nazma-logo.png`: ✓
+
+* Invoice/document printables unchanged (already used `getCompanyBranding()`): ✓
+
+* `npm run build` + `docker compose build`: ✓
+
+* ADR-058 + governance docs: ✓
+
+
+
+## Explicitly NOT Changed
+
+
+
+* posting-service, ledger, due engine, territory RBAC, dashboard, notification architecture
+
+* Invoice engine calculations, Dealer.currentBalance
+
+
+
+## Next Phase
+
+
+
+**PHASE_11F** certification and client demo
+
+
+
+---
+
+
+
+# PHASE_11E_CLIENT_STABILIZATION_PATCH
+
+
+
+Status: COMPLETE (2026-07-14)
+
+
+
+## Objectives
+
+
+
+Pre-client-review stabilization — three workflow bugs only. No financial or architecture changes.
+
+
+
+* **PATCH 1** — Logout from header profile menu + mobile nav (`signOut` → `/login`)
+
+* **PATCH 2** — Delivery challan preview/print via document platform (`ChallanPrintable`, `/delivery-challans/[id]/print`)
+
+* **PATCH 3** — Collection confirm-without-save-draft (`navigateOnCreate: false` on direct confirm)
+
+
+
+## Completion Criteria
+
+
+
+* Logout works from every dashboard page (Super Admin, Accounts, Manager, SR): ✓
+
+* Session destroyed; redirect to `/login`; `mustChangePassword` flow preserved: ✓
+
+* Challan preview modal + print route render `document-print-root` content: ✓
+
+* Challan detail no longer blank while session hydrates (server `userRole`): ✓
+
+* Collection Flow A (Create → Confirm) and Flow B (Draft → Save → Confirm): ✓
+
+* `npm run build` + `docker compose build`: ✓
+
+* ADR-057 + governance docs: ✓
+
+
+
+## Explicitly NOT Changed
+
+
+
+* posting-service, ledger, due engine, territory RBAC, dashboard, notification architecture
+
+* Dealer.currentBalance, collection transaction engine, challan financial boundary
+
+
+
+## Next Phase
+
+
+
+**PHASE_12** development may proceed or **Dashboard Exports**
 
 
 

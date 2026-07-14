@@ -99,10 +99,6 @@ export function ChallanDetailView({
     );
   }, [fulfillment, detailLines]);
 
-  const handlePrint = () => {
-    window.print();
-  };
-
   return (
     <div className="challan-print-area grid grid-cols-1 gap-6 lg:grid-cols-3 lg:items-start">
       <div className="space-y-6 lg:col-span-2">
@@ -257,14 +253,13 @@ export function ChallanDetailView({
           <ChallanHistoryTimeline history={challan.auditHistory} />
         </Card>
 
-        <button
-          type="button"
-          onClick={handlePrint}
+        <Link
+          href={`/delivery-challans/${challan.id}/print`}
           className="print:hidden inline-flex w-full items-center justify-center gap-2 rounded-lg border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
         >
           <Printer aria-hidden="true" className="size-4" />
           {t("challan.actions.print")}
-        </button>
+        </Link>
       </div>
     </div>
   );

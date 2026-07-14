@@ -2,29 +2,34 @@
 
 ## Current State
 
-PHASE_11D_ENTERPRISE_NOTIFICATION_CERTIFICATION is **complete** (2026-07-13):
+PHASE_11E.1_UI_STABILIZATION_PATCH is **complete** (2026-07-14):
 
-- Read-only certification module for PHASE_11A–11C notification layer
-- Rules 1–12 verified: immutability, queue integrity, retry policy, provider isolation, auth integration, security, financial boundary, audit completeness, architecture, performance
-- `runNotificationCertification()` / `runNotificationCertificationWithReport()` public entry points
-- `phase11dApproved: true` — overall score 10/10
-- ADR-056 authored; `notification-certification.test.ts` — 21 tests
+- Translation flicker eliminated — bundled i18n dictionaries, locale cookie SSR, synchronous `t()` on first render
+- Company branding unified — `CompanyLogoImage` reads `getCompanyBranding().logoSrc` across sidebar, login, and auth shell
+- ADR-058 authored; financial/ledger/RBAC/notification/invoice-calculation layers untouched
 
-All prior certifications remain frozen.
+PHASE_11E client stabilization (logout, challan print, collection confirm) remains complete.
+
+PHASE_11D notification certification remains frozen.
 
 ---
 
 ## Next Steps
 
-### 1. PHASE_12 — Next development phase (approved)
+### 1. PHASE_11F — Certification + client demo
 
-- Notification layer certified; proceed with next roadmap item
+- Run certification gates before demo
+- Validate login → dashboard → dealers → products → collections → invoices → settings → notifications → audit flows
 
-### 2. Dashboard Exports (follow-on)
+### 2. PHASE_12 — Next development phase (approved after demo)
+
+- Proceed with next roadmap item
+
+### 3. Dashboard Exports (follow-on)
 
 - PDF / Excel exports for dashboard + map data
 
-### 3. Production SMTP + worker scheduling
+### 4. Production SMTP + worker scheduling
 
 - Configure `SMTP_*` env vars in `.env` / Docker
 - Schedule `process-notifications.ts` via cron or orchestrator
@@ -59,3 +64,4 @@ All prior certifications remain frozen.
 - User lifecycle: `INVITED → PENDING_ACTIVATION → ACTIVE → DISABLED → ARCHIVED`
 - All balance mutations continue through `posting-service.ts` only
 - Notification delivery requires worker: `npm run process-notifications` or Super Admin "Process queue" in UI
+- Logout: profile menu (desktop) or mobile nav footer; change-password page retains sign-out form

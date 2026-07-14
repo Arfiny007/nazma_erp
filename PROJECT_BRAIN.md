@@ -43,6 +43,8 @@ Priority Order:
 18. Authentication Notification Integration ✅ (PHASE_11B)
 19. Notification Delivery & Queue Engine ✅ (PHASE_11C)
 20. Notification Certification ✅ (PHASE_11D)
+21. Client Stabilization Patch ✅ (PHASE_11E)
+22. UI Stabilization Patch ✅ (PHASE_11E.1)
 
 ---
 
@@ -112,6 +114,8 @@ Ownership:
 
 Delivery Challan is **non-financial**. It exists to bridge the approved order
 and the financial invoice without prematurely creating receivables.
+
+Printable dispatch document: `ChallanPrintable` + `/delivery-challans/[id]/print` (PHASE_11E).
 
 ---
 

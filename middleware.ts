@@ -122,7 +122,9 @@ export const config = {
   matcher: [
     /*
      * Match all request paths except static assets and metadata files.
+     * `branding/` and `locales/` must stay public so login/auth pages can
+     * load the company logo and locale dictionaries without a session.
      */
-    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
+    "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|branding|locales).*)",
   ],
 };

@@ -1,6 +1,7 @@
 "use client";
 
-import { X } from "lucide-react";
+import { LogOut, X } from "lucide-react";
+import { signOut } from "next-auth/react";
 import { useEffect } from "react";
 
 import { AppLogo } from "@/components/shared/app-logo";
@@ -10,18 +11,21 @@ import { NAV_SECTIONS } from "@/lib/navigation";
 import { hasPermission } from "@/lib/permissions";
 import { UserRole } from "@prisma/client";
 
+import type { UserProfileSummary } from "./user-profile-menu";
 import { SidebarItem } from "./sidebar-item";
 
 interface MobileNavProps {
   open: boolean;
   onClose: () => void;
   userRole?: UserRole;
+  user?: UserProfileSummary | null;
 }
 
 export function MobileNav({
   open,
   onClose,
   userRole = UserRole.Super_Admin,
+  user = null,
 }: MobileNavProps) {
   const { t } = useLanguage();
 
@@ -106,6 +110,30 @@ export function MobileNav({
             </div>
           ))}
         </nav>
+
+        {user && (
+          <div className="border-t border-slate-200/80 p-3 dark:border-slate-800">
+            <div className="mb-2 px-3">
+              <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">
+                {user.name}
+              </p>
+              <p className="truncate text-xs text-slate-500 dark:text-slate-400">
+                {user.email}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                onClose();
+                void signOut({ callbackUrl: "/login" });
+              }}
+              className="flex w-full items-center gap-2 rounded-lg px-3 py-2.5 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40"
+            >
+              <LogOut aria-hidden="true" className="size-4" />
+              {t("auth.signOut")}
+            </button>
+          </div>
+        )}
       </aside>
     </>
   );

@@ -7,23 +7,14 @@ import type { UserRole } from "@prisma/client";
 
 import { ChallanTable } from "@/components/delivery-challans/challan-table";
 import { PageContainer } from "@/components/layout/page-container";
-import { TableSkeleton } from "@/components/shared/loading-skeleton";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { hasPermission } from "@/lib/permissions";
 
 export default function DeliveryChallansPage() {
-  const { t, isLoading } = useLanguage();
+  const { t } = useLanguage();
   const { data: session } = useSession();
   const userRole = session?.user?.role as UserRole | undefined;
   const canCreate = userRole ? hasPermission(userRole, "orders:create") : false;
-
-  if (isLoading) {
-    return (
-      <PageContainer title={t("challan.title")} description={t("common.loading")}>
-        <TableSkeleton rows={8} columns={9} />
-      </PageContainer>
-    );
-  }
 
   return (
     <PageContainer

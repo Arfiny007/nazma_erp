@@ -1,10 +1,11 @@
 "use client";
 
-import { AlertCircle, ArrowLeft, Pencil, Printer } from "lucide-react";
+import { AlertCircle, ArrowLeft, Eye, Pencil, Printer } from "lucide-react";
 import Link from "next/link";
-import { useSession } from "next-auth/react";
+import { useState } from "react";
 import type { OrderStatus, UserRole } from "@prisma/client";
 
+import { ChallanDocumentPreview } from "@/components/documents/challan/challan-document-preview";
 import { ChallanDetailView } from "@/components/delivery-challans/challan-detail-view";
 import { PageContainer } from "@/components/layout/page-container";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -20,6 +21,7 @@ interface ChallanDetailPageClientProps {
   detailLines: ChallanDetailLineDTO[];
   fulfillment: OrderFulfillmentProgressDTO | null;
   orderStatus: OrderStatus | null;
+  userRole: UserRole;
 }
 
 export function ChallanDetailPageClient({
@@ -27,10 +29,10 @@ export function ChallanDetailPageClient({
   detailLines,
   fulfillment,
   orderStatus,
+  userRole,
 }: ChallanDetailPageClientProps) {
   const { t } = useLanguage();
-  const { data: session } = useSession();
-  const userRole = session?.user?.role as UserRole | undefined;
+  const [previewOpen, setPreviewOpen] = useState(false);
 
   if (!challan) {
     return (
@@ -58,9 +60,7 @@ export function ChallanDetailPageClient({
   }
 
   const canEdit =
-    userRole !== undefined &&
-    hasPermission(userRole, "orders:edit") &&
-    challan.status === "Draft";
+    hasPermission(userRole, "orders:edit") && challan.status === "Draft";
 
   return (
     <PageContainer
@@ -86,24 +86,35 @@ export function ChallanDetailPageClient({
           )}
           <button
             type="button"
-            onClick={() => window.print()}
+            onClick={() => setPreviewOpen(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
+          >
+            <Eye aria-hidden="true" className="size-4" />
+            {t("document.actions.previewChallan")}
+          </button>
+          <Link
+            href={`/delivery-challans/${challan.id}/print`}
             className="inline-flex items-center gap-1.5 rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 shadow-sm transition-colors hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:bg-slate-800"
           >
             <Printer aria-hidden="true" className="size-4" />
             {t("challan.actions.print")}
-          </button>
+          </Link>
         </div>
       }
     >
-      {userRole && (
-        <ChallanDetailView
-          challan={challan}
-          detailLines={detailLines}
-          fulfillment={fulfillment}
-          orderStatus={orderStatus}
-          userRole={userRole}
-        />
-      )}
+      <ChallanDetailView
+        challan={challan}
+        detailLines={detailLines}
+        fulfillment={fulfillment}
+        orderStatus={orderStatus}
+        userRole={userRole}
+      />
+      <ChallanDocumentPreview
+        challan={challan}
+        detailLines={detailLines}
+        open={previewOpen}
+        onClose={() => setPreviewOpen(false)}
+      />
     </PageContainer>
   );
 }

@@ -6,27 +6,15 @@ import { useSession } from "next-auth/react";
 
 import { PageContainer } from "@/components/layout/page-container";
 import { ProductTable } from "@/components/products/product-table";
-import { TableSkeleton } from "@/components/shared/loading-skeleton";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { hasPermission } from "@/lib/permissions";
 import type { UserRole } from "@prisma/client";
 
 export default function ProductsPage() {
-  const { t, isLoading } = useLanguage();
+  const { t } = useLanguage();
   const { data: session } = useSession();
   const userRole = session?.user?.role as UserRole | undefined;
   const canCreate = userRole ? hasPermission(userRole, "products:create") : false;
-
-  if (isLoading) {
-    return (
-      <PageContainer
-        title={t("products.title")}
-        description={t("common.loading")}
-      >
-        <TableSkeleton rows={8} columns={7} />
-      </PageContainer>
-    );
-  }
 
   return (
     <PageContainer

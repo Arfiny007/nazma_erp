@@ -9,104 +9,61 @@ import {
   useState,
 } from "react";
 
+import { getTranslations } from "@/lib/i18n/translations";
 import {
-  DEFAULT_LOCALE,
-  type Locale,
-  type TranslationDictionary,
-} from "@/types/locale";
-
-const LOCALE_STORAGE_KEY = "nazma-locale";
+  LOCALE_STORAGE_KEY,
+  parseLocale,
+  setLocaleCookie,
+} from "@/lib/i18n/locale-cookie";
+import type { Locale, TranslationDictionary } from "@/types/locale";
 
 interface LanguageContextValue {
   locale: Locale;
   setLocale: (locale: Locale) => void;
   t: (key: string) => string;
-  isLoading: boolean;
 }
 
 const LanguageContext = createContext<LanguageContextValue | null>(null);
 
-async function loadTranslations(locale: Locale): Promise<TranslationDictionary> {
-  const response = await fetch(`/locales/${locale}/common.json`);
-
-  if (!response.ok) {
-    throw new Error(`Failed to load translations for locale: ${locale}`);
-  }
-
-  return response.json() as Promise<TranslationDictionary>;
-}
-
-function getStoredLocale(): Locale {
-  if (typeof window === "undefined") {
-    return DEFAULT_LOCALE;
-  }
-
-  const stored = window.localStorage.getItem(LOCALE_STORAGE_KEY);
-
-  if (stored === "en" || stored === "bn") {
-    return stored;
-  }
-
-  return DEFAULT_LOCALE;
-}
-
 interface LanguageProviderProps {
   children: React.ReactNode;
+  initialLocale: Locale;
 }
 
-export function LanguageProvider({ children }: LanguageProviderProps) {
-  const [locale, setLocaleState] = useState<Locale>(() => getStoredLocale());
-  const [translations, setTranslations] = useState<TranslationDictionary>({});
-  const [loadedLocale, setLoadedLocale] = useState<Locale | null>(null);
-  const isLoading = loadedLocale !== locale;
+export function LanguageProvider({
+  children,
+  initialLocale,
+}: LanguageProviderProps) {
+  const [locale, setLocaleState] = useState<Locale>(initialLocale);
 
   useEffect(() => {
-    let cancelled = false;
+    const stored = window.localStorage.getItem(LOCALE_STORAGE_KEY);
+    const storedLocale = parseLocale(stored);
 
-    async function fetchTranslations() {
-      try {
-        const dictionary = await loadTranslations(locale);
-
-        if (!cancelled) {
-          setTranslations(dictionary);
-          setLoadedLocale(locale);
-        }
-      } catch {
-        if (cancelled) {
-          return;
-        }
-
-        if (locale !== DEFAULT_LOCALE) {
-          try {
-            const fallback = await loadTranslations(DEFAULT_LOCALE);
-            if (!cancelled) {
-              setTranslations(fallback);
-            }
-          } catch {
-            // Keep previous translations when fallback loading fails.
-          }
-        }
-
-        if (!cancelled) {
-          setLoadedLocale(locale);
-        }
+    if (stored === "en" || stored === "bn") {
+      if (storedLocale !== initialLocale) {
+        setLocaleState(storedLocale);
+        setLocaleCookie(storedLocale);
       }
+      return;
     }
 
-    void fetchTranslations();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [locale]);
+    window.localStorage.setItem(LOCALE_STORAGE_KEY, initialLocale);
+  }, [initialLocale]);
 
   useEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
 
+  const translations = useMemo<TranslationDictionary>(
+    () => getTranslations(locale),
+    [locale],
+  );
+
   const setLocale = useCallback((nextLocale: Locale) => {
     setLocaleState(nextLocale);
     window.localStorage.setItem(LOCALE_STORAGE_KEY, nextLocale);
+    setLocaleCookie(nextLocale);
   }, []);
 
   const t = useCallback(
@@ -121,9 +78,8 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
       locale,
       setLocale,
       t,
-      isLoading,
     }),
-    [locale, setLocale, t, isLoading],
+    [locale, setLocale, t],
   );
 
   return (

@@ -4,6 +4,58 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_11E.1] — 2026-07-14 — UI Stabilization Patch
+
+### Fixed
+
+- **Translation flicker** — Raw i18n keys (`dashboard.title`, `nav.dealers`, etc.) no longer flash on hard refresh; dictionaries bundled at build time with synchronous first render
+- **Branding inconsistency** — Sidebar, login, and auth pages now use the same logo asset as invoices (`getCompanyBranding().logoSrc` → `/branding/nazma-logo.png`)
+- **Login logo missing (hotfix)** — Middleware no longer intercepts `/branding/*` for unauthenticated users
+
+### Added
+
+- `src/lib/i18n/translations.ts` — static EN/BN dictionary imports
+- `src/lib/i18n/locale-cookie.ts` — `nazma-locale` cookie for SSR locale sync
+- `src/components/shared/company-logo-image.tsx` — shared logo component
+- ADR-058
+
+### Changed
+
+- `LanguageProvider` — accepts `initialLocale` from server; removed client `fetch` + `isLoading`
+- Root layout — reads locale cookie; sets `<html lang>`
+- Six list pages — removed translation-loading skeleton gates
+
+### Explicitly NOT Changed
+
+- posting-service, ledger, due engine, territory RBAC, dashboard, notification architecture
+- Invoice engine calculations, document print composers
+
+---
+
+## [PHASE_11E] — 2026-07-14 — Client Stabilization Patch
+
+### Fixed
+
+- **Logout** — Header profile dropdown + mobile nav sign-out via Auth.js `signOut({ callbackUrl: "/login" })`; works from all dashboard pages
+- **Delivery challan preview** — `ChallanPrintable` on document platform; `/delivery-challans/[id]/print` route; preview modal; fixes blank print caused by global `document-print.css` visibility rules
+- **Challan detail blank screen** — Server-resolved `userRole` instead of client session gate
+- **Collection confirm** — Direct Create → Confirm no longer interrupted by `router.replace` mid-flow; permission check uses `canCreate || canEdit`
+
+### Added
+
+- `src/components/layout/user-profile-menu.tsx`
+- `src/components/documents/challan/challan-printable.tsx`, `challan-document-preview.tsx`
+- `src/app/(dashboard)/delivery-challans/[id]/print/` — print route
+- ADR-057
+- Localization keys: `auth.signOut`, `document.challan.*`, `document.actions.previewChallan`
+
+### Explicitly NOT Changed
+
+- posting-service, ledger, due engine, territory RBAC, dashboard, notification architecture
+- Dealer.currentBalance, collection transaction engine, challan financial boundary
+
+---
+
 ## [PHASE_11D] — 2026-07-13 — Enterprise Notification Certification
 
 ### Added

@@ -1,6 +1,47 @@
 # IMPLEMENTATION STATUS
 
-Last updated: 2026-07-13 (PHASE_11D — Enterprise Notification Certification)
+Last updated: 2026-07-14 (PHASE_11E.1 — UI Stabilization Patch)
+
+---
+
+## UI Stabilization Patch — Verification (PHASE_11E.1)
+
+| Criterion | Status |
+|-----------|--------|
+| No raw translation keys on hard refresh | ✅ |
+| Bundled EN/BN dictionaries (synchronous `t()`) | ✅ |
+| Locale cookie SSR + `<html lang>` sync | ✅ |
+| `CompanyLogoImage` via `getCompanyBranding()` | ✅ |
+| Sidebar / login / auth shell logo unified | ✅ |
+| Invoice/document printables unchanged | ✅ |
+| posting-service / ledger / due / RBAC / notification untouched | ✅ |
+| Invoice calculations untouched | ✅ |
+| `npm run build` | ✅ |
+| `docker compose build` | ✅ |
+| ADR-058 authored | ✅ |
+| Branding certification (`runBrandingCertification`) | ✅ |
+| Login logo middleware hotfix (`branding`/`locales` public) | ✅ |
+
+---
+
+## Client Stabilization Patch — Verification (PHASE_11E)
+
+| Criterion | Status |
+|-----------|--------|
+| Logout from header profile menu (all roles) | ✅ |
+| Logout from mobile nav footer | ✅ |
+| `signOut({ callbackUrl: "/login" })` — session destroyed | ✅ |
+| `mustChangePassword` middleware unchanged (`/api/auth` allowed) | ✅ |
+| Challan `ChallanPrintable` on `DocumentLayout` | ✅ |
+| `/delivery-challans/[id]/print` route | ✅ |
+| Challan preview modal (`ChallanDocumentPreview`) | ✅ |
+| Challan detail server `userRole` (no session hydration blank) | ✅ |
+| Collection direct confirm (`navigateOnCreate: false`) | ✅ |
+| Collection confirm permission (`canCreate \|\| canEdit`) | ✅ |
+| posting-service / ledger / due / RBAC / notification untouched | ✅ |
+| `npm run build` | ✅ |
+| `docker compose build` | ✅ |
+| ADR-057 authored | ✅ |
 
 ---
 

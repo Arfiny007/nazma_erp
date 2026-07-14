@@ -2,7 +2,7 @@
 
 Known deferred improvements categorized by priority. Each item includes rationale for deferral.
 
-**Last updated:** 2026-07-13 (PHASE_11D — Enterprise Notification Certification)
+**Last updated:** 2026-07-14 (PHASE_11E.1 — UI Stabilization Patch)
 
 ---
 
@@ -36,7 +36,7 @@ Known deferred improvements categorized by priority. Each item includes rational
 | M9 | Dealer statement UI | Hybrid architecture designed; no route | Needs ledger for running balance | No account statements | PHASE_07D |
 | M10 | Composite DB indexes | Missing `(dealerCode, collectionDate)` etc. | Current volume acceptable | Slow reports at scale | PHASE_07–08 |
 | M11 | Credit limit manager override | Hard stop only; no RBAC override | ADR-011 future enhancement | No in-system exceptions | Future |
-| M12 | Delivery challan PDF | Basic print only; not document platform | Invoice/receipt prioritized | No enterprise gate pass | Post-06C |
+| M12 | Delivery challan PDF | Basic print on document platform (PHASE_11E); preview modal + `/print` route | Invoice/receipt prioritized | No enterprise gate pass | Post-06C polish |
 | M13 | Chart of Accounts / full GL | No TB, P&L, BS | AR subledger first | No statutory statements | PHASE_07F+ |
 | M14 | Logistics fields on Invoice | Legacy columns may duplicate challan data | Application treats as challan attrs | Schema ambiguity | Cleanup |
 | M15 | ~~Opening balance document~~ | ~~Enum reserved; no handler~~ | **Resolved in PHASE_07C** (ADR-028) | ~~Cannot migrate existing AR~~ | ✅ DONE |
@@ -54,6 +54,7 @@ Known deferred improvements categorized by priority. Each item includes rational
 | L5 | Full modal focus trap | Tab can escape preview modal | A11y polish |
 | L6 | Email/SMS document delivery | PHASE_11C delivers auth emails via SMTP worker; certified PHASE_11D; SMS deferred | PHASE_12+ |
 | L16 | Notification worker cron scheduling | Manual script + UI process queue; no built-in cron sidecar | Production ops must schedule `process-notifications.ts` |
+| L17 | ~~i18n translation flicker on refresh~~ | **Resolved PHASE_11E.1** — bundled dictionaries + locale cookie SSR (ADR-058) | — |
 | L7 | Denormalized invoice headers | `dealerName`, `orderNo` on header | Future |
 | L8 | Proper SR mapping | `salesPerson` = territory approximation | Reporting |
 | L9 | Separate ship-to address | Bill To = Ship To in v1 | Future |
@@ -73,7 +74,7 @@ Known deferred improvements categorized by priority. Each item includes rational
 | Invoice refactored to platform primitives | ✅ Complete | PHASE_06C |
 | Money receipt on platform | ✅ Complete | ADR-023 |
 | Invoice PDF client feedback patch | ⏳ Pending | No duplicate templates |
-| Delivery challan printable | ⏳ Deferred | Reuse `DocumentLayout` |
+| Delivery challan printable | ⏳ Partial | PHASE_11E — `ChallanPrintable` + print route; polish deferred |
 | Dealer statement printable | ⏳ Deferred | Hybrid ledger + documents |
 | Credit note printable | ⏳ Deferred | After credit note workflow |
 

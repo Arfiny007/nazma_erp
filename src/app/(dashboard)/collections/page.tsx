@@ -6,24 +6,15 @@ import { useSession } from "next-auth/react";
 import type { UserRole } from "@prisma/client";
 
 import { CollectionTable } from "@/components/collections/collection-table";
-import { CollectionSkeleton } from "@/components/collections/collection-skeleton";
 import { PageContainer } from "@/components/layout/page-container";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { hasPermission } from "@/lib/permissions";
 
 export default function CollectionsPage() {
-  const { t, isLoading } = useLanguage();
+  const { t } = useLanguage();
   const { data: session } = useSession();
   const userRole = session?.user?.role as UserRole | undefined;
   const canCreate = userRole ? hasPermission(userRole, "collections:create") : false;
-
-  if (isLoading) {
-    return (
-      <PageContainer title={t("collection.title")} description={t("common.loading")}>
-        <CollectionSkeleton />
-      </PageContainer>
-    );
-  }
 
   return (
     <PageContainer
