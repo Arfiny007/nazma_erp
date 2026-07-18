@@ -85,8 +85,9 @@ function createMockClient() {
       ]),
     },
     userTerritoryAssignment: {
-      groupBy: vi.fn().mockResolvedValue([
-        { territoryId: "terr-1", _count: { id: 2 } },
+      findMany: vi.fn().mockResolvedValue([
+        { territoryId: "terr-1" },
+        { territoryId: "terr-1" },
       ]),
     },
   };
@@ -267,6 +268,22 @@ describe("resolveTerritoryMapForRole", () => {
       client as never,
     );
     expect(payload.role).toBe("Manager");
+  });
+});
+
+describe("SR assignment counts", () => {
+  it("counts active SR assignments per territory via findMany", async () => {
+    const client = createMockClient();
+    await getAdminTerritoryMap("admin-1", undefined, client as never);
+
+    expect(client.userTerritoryAssignment.findMany).toHaveBeenCalledWith({
+      where: {
+        isActive: true,
+        territoryId: { in: ["terr-1"] },
+        user: { role: "SR", isActive: true },
+      },
+      select: { territoryId: true },
+    });
   });
 });
 

@@ -92,6 +92,16 @@ describe("audit mappers", () => {
   });
 
   it("groups timeline records newest to oldest buckets", () => {
+    const now = new Date();
+    const today = new Date(now);
+    today.setHours(12, 0, 0, 0);
+    const thisWeek = new Date(now);
+    thisWeek.setDate(thisWeek.getDate() - 3);
+    thisWeek.setHours(12, 0, 0, 0);
+    const older = new Date(now);
+    older.setDate(older.getDate() - 30);
+    older.setHours(12, 0, 0, 0);
+
     const records: AuditRecord[] = [
       {
         id: "1",
@@ -101,7 +111,7 @@ describe("audit mappers", () => {
         userId: "u1",
         userName: "A",
         role: "Accounts",
-        createdAt: new Date("2026-07-13T12:00:00.000Z").toISOString(),
+        createdAt: today.toISOString(),
         metadata: {},
       },
       {
@@ -112,7 +122,7 @@ describe("audit mappers", () => {
         userId: "u1",
         userName: "A",
         role: "Accounts",
-        createdAt: new Date("2026-07-11T12:00:00.000Z").toISOString(),
+        createdAt: thisWeek.toISOString(),
         metadata: {},
       },
       {
@@ -123,7 +133,7 @@ describe("audit mappers", () => {
         userId: "u1",
         userName: "A",
         role: "SR",
-        createdAt: new Date("2026-06-01T12:00:00.000Z").toISOString(),
+        createdAt: older.toISOString(),
         metadata: {},
       },
     ];

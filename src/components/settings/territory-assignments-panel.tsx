@@ -45,7 +45,7 @@ export function TerritoryAssignmentsPanel() {
 
       const [userResult, territoryResult] = await Promise.all([
         searchAssignableUsers({ page: 1, pageSize: 50 }),
-        searchAssignableTerritories({ page: 1, pageSize: 100 }),
+        searchAssignableTerritories({ page: 1, pageSize: 50 }),
       ]);
 
       if (cancelled) {

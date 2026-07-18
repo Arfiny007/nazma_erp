@@ -45,6 +45,8 @@ Priority Order:
 20. Notification Certification ✅ (PHASE_11D)
 21. Client Stabilization Patch ✅ (PHASE_11E)
 22. UI Stabilization Patch ✅ (PHASE_11E.1)
+23. Territory Assignment groupBy Hotfix ✅ (PHASE_11E.2)
+24. Client Release Stabilization RC-1 ✅ (PHASE_11E.3)
 
 ---
 

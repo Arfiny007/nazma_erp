@@ -41,7 +41,7 @@ Grid-based territory visualization grouped by division/district. No GIS polygons
 | Collections | `Collection.receivedAmount` batched by dealer territory |
 | Due | `aggregateTerritoryDue()` from analytics layer (dealer `currentBalance`) |
 | Dealer count | `dealer.groupBy` by territoryId |
-| SR count | `userTerritoryAssignment.groupBy` by territoryId |
+| SR count | `userTerritoryAssignment.findMany` + reduce by territoryId (ADR-059; was `groupBy` + `_count.id`) |
 
 ### Risk classification (visualization only)
 

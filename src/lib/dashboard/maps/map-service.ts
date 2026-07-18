@@ -59,7 +59,7 @@ const CONFIRMED_COLLECTION_STATUSES: CollectionStatus[] = [
 export type MapReadClient = AnalyticsReadClient & {
   userTerritoryAssignment?: Pick<
     Prisma.TransactionClient["userTerritoryAssignment"],
-    "groupBy"
+    "findMany"
   >;
 };
 
@@ -208,19 +208,18 @@ async function batchSrCounts(
     return new Map();
   }
 
-  const rows = await client.userTerritoryAssignment.groupBy({
-    by: ["territoryId"],
+  const rows = await client.userTerritoryAssignment.findMany({
     where: {
       isActive: true,
       territoryId: { in: territoryIds },
       user: { role: "SR", isActive: true },
     },
-    _count: { id: true },
+    select: { territoryId: true },
   });
 
   const map = new Map<string, number>();
   for (const row of rows) {
-    map.set(row.territoryId, row._count.id);
+    map.set(row.territoryId, (map.get(row.territoryId) ?? 0) + 1);
   }
   return map;
 }

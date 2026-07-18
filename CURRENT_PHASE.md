@@ -6,7 +6,7 @@ Current Phase:
 
 
 
-PHASE_11E.1_UI_STABILIZATION_PATCH
+PHASE_11E.3_CLIENT_RELEASE_STABILIZATION
 
 
 
@@ -15,6 +15,115 @@ Status:
 
 
 COMPLETE
+
+
+
+---
+
+
+
+# PHASE_11E.3_CLIENT_RELEASE_STABILIZATION
+
+
+
+Status: COMPLETE (2026-07-18)
+
+
+
+## Objectives
+
+
+
+Full enterprise RC-1 regression pass — testing only; bug fixes only.
+
+
+
+* **RC verification** — All 20 modules smoke-tested via HTTP + Vitest
+* **HOTFIX cleanup** — Removed PHASE_11E.2 debug `RUNTIME_TRACE` instrumentation from production paths
+* **TEST fix** — Audit timeline unit test uses dynamic dates (no calendar drift)
+
+
+
+## Completion Criteria
+
+
+
+* All major routes HTTP 200 for Super_Admin: ✓
+* RBAC redirects verified (Manager/SR/Accounts): ✓
+* `npx vitest run` — 577 passed (with `DATABASE_URL`): ✓
+* `npm run build` — pass: ✓
+* Dashboard certification — architecture boundary restored: ✓
+* Territory map `findMany` hotfix preserved: ✓
+* Financial / due / audit / notification engines untouched: ✓
+
+
+
+## Explicitly NOT Changed
+
+
+
+* posting-service, ledger, due engine, notification architecture, authentication flows
+* Territory assignment UI / business logic beyond debug cleanup
+
+
+
+## Next Phase
+
+
+
+**PHASE_11F** certification and client demo
+
+
+
+---
+
+
+
+Status: COMPLETE (2026-07-18)
+
+
+
+## Objectives
+
+
+
+Fix PostgreSQL `42702` ambiguous `id` error in territory map SR counts. No financial or RBAC redesign.
+
+
+
+* **HOTFIX** — Replace `userTerritoryAssignment.groupBy` + `_count.id` with `findMany` + reduce in `batchSrCounts()`
+
+
+
+## Completion Criteria
+
+
+
+* Territory map SR counts load without SQL error: ✓
+
+* RBAC filters preserved (`user.role`, `isActive`, territory scope): ✓
+
+* Territory assignment admin CRUD unchanged: ✓
+
+* ADR-059 + governance docs: ✓
+
+
+
+## Explicitly NOT Changed
+
+
+
+* posting-service, ledger, due engine, audit, notifications, authentication
+
+* Territory assignment UI / server actions
+
+
+
+## Next Phase
+
+
+
+**PHASE_11F** certification and client demo
 
 
 

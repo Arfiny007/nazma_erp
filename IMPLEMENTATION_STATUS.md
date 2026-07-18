@@ -1,6 +1,36 @@
 # IMPLEMENTATION STATUS
 
-Last updated: 2026-07-14 (PHASE_11E.1 — UI Stabilization Patch)
+Last updated: 2026-07-18 (PHASE_11E.3 — Client Release Stabilization RC-1)
+
+---
+
+## Client Release Stabilization — Verification (PHASE_11E.3)
+
+| Criterion | Status |
+|-----------|--------|
+| HTTP smoke — all major routes (Super_Admin) | ✅ |
+| RBAC — Manager/SR/Accounts route guards | ✅ |
+| `npx vitest run` — 577 passed (local `DATABASE_URL`) | ✅ |
+| `npm run build` | ✅ |
+| Debug `RUNTIME_TRACE` removed from production paths | ✅ |
+| Dashboard certification architecture boundary | ✅ |
+| Audit timeline test — dynamic dates | ✅ |
+| Territory map `findMany` hotfix preserved | ✅ |
+| Financial / due / notification / auth untouched | ✅ |
+
+---
+
+## Territory Assignment groupBy Hotfix — Verification (PHASE_11E.2)
+
+| Criterion | Status |
+|-----------|--------|
+| `batchSrCounts()` uses `findMany` + reduce (not `groupBy` + `_count.id`) | ✅ |
+| SR role + active user filters preserved | ✅ |
+| Territory map loads without PostgreSQL 42702 | ✅ |
+| Territory assignment admin actions unchanged | ✅ |
+| Financial / due / audit / notification / auth untouched | ✅ |
+| `map.test.ts` — SR count test | ✅ |
+| ADR-059 authored | ✅ |
 
 ---
 

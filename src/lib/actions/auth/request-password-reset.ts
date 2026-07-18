@@ -36,14 +36,21 @@ export async function requestPasswordResetAction(
     });
 
     if (user) {
-      await dispatchPasswordResetNotification({
-        actorId: user.id,
-        userId: user.id,
-        name: user.name,
-        email: user.email,
-        resetLink: buildPasswordResetUrl(resetToken),
-        expirationAt: new Date(Date.now() + PASSWORD_RESET_TOKEN_TTL_MS),
-      });
+      try {
+        await dispatchPasswordResetNotification({
+          actorId: user.id,
+          userId: user.id,
+          name: user.name,
+          email: user.email,
+          resetLink: buildPasswordResetUrl(resetToken),
+          expirationAt: new Date(Date.now() + PASSWORD_RESET_TOKEN_TTL_MS),
+        });
+      } catch (error) {
+        const reason = error instanceof Error ? error.message : String(error);
+        console.error(
+          `[Notification]\nPassword reset email skipped\nReason:\n${reason}\nUser:\n${user.email}`,
+        );
+      }
     }
   }
 

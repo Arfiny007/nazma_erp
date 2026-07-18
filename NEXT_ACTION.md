@@ -2,15 +2,16 @@
 
 ## Current State
 
-PHASE_11E.1_UI_STABILIZATION_PATCH is **complete** (2026-07-14):
+PHASE_11E.3_CLIENT_RELEASE_STABILIZATION is **complete** (2026-07-18):
 
-- Translation flicker eliminated — bundled i18n dictionaries, locale cookie SSR, synchronous `t()` on first render
-- Company branding unified — `CompanyLogoImage` reads `getCompanyBranding().logoSrc` across sidebar, login, and auth shell
-- ADR-058 authored; financial/ledger/RBAC/notification/invoice-calculation layers untouched
+- Full RC-1 regression pass: HTTP smoke (all roles), Vitest 577/577, `npm run build` pass
+- Removed debug `RUNTIME_TRACE` instrumentation from production paths (dashboard cert blocker)
+- Audit timeline unit test fixed for calendar drift
+- PHASE_11E.2 `findMany` territory map hotfix preserved
 
-PHASE_11E client stabilization (logout, challan print, collection confirm) remains complete.
+PHASE_11E.2 territory groupBy hotfix remains complete.
 
-PHASE_11D notification certification remains frozen.
+PHASE_11E.1 UI stabilization remains complete.
 
 ---
 
@@ -18,6 +19,7 @@ PHASE_11D notification certification remains frozen.
 
 ### 1. PHASE_11F — Certification + client demo
 
+- Rebuild Docker (`docker compose up --build`) to pick up RC stabilization fixes
 - Run certification gates before demo
 - Validate login → dashboard → dealers → products → collections → invoices → settings → notifications → audit flows
 

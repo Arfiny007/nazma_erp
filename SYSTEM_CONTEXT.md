@@ -4,8 +4,8 @@ Definitive engineering context for AI sessions and new maintainers.
 
 Read this document first. Then consult `PROJECT_BRAIN.md`, `CURRENT_PHASE.md`, and relevant ADRs.
 
-**Last updated:** 2026-07-14 (PHASE_11E.1 — UI Stabilization Patch)
-**Current phase:** PHASE_11E.1 complete → Next: PHASE_11F certification + client demo
+**Last updated:** 2026-07-18 (PHASE_11E.3 — Client Release Stabilization RC-1)
+**Current phase:** PHASE_11E.3 complete → Next: PHASE_11F certification + client demo
 **Production readiness:** 9.8 / 10 (ADR-041 through ADR-056)
 
 ---

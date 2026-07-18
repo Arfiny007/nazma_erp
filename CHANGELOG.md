@@ -4,6 +4,45 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_11E.3] — 2026-07-18 — Client Release Stabilization (RC-1)
+
+### Fixed
+
+- **Debug instrumentation leak** — Removed `RUNTIME_TRACE` hooks from `prisma.ts`, map service, territory assignment actions, and `getTerritoryMap`; restored dashboard architecture certification boundary
+- **Audit timeline test drift** — Unit test now uses dynamic relative dates instead of hardcoded July 2026 timestamps
+
+### Verified
+
+- HTTP smoke: all major routes (Super_Admin, Manager, SR, Accounts)
+- Vitest: 577 passed / 7 skipped (584 total)
+- `npm run build` pass
+- RBAC access-denied redirects for territory-assignments (non–Super_Admin)
+
+### Explicitly NOT Changed
+
+- PHASE_11E.2 `batchSrCounts()` findMany hotfix (preserved)
+- Financial engine, due engine, notification architecture, authentication flows
+
+---
+
+## [PHASE_11E.2] — 2026-07-18 — Territory Assignment groupBy Hotfix
+
+### Fixed
+
+- **PostgreSQL 42702** — Territory map `batchSrCounts()` no longer uses `userTerritoryAssignment.groupBy` with `_count.id` when filtering via `user` relation join; replaced with `findMany` + in-memory count
+
+### Added
+
+- ADR-059
+- `map.test.ts` — SR assignment count query assertion
+
+### Explicitly NOT Changed
+
+- Territory assignment CRUD server actions
+- Financial engine, due engine, dashboard architecture, audit, notifications, authentication
+
+---
+
 ## [PHASE_11E.1] — 2026-07-14 — UI Stabilization Patch
 
 ### Fixed
