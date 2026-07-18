@@ -2,29 +2,34 @@
 
 ## Current State
 
-PHASE_11E.3_CLIENT_RELEASE_STABILIZATION is **complete** (2026-07-18):
+PHASE_11E.5_ENTERPRISE_GIT_HYGIENE is **complete** (2026-07-18):
 
-- Full RC-1 regression pass: HTTP smoke (all roles), Vitest 577/577, `npm run build` pass
-- Removed debug `RUNTIME_TRACE` instrumentation from production paths (dashboard cert blocker)
-- Audit timeline unit test fixed for calendar drift
-- PHASE_11E.2 `findMany` territory map hotfix preserved
+- Removed all debug modules and 19 investigation scripts from repository
+- `.gitignore` updated to prevent future debug artifact commits
+- Build, Vitest (577/577), and Prisma validate pass
+- Repository is production-clean and ready for Git commit
 
-PHASE_11E.2 territory groupBy hotfix remains complete.
+PHASE_11E.4 enterprise certification remains complete.
 
-PHASE_11E.1 UI stabilization remains complete.
+PHASE_11E.3 RC-1 stabilization remains complete.
 
 ---
 
 ## Next Steps
 
-### 1. PHASE_11F — Certification + client demo
+### 1. Git commit + push (immediate)
 
-- Rebuild Docker (`docker compose up --build`) to pick up RC stabilization fixes
-- Run certification gates before demo
-- Validate login → dashboard → dealers → products → collections → invoices → settings → notifications → audit flows
+- Commit cleanup with recommended message from PHASE_11E.5 report
+- Tag `v0.11.0-rc1`
+- Push to remote
 
-### 2. PHASE_12 — Next development phase (approved after demo)
+### 2. Client demo
 
+- Authenticated dry-run: login → dashboard → dealers → products → collections → invoices → settings → audit
+
+### 3. PHASE_12 — Next development phase
+
+- Branch `phase-12` from tagged baseline
 - Proceed with next roadmap item
 
 ### 3. Dashboard Exports (follow-on)

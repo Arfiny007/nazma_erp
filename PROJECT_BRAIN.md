@@ -47,6 +47,8 @@ Priority Order:
 22. UI Stabilization Patch ✅ (PHASE_11E.1)
 23. Territory Assignment groupBy Hotfix ✅ (PHASE_11E.2)
 24. Client Release Stabilization RC-1 ✅ (PHASE_11E.3)
+25. Enterprise Final Certification ✅ (PHASE_11E.4)
+26. Enterprise Git Hygiene & Repository Cleanup ✅ (PHASE_11E.5)
 
 ---
 

@@ -4,6 +4,41 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_11E.5] — 2026-07-18 — Enterprise Git Hygiene & Repository Cleanup
+
+### Removed
+
+- **Debug modules** — Deleted `src/lib/debug/` (`client-trace.ts`, `runtime-trace.ts`)
+- **Investigation scripts** — Removed 19 temporary `scripts/` files (`runtime-trace-*`, `prove-*`, `verify-*`, `extract-*`, `query-*.mjs`, `docker-server-reference-manifest.json`)
+
+### Added
+
+- `.gitignore` patterns to block future debug/investigation script commits
+
+### Verified
+
+- `npm run build` pass
+- `npx vitest run` — 577 passed / 7 skipped
+- `npx prisma validate` pass
+- No production imports reference debug modules
+- Financial engine, schema, workflows unchanged
+
+---
+
+## [PHASE_11E.4] — 2026-07-18 — Enterprise Final Certification & Release Approval
+
+### Verified
+
+- Full enterprise certification gate (financial, auth, territory, dashboard, notification, branding)
+- Password-reset notification fault isolation (mirrors create-user try/catch)
+- Docker rebuild + HTTP smoke pass
+
+### Explicitly NOT Changed
+
+- posting-service, ledger, due engine, notification architecture, database schema
+
+---
+
 ## [PHASE_11E.3] — 2026-07-18 — Client Release Stabilization (RC-1)
 
 ### Fixed

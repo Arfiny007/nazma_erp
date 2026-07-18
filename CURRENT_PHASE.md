@@ -6,7 +6,7 @@ Current Phase:
 
 
 
-PHASE_11E.3_CLIENT_RELEASE_STABILIZATION
+PHASE_11E.5_ENTERPRISE_GIT_HYGIENE
 
 
 
@@ -15,6 +15,63 @@ Status:
 
 
 COMPLETE
+
+
+
+---
+
+
+
+# PHASE_11E.5_ENTERPRISE_GIT_HYGIENE
+
+
+
+Status: COMPLETE (2026-07-18)
+
+
+
+## Objectives
+
+
+
+Final pre-commit repository cleanup — remove all debug artifacts and investigation scripts. No feature or architecture changes.
+
+
+
+* **DEBUG removal** — Deleted `src/lib/debug/` modules (`client-trace`, `runtime-trace`)
+* **SCRIPT cleanup** — Removed 19 temporary investigation scripts from `scripts/`
+* **GIT hygiene** — `.gitignore` patterns to block future debug script commits
+* **VERIFICATION** — Build, Vitest, Prisma validate pass
+
+
+
+## Completion Criteria
+
+
+
+* No `clientTrace` / `runtimeTrace` / `traceLog` in production code: ✓
+* No investigation scripts in tracked `scripts/`: ✓
+* `npm run build` — pass: ✓
+* `npx vitest run` — 577 passed: ✓
+* `npx prisma validate` — pass: ✓
+* Financial / schema / workflow logic untouched: ✓
+
+
+
+## Explicitly NOT Changed
+
+
+
+* posting-service, ledger, due engine, notification architecture, database schema
+* Business workflows, APIs, UI behavior
+
+
+
+## Next Phase
+
+
+
+**Git commit + push** → **PHASE_12** development
 
 
 
