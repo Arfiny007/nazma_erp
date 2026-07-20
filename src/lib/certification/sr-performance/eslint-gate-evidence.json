@@ -1,0 +1,15 @@
+{
+  "command": "npx eslint .",
+  "exitCode": 0,
+  "recordedAt": "2026-07-20T00:25:00.000Z",
+  "scope": "repository-wide",
+  "errorCount": 0,
+  "warningCount": 31,
+  "remediatedFiles": [
+    "src/components/geography/district-select.tsx",
+    "src/components/geography/territory-select.tsx",
+    "src/components/settings/territory-assignments-panel.tsx",
+    "src/contexts/LanguageContext.tsx"
+  ],
+  "notes": "PHASE_12A.1 RULE_SR_REPORT_15 — recorded after repository-wide ESLint exit 0 (0 errors, 31 non-blocking warnings). No eslint-disable for react-hooks/set-state-in-effect on remediated files."
+}

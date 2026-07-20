@@ -78,6 +78,8 @@ export type Permission =
   | "ledger:view"
   // Due Reports
   | "reports:view"
+  // SR Performance & Ledger Dashboard (Manager + Super_Admin)
+  | "reports:sr-performance:view"
   // Administration
   | "audit:view"
   | "settings:view"
@@ -143,6 +145,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     "ledger:view",
     // Reports — Full
     "reports:view",
+    "reports:sr-performance:view",
     // Administration — Full
     "audit:view",
     "settings:view",
@@ -188,6 +191,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     "ledger:view",
     // Reports — Read
     "reports:view",
+    "reports:sr-performance:view",
     // Audit — territory-scoped visibility
     "audit:view",
     // User management — limited SR provisioning in assigned territories

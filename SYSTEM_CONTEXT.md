@@ -4,9 +4,9 @@ Definitive engineering context for AI sessions and new maintainers.
 
 Read this document first. Then consult `PROJECT_BRAIN.md`, `CURRENT_PHASE.md`, and relevant ADRs.
 
-**Last updated:** 2026-07-18 (PHASE_11E.5 — Enterprise Git Hygiene & Repository Cleanup)
-**Current phase:** PHASE_11E.5 complete → Next: Git commit + PHASE_12
-**Production readiness:** 9.8 / 10 (ADR-041 through ADR-056)
+**Last updated:** 2026-07-20 (PHASE_12A.1 — FULLY CERTIFIED / deployment-parity)
+**Current phase:** PHASE_12A.1 FULLY CERTIFIED → Next: git commit + follow-on exports/demo
+**Production readiness:** 9.8 / 10 (ADR-041 through ADR-060)
 
 ---
 

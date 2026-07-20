@@ -49,6 +49,9 @@ Priority Order:
 24. Client Release Stabilization RC-1 ✅ (PHASE_11E.3)
 25. Enterprise Final Certification ✅ (PHASE_11E.4)
 26. Enterprise Git Hygiene & Repository Cleanup ✅ (PHASE_11E.5)
+27. Printable SR Performance & Ledger Dashboard ✅ (PHASE_12A)
+28. SR Performance Filter Stabilization & Split Print ✅ (PHASE_12A.1)
+29. Repository-Wide ESLint Closure (React state architecture) ✅ (PHASE_12A.1)
 
 ---
 

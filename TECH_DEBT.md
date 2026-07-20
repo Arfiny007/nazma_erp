@@ -2,7 +2,16 @@
 
 Known deferred improvements categorized by priority. Each item includes rationale for deferral.
 
-**Last updated:** 2026-07-14 (PHASE_11E.1 — UI Stabilization Patch)
+**Last updated:** 2026-07-20 (PHASE_12A.1 — ESLint closure)
+
+### PHASE_12A / 12A.1 notes
+
+| ID | Item | Description | Why deferred | Target |
+|----|------|-------------|--------------|--------|
+| SR1 | SR Performance Excel export | Screen + HTML/CSS print only | Printable dashboard prioritized | Dashboard/report exports |
+| SR2 | Unsupported posting columns | Debit/credit notes excluded from Sales/Collection columns | Client six-column layout frozen; diagnostics warn | Future statement columns |
+| SR3 | ~~False territory-overlap warning~~ | ~~Multi-SR territory assignment surfaced as financial warning~~ | **Resolved PHASE_12A.1** — ownership attribution diagnostics only | ✅ DONE |
+| SR4 | ~~Pre-existing ESLint `react-hooks/set-state-in-effect` errors~~ | ~~`LanguageContext`, district/territory selects, `territory-assignments-panel` failed `npx eslint .` (4 errors)~~ | **Resolved PHASE_12A.1 ESLint closure** — derived view state + `useSyncExternalStore`; no suppressions | ✅ DONE |
 
 ---
 

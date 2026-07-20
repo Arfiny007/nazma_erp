@@ -2,51 +2,40 @@
 
 ## Current State
 
-PHASE_11E.5_ENTERPRISE_GIT_HYGIENE is **complete** (2026-07-18):
+**PHASE_12A.1 FULLY CERTIFIED** (2026-07-20) — code gates + deployment-parity
 
-- Removed all debug modules and 19 investigation scripts from repository
-- `.gitignore` updated to prevent future debug artifact commits
-- Build, Vitest (577/577), and Prisma validate pass
-- Repository is production-clean and ready for Git commit
-
-PHASE_11E.4 enterprise certification remains complete.
-
-PHASE_11E.3 RC-1 stabilization remains complete.
+- Repository gates: Prisma / tsc / eslint / vitest 631+7 / build / docker build
+- Certification: `phase12a1Approved: true`, `approved: true`, RULE_SR_REPORT_01–15
+- Container recreate: `RUNNING_IMAGE_MATCH=true`
+- Runtime smoke on recreated image: SR 18/18 + warning 2/2
+- LanguageProvider / geography / territory-assignment parity: 8/8
 
 ---
 
 ## Next Steps
 
-### 1. Git commit + push (immediate)
+### 1. Git commit for PHASE_12A + 12A.1
 
-- Commit cleanup with recommended message from PHASE_11E.5 report
-- Tag `v0.11.0-rc1`
-- Push to remote
+- Commit SR Performance module + stabilization + ESLint closure + deployment-parity governance (ADR-060)
+- Do not include `.env`, secrets, or `tmp-cert-*` evidence scratch files
 
-### 2. Client demo
+### 2. Live verification (optional spot-check)
 
-- Authenticated dry-run: login → dashboard → dealers → products → collections → invoices → settings → audit
+- Confirm container image ID matches `nazma-app:latest`
+- Login Super_Admin → SR Performance filters / prints
+- Login Manager → territory isolation
 
-### 3. PHASE_12 — Next development phase
+### 3. Follow-on candidates
 
-- Branch `phase-12` from tagged baseline
-- Proceed with next roadmap item
-
-### 3. Dashboard Exports (follow-on)
-
-- PDF / Excel exports for dashboard + map data
-
-### 4. Production SMTP + worker scheduling
-
-- Configure `SMTP_*` env vars in `.env` / Docker
-- Schedule `process-notifications.ts` via cron or orchestrator
+- Dashboard / report Excel exports
+- Production SMTP + notification worker scheduling
+- Client demo dry-run across core modules
 
 ### Explicitly Out of Scope (until respective phase)
 
 - SMS / Twilio delivery
 - Push / in-app notification center
-- Template editor UI
-- Redis / BullMQ queues
+- Redesign of posting-service / due engine / Territory RBAC
 
 ---
 
@@ -55,20 +44,15 @@ PHASE_11E.3 RC-1 stabilization remains complete.
 | Role | Email | Password |
 |------|-------|----------|
 | Super_Admin | admin@nazma.local | Admin123! |
-| Manager | manager1@nazma.test | (seed) |
-| SR | sr1@nazma.test | (seed) |
-| Accounts | accounts1@nazma.test | (seed) |
+| Manager | manager1@nazma.test | Demo123! |
+| SR | sr1@nazma.test | Demo123! |
+| Accounts | accounts1@nazma.test | Demo123! |
 
 ---
 
 ## Notes
 
-- `runFinancialCertification()` is the pre-release financial gate — run with live PostgreSQL for full score
-- `runAuditCertification()` is the pre-export audit gate
-- `runUserCertification()` is the user management gate (PHASE_10B)
-- `runAuthenticationCertification()` is the pre-production auth gate (PHASE_10D)
-- `runNotificationCertification()` is the pre-production notification gate (PHASE_11D)
-- User lifecycle: `INVITED → PENDING_ACTIVATION → ACTIVE → DISABLED → ARCHIVED`
-- All balance mutations continue through `posting-service.ts` only
-- Notification delivery requires worker: `npm run process-notifications` or Super Admin "Process queue" in UI
-- Logout: profile menu (desktop) or mobile nav footer; change-password page retains sign-out form
+- SR Performance uses `LedgerEntry` only — never `Dealer.currentBalance` as historical source
+- Collection reversals reduce period Collection (not Sales)
+- Multiple SRs in one territory is not a financial warning when ownership is unique
+- Core financial engines were untouched in PHASE_12A / 12A.1

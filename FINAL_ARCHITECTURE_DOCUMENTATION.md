@@ -1,3 +1,41 @@
+# FINAL ARCHITECTURE DOCUMENTATION — Nazma Water Taps ERP
+
+## PHASE_12A.1 Addendum (2026-07-20)
+
+SR Performance Filter Stabilization, Split Print, Repository-Wide ESLint Closure, and Deployment-Parity.
+
+| Concern | Decision |
+|---------|----------|
+| Filter contract | Shared `parseSrPerformanceFilters` — URL is canonical |
+| Dates | Local `YYYY-MM-DD` parse/serialize; exclusive upper bound `to+1 day` |
+| Attribution warnings | Dealer ownership integrity only — not multi-SR territory assignment |
+| Print | `mode=individual` \| `mode=overview` independently |
+| Soft-resolve | Invalid `srId` canonicalized via SSR redirect + client URL sync; compatible territory keeps `srId` |
+| Certification | `phase` / `phase12a1Approved` / `approved`; RULE_SR_REPORT_01–15 |
+| ESLint | Four baseline `set-state-in-effect` defects remediated (derived state + `useSyncExternalStore`); no suppressions |
+| Deployment parity | App container must run certified image (`RUNNING_IMAGE_MATCH=true`) before FULLY CERTIFIED |
+| ADR | ADR-060 stabilization + ESLint + deployment-parity revision |
+| Frozen engines | Untouched |
+
+## PHASE_12A Addendum (2026-07-19)
+
+Printable SR Performance & Ledger Dashboard (`/reports/sr-performance`).
+
+| Concern | Decision |
+|---------|----------|
+| Permission | `reports:sr-performance:view` — Super_Admin + Manager |
+| Financial source | `LedgerEntry` only (not `Dealer.currentBalance`) |
+| Previous Due | Latest ledger balance before `from` using statement ORDER BY DESC |
+| Sales / Collection | Issue debit; Collection credit − Collection Reversal debit |
+| Formula | Balance/Net = Previous Due + Sales − Collection (Prisma.Decimal) |
+| Attribution | Active ownership `assignedSrId`; integrity diagnostics for duplicate/ambiguous/missing ownership |
+| Queries | Bounded findMany + 2 parameterized `$queryRaw` aggregates (anti-N+1) |
+| Print | Document Platform composer; split individual/overview modes |
+| ADR | ADR-060 |
+| Frozen engines | Untouched (posting, statement, due, territory RBAC impl, dashboard) |
+
+---
+
 CLIENT_FEEDBACK_LOG.md
 Client Feedback Log — Nazma Water Taps ERP
 Permanent chronological record of significant client and business requests, architectural responses, and delivery status. This document preserves change history across AI sessions and team handoffs.

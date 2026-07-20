@@ -1,6 +1,81 @@
 # IMPLEMENTATION STATUS
 
-Last updated: 2026-07-18 (PHASE_11E.5 — Enterprise Git Hygiene & Repository Cleanup)
+Last updated: 2026-07-20 (PHASE_12A.1 — FULLY CERTIFIED / deployment-parity)
+
+---
+
+## SR Performance Stabilization — Verification (PHASE_12A.1)
+
+| Criterion | Status |
+|-----------|--------|
+| Shared `parseSrPerformanceFilters` (screen + print) | ✅ |
+| URL canonical filter state (back/forward/refresh) | ✅ |
+| Local date-only parse (no UTC shift) | ✅ |
+| Filter → query matrix (srSearch / partySearch scoping) | ✅ |
+| Invalid srId cleared on territory change (URL soft-resolve) | ✅ |
+| Compatible territory change preserves valid srId | ✅ |
+| Dealer attribution diagnostics (no false territory-overlap warning) | ✅ |
+| Print `mode=individual` independent | ✅ |
+| Print `mode=overview` independent | ✅ |
+| Focused Vitest SR suites | ✅ |
+| Full `npx vitest run` — 631 passed / 7 skipped | ✅ |
+| `npx tsc --noEmit` — TSC_EXIT_CODE=0 | ✅ |
+| `npx prisma validate` — PRISMA_EXIT_CODE=0 | ✅ |
+| `npx eslint .` — ESLINT_EXIT_CODE=0 | ✅ |
+| Four baseline `set-state-in-effect` defects remediated | ✅ |
+| RULE_SR_REPORT_15 repository-wide ESLint gate | ✅ |
+| Docker image build | ✅ |
+| App container recreate on certified image | ✅ |
+| `RUNNING_IMAGE_MATCH=true` | ✅ |
+| LanguageProvider / geography / assignments runtime parity | ✅ 8/8 |
+| Browser smoke Super_Admin + Manager (18/18) on recreated image | ✅ |
+| Warning runtime (valid overlap / invalid attribution) 2/2 | ✅ |
+| `npm run build` — BUILD_EXIT_CODE=0 | ✅ |
+| `runSrPerformanceCertification()` RULE_SR_REPORT_01–15 + `phase12a1Approved` / `approved` | ✅ |
+| ADR-060 stabilization + ESLint + deployment-parity revision | ✅ |
+| Frozen financial engines untouched | ✅ |
+| TECH_DEBT SR4 closed | ✅ |
+
+### Deployment-parity image evidence
+
+| Role | Image ID |
+|------|----------|
+| Pre-recreate (stale) | `sha256:536768050f703888fbf56490cc93107a079cfd121ea501d48dd362c7d9a92829` |
+| Final running (= `nazma-app:latest`) | `sha256:a57faf0cd8e8775dcb25e50bcb24242660f42636588a3b540278fb618fb6b323` |
+
+### Skipped-test audit (full Vitest — 7 skipped)
+
+| Test file | Test name | Skip mechanism | Reason | Baseline status | Relevant to PHASE_12A.1 |
+|-----------|-----------|----------------|--------|-----------------|-------------------------|
+| `src/lib/invoices/issue-invoice-concurrency.test.ts` | serializes same-dealer concurrent issues… | `it.skipIf(!integrationReady)` | Requires reachable PostgreSQL (`INTEGRATION_DATABASE_URL` / host-mapped `DATABASE_URL`) | Pre-existing since PHASE_07+ concurrency suite | No |
+| `src/lib/invoices/issue-invoice-concurrency.test.ts` | enforces credit limit after dealer lock… | `it.skipIf(!integrationReady)` | Same | Pre-existing | No |
+| `src/lib/invoices/issue-invoice-concurrency.test.ts` | returns one invoice per challan on concurrent duplicate submission | `it.skipIf(!integrationReady)` | Same | Pre-existing | No |
+| `src/lib/invoices/issue-invoice-concurrency.test.ts` | is idempotent on sequential retry for the same challan | `it.skipIf(!integrationReady)` | Same | Pre-existing | No |
+| `src/lib/ledger/ledger-reconciliation.integration.test.ts` | reconcileAllDealers reports integrity for every dealer | `it.skipIf(!integrationReady)` | Same | Pre-existing | No |
+| `src/lib/finance/initialization/opening-balance-concurrency.integration.test.ts` | rejects concurrent duplicate draft creation… | `ctx.skip()` when `!integrationReady` | Same | Pre-existing | No |
+| `src/lib/finance/initialization/opening-balance-concurrency.integration.test.ts` | serializes concurrent posts… (2nd it) | `ctx.skip()` when `!integrationReady` | Same | Pre-existing | No |
+
+No SR Performance / filter / territory-isolation / print / document / certification tests are skipped.
+
+---
+
+## Printable SR Performance & Ledger Dashboard — Verification (PHASE_12A)
+
+| Criterion | Status |
+|-----------|--------|
+| Route `/reports/sr-performance` + `/print` | ✅ |
+| Permission `reports:sr-performance:view` (Super_Admin + Manager) | ✅ |
+| Middleware / nav / page / action enforcement | ✅ |
+| LedgerEntry Previous Due / Sales / Collection / Balance | ✅ |
+| Decimal-only financial math | ✅ |
+| Territory RBAC + ownership attribution (no double count) | ✅ |
+| Anti-N+1 batched `$queryRaw` aggregates | ✅ |
+| Document Platform printable composer | ✅ |
+| EN/BN localization parity | ✅ |
+| `runSrPerformanceCertification()` | ✅ (strengthened in 12A.1) |
+| ADR-060 authored | ✅ |
+| Frozen financial engines untouched | ✅ |
+| Certification verdict | **SUSPENDED → stabilized under PHASE_12A.1** |
 
 ---
 

@@ -253,7 +253,7 @@ function makeDueReportStub(options: {
       },
     },
     user: {} as DueReportReadClient["dealer"],
-  } as DueReportReadClient;
+  } as unknown as DueReportReadClient;
 
   return client;
 }

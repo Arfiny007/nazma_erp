@@ -107,7 +107,7 @@ function makeCertificationStub(dealers: StubDealer[]): DueReportReadClient {
     },
     invoice: { findMany: async () => [] },
     ledgerEntry: { findMany: async () => [] },
-  } as DueReportReadClient;
+  } as unknown as DueReportReadClient;
 }
 
 const mixedTerritoryDealers: StubDealer[] = [

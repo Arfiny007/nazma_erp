@@ -3,6 +3,10 @@
 import { Loader2 } from "lucide-react";
 import { useEffect, useId, useState } from "react";
 
+import {
+  resolveCascadingSelectViewState,
+  shouldClearCascadingSelection,
+} from "@/components/geography/cascading-select-state";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { listDistrictsByDivision } from "@/lib/actions/geography/list-districts-by-division";
 import { cn } from "@/lib/utils";
@@ -31,20 +35,23 @@ export function DistrictSelect({
   const generatedId = useId();
   const selectId = id ?? generatedId;
 
-  const [items, setItems] = useState<DistrictDTO[]>([]);
+  const [loadedItems, setLoadedItems] = useState<DistrictDTO[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
+  const { items, loading: isLoading, loadError: hasLoadError } =
+    resolveCascadingSelectViewState(divisionId, {
+      items: loadedItems,
+      loading,
+      loadError,
+    });
 
+  useEffect(() => {
     if (!divisionId) {
-      setItems([]);
-      setLoading(false);
-      setLoadError(false);
-      onChange(null);
       return;
     }
+
+    let cancelled = false;
 
     async function load(): Promise<void> {
       setLoading(true);
@@ -57,9 +64,9 @@ export function DistrictSelect({
 
       if (!result.success) {
         setLoadError(true);
-        setItems([]);
+        setLoadedItems([]);
       } else {
-        setItems(result.data);
+        setLoadedItems(result.data);
       }
 
       setLoading(false);
@@ -70,13 +77,20 @@ export function DistrictSelect({
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset selection when division changes
   }, [divisionId]);
+
+  useEffect(() => {
+    if (shouldClearCascadingSelection(divisionId, value)) {
+      onChange(null);
+    }
+    // Parent-driven identity reset only — avoid re-binding on every onChange identity change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset selection when division clears
+  }, [divisionId, value]);
 
   const displayName = (district: DistrictDTO): string =>
     locale === "bn" ? district.nameBn : district.name;
 
-  const isDisabled = disabled || !divisionId || loading;
+  const isDisabled = disabled || !divisionId || isLoading;
 
   return (
     <div className={cn("relative", className)}>
@@ -85,7 +99,7 @@ export function DistrictSelect({
         value={value ?? ""}
         disabled={isDisabled}
         aria-invalid={hasError || undefined}
-        aria-busy={loading || undefined}
+        aria-busy={isLoading || undefined}
         onChange={(event) => {
           const nextId = event.target.value;
           if (!nextId) {
@@ -106,7 +120,7 @@ export function DistrictSelect({
         <option value="">
           {!divisionId
             ? t("geography.select.selectDivisionFirst")
-            : loading
+            : isLoading
               ? t("geography.select.loading")
               : t("geography.select.districtPlaceholder")}
         </option>
@@ -117,14 +131,14 @@ export function DistrictSelect({
         ))}
       </select>
 
-      {loading && (
+      {isLoading && (
         <Loader2
           aria-hidden="true"
           className="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 animate-spin text-slate-400"
         />
       )}
 
-      {loadError && (
+      {hasLoadError && (
         <p className="mt-1 text-xs text-red-600 dark:text-red-400">
           {t("geography.select.loadError")}
         </p>

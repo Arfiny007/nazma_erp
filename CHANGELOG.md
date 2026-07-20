@@ -4,6 +4,104 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_12A.1] — 2026-07-20 — Deployment-Parity Closure
+
+### Verified
+
+- App service recreated on certified Docker image (`RUNNING_IMAGE_MATCH=true`)
+- Pre-recreate stale image `536768050f70…` → final image `a57faf0cd8e8775d…`
+- LanguageProvider / geography cascade / territory-assignments runtime parity: 8/8
+- SR browser smoke 18/18 and warning smoke 2/2 against recreated container
+- Individual + overview print runtime + screen-to-print parity on recreated container
+- Runtime logs clean (Prisma package.json deprecation warn only)
+
+### Fixed (minimal)
+
+- SR Performance `generatedAt` display: `suppressHydrationWarning` on `toLocaleString()` to absorb Docker UTC vs browser-local text during SSR hydration
+
+### Explicitly NOT Changed
+
+- Financial engines, filters, SQL, permissions, document platform architecture
+
+---
+
+## [PHASE_12A.1] — 2026-07-20 — ESLint Closure & Final Certification
+
+### Fixed
+
+- Four baseline `react-hooks/set-state-in-effect` ESLint errors (present since `07adaa9`):
+  - `district-select.tsx` / `territory-select.tsx` — derived cascading view state (no sync setState when parent id cleared)
+  - `territory-assignments-panel.tsx` — derived empty assignments when no user selected
+  - `LanguageContext.tsx` — locale preference via `useSyncExternalStore` + external store helpers
+- Repository-wide `npx eslint .` → `ESLINT_EXIT_CODE=0`
+- Certification RULE_SR_REPORT_15 (repository-wide ESLint gate evidence)
+- Certification result exposes `phase`, `approved`, and `phase12a1Approved`
+- TECH_DEBT SR4 closed; KNOWN_RISKS SR-R5 resolved
+
+### Verification
+
+- Prisma / tsc / eslint / vitest (631 passed / 7 skipped) / build / docker compose build — all exit 0
+- Focused remediation + SR suites green
+- Browser smoke Super_Admin + Manager re-run after React state remediation
+
+### Explicitly NOT Changed
+
+- posting-service, dealer-lock, ledger, due engine, territory RBAC, dashboard, audit, notifications, auth
+- Prisma schema / company-branding / SR SQL / ownership attribution formulas
+
+---
+
+## [PHASE_12A.1] — 2026-07-19 — SR Performance Filter Stabilization & Split Print
+
+### Fixed
+
+- Canonical URL filter contract via shared `parseSrPerformanceFilters`
+- Local date-only parsing (no UTC shift from `new Date("YYYY-MM-DD")`)
+- URL-driven back/forward/refresh filter restoration
+- Scoped loading (overview vs individual) and request-id stale-response guards
+- False territory-overlap financial warning replaced with dealer ownership attribution diagnostics
+- Split print modes: `mode=individual` and `mode=overview`
+- Soft-resolve: territory change keeps valid `srId`; invalid `srId` canonicalized out of URL (SSR redirect + client sync)
+- Certification contract exposes explicit `phase12a1Approved` (legacy `phase12aApproved` retained as alias)
+- Safe test-only TypeScript fixes in audit/territory/due stubs so `npx tsc --noEmit` exits 0
+
+### Certification evidence closure
+
+- Browser smoke Super_Admin + Manager (Playwright): 18/18
+- Warning runtime: multi-SR overlap silent; ambiguous ownership warns
+- Full Vitest: 617 passed / 7 skipped (pre-existing integration `skipIf` / `ctx.skip` only)
+- `docker compose build` + `npm run build` pass
+
+### Explicitly NOT Changed
+
+- posting-service, ledger write/statement/reconciliation, due engine
+- Territory RBAC engine implementation, dashboard engines
+- Prisma schema / financial indexes
+- company-branding source of truth
+
+---
+
+## [PHASE_12A] — 2026-07-19 — Printable SR Performance & Ledger Dashboard
+
+### Added
+
+- Route `/reports/sr-performance` + printable `/reports/sr-performance/print`
+- Permission `reports:sr-performance:view` (Super_Admin + Manager)
+- Read-only engine `src/lib/reports/sr-performance/` (LedgerEntry source of truth)
+- Server actions under `src/lib/actions/reports/sr-performance/`
+- Document Platform composer `src/components/documents/sr-performance/`
+- Certification `runSrPerformanceCertification()` + ADR-060
+- EN/BN localization keys for SR Performance UI/print
+
+### Explicitly NOT Changed
+
+- posting-service, ledger write/statement/reconciliation, due engine
+- Territory RBAC engine implementation, dashboard engines
+- Prisma schema / financial indexes
+- company-branding source of truth
+
+---
+
 ## [PHASE_11E.5] — 2026-07-18 — Enterprise Git Hygiene & Repository Cleanup
 
 ### Removed

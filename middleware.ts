@@ -47,6 +47,11 @@ const ROUTE_PERMISSIONS: ReadonlyArray<{
   { prefix: "/invoices", permission: "invoices:view" },
   { prefix: "/collections", permission: "collections:view" },
   { prefix: "/ledger", permission: "ledger:view" },
+  // More specific report routes before general /reports
+  {
+    prefix: "/reports/sr-performance",
+    permission: "reports:sr-performance:view",
+  },
   { prefix: "/reports", permission: "reports:view" },
   { prefix: "/audit", permission: "audit:view" },
   { prefix: "/settings/notifications", permission: "notifications:view" },

@@ -6,15 +6,16 @@ import {
   useContext,
   useEffect,
   useMemo,
-  useState,
+  useSyncExternalStore,
 } from "react";
 
 import { getTranslations } from "@/lib/i18n/translations";
 import {
-  LOCALE_STORAGE_KEY,
-  parseLocale,
-  setLocaleCookie,
-} from "@/lib/i18n/locale-cookie";
+  resolveClientLocale,
+  subscribeLocaleStore,
+  syncLocaleExternalStore,
+  writeLocalePreference,
+} from "@/lib/i18n/locale-store";
 import type { Locale, TranslationDictionary } from "@/types/locale";
 
 interface LanguageContextValue {
@@ -34,37 +35,34 @@ export function LanguageProvider({
   children,
   initialLocale,
 }: LanguageProviderProps) {
-  const [locale, setLocaleState] = useState<Locale>(initialLocale);
+  const getServerSnapshot = useCallback(() => initialLocale, [initialLocale]);
+  const getClientSnapshot = useCallback(
+    () => resolveClientLocale(initialLocale),
+    [initialLocale],
+  );
+
+  const locale = useSyncExternalStore(
+    subscribeLocaleStore,
+    getClientSnapshot,
+    getServerSnapshot,
+  );
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(LOCALE_STORAGE_KEY);
-    const storedLocale = parseLocale(stored);
-
-    if (stored === "en" || stored === "bn") {
-      if (storedLocale !== initialLocale) {
-        setLocaleState(storedLocale);
-        setLocaleCookie(storedLocale);
-      }
-      return;
-    }
-
-    window.localStorage.setItem(LOCALE_STORAGE_KEY, initialLocale);
+    syncLocaleExternalStore(initialLocale);
   }, [initialLocale]);
 
   useEffect(() => {
     document.documentElement.lang = locale;
   }, [locale]);
 
+  const setLocale = useCallback((nextLocale: Locale) => {
+    writeLocalePreference(nextLocale);
+  }, []);
+
   const translations = useMemo<TranslationDictionary>(
     () => getTranslations(locale),
     [locale],
   );
-
-  const setLocale = useCallback((nextLocale: Locale) => {
-    setLocaleState(nextLocale);
-    window.localStorage.setItem(LOCALE_STORAGE_KEY, nextLocale);
-    setLocaleCookie(nextLocale);
-  }, []);
 
   const t = useCallback(
     (key: string): string => {

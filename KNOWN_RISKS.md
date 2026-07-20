@@ -3,7 +3,17 @@
 Operational risk register as of PHASE_06D completion. None are blocking for controlled production use of the Order → Invoice → Collection pipeline.
 
 **Overall readiness:** 9.3 / 10 (ADR-037)  
-**Last updated:** 2026-07-10 (PHASE_07F — Enterprise Financial System Certification)
+**Last updated:** 2026-07-20 (PHASE_12A.1 — ESLint closure)
+
+### PHASE_12A / 12A.1 — SR Performance reporting risks
+
+| ID | Risk | Mitigation | Status |
+|----|------|------------|--------|
+| SR-R1 | Multi-SR territory assignments misread as financial defects | Ownership attribution diagnostics only; territory overlap is metadata | **Resolved** (PHASE_12A.1) |
+| SR-R2 | Unsupported ledger posting types in period | Excluded from Sales/Collection; reconciliation delta + banner | Mitigated |
+| SR-R3 | Large print datasets | Hard cap `SR_PERFORMANCE_PRINT_DEALER_CAP` (5000) | Mitigated |
+| SR-R4 | Filter URL / React state divergence | Canonical URL parser + merge helper; back/forward reload; soft-resolve redirect | **Resolved** (PHASE_12A.1) |
+| SR-R5 | Repository-wide ESLint errors on baseline UI files | Four `set-state-in-effect` defects corrected; RULE_SR_REPORT_15 evidence gate | **Resolved** (PHASE_12A.1 ESLint closure) |
 
 ---
 

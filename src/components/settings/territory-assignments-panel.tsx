@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 
+import { resolveAssignmentsForSelectedUser } from "@/components/settings/territory-assignments-view-state";
 import { useLanguage } from "@/contexts/LanguageContext";
 import {
   assignTerritory,
@@ -74,7 +75,6 @@ export function TerritoryAssignmentsPanel() {
 
   useEffect(() => {
     if (!selectedUserId) {
-      setAssignments([]);
       return;
     }
 
@@ -93,6 +93,11 @@ export function TerritoryAssignmentsPanel() {
       cancelled = true;
     };
   }, [selectedUserId, reloadToken]);
+
+  const visibleAssignments = resolveAssignmentsForSelectedUser(
+    selectedUserId,
+    assignments,
+  );
 
   const handleAssign = async (): Promise<void> => {
     setActionError(null);
@@ -230,14 +235,14 @@ export function TerritoryAssignmentsPanel() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
-            {assignments.length === 0 ? (
+            {visibleAssignments.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-4 py-10 text-center text-sm text-slate-500">
                   {t("territoryAssignment.table.empty")}
                 </td>
               </tr>
             ) : (
-              assignments.map((assignment) => (
+              visibleAssignments.map((assignment) => (
                 <tr key={assignment.id}>
                   <td className="px-4 py-3 text-sm font-medium text-slate-900 dark:text-slate-50">
                     {displayTerritoryName(

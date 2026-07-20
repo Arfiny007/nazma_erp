@@ -1,0 +1,197 @@
+{
+  "generatedAt": "2026-07-20T09:28:17.035Z",
+  "baseUrl": "http://localhost:3000",
+  "browser": "Chromium (Playwright headless)",
+  "database": {
+    "host": "docker nazma-erp-db → 127.0.0.1:5432 / postgres:5432",
+    "credentials": "REDACTED"
+  },
+  "roles": [
+    "Super_Admin admin@nazma.local",
+    "Manager manager1@nazma.test"
+  ],
+  "results": [
+    {
+      "scenario": "SA initial current-month load",
+      "startingUrl": "http://localhost:3000/reports/sr-performance",
+      "action": "Open report",
+      "resultingUrl": "http://localhost:3000/reports/sr-performance",
+      "expected": "Overview rows + statement",
+      "actual": "Nazma ERP WATER TAPS DISTRIBUTION PLATFORM Dashboard Dealers Products Sales Orders Delivery Challans Invoices Collections Ledger Opening Balances ADMINISTRATION Due Reports SR ",
+      "pass": true,
+      "evidence": "sa-01-initial-load.png"
+    },
+    {
+      "scenario": "SA custom from/to",
+      "startingUrl": "http://localhost:3000/reports/sr-performance?from=2026-01-01&to=2026-07-20&srId=a00def8f-5461-447d-90d2-ce143c9a4467",
+      "action": "from=2026-01-01 to=2026-07-19",
+      "resultingUrl": "http://localhost:3000/reports/sr-performance?from=2026-01-01&to=2026-07-19&srId=a00def8f-5461-447d-90d2-ce143c9a4467",
+      "expected": "URL dates set",
+      "actual": "{\"from\":\"2026-01-01\",\"to\":\"2026-07-19\",\"srId\":\"a00def8f-5461-447d-90d2-ce143c9a4467\"}",
+      "pass": true,
+      "evidence": "sa-02-custom-dates.png"
+    },
+    {
+      "scenario": "SA territory selection",
+      "startingUrl": "http://localhost:3000/reports/sr-performance?from=2026-01-01&to=2026-07-19&srId=a00def8f-5461-447d-90d2-ce143c9a4467",
+      "action": "territoryId=027fb491-e4b0-449c-bbb4-26e94bf5ed5d",
+      "resultingUrl": "http://localhost:3000/reports/sr-performance?from=2026-01-01&to=2026-07-19&territoryId=027fb491-e4b0-449c-bbb4-26e94bf5ed5d&srId=873f63dd-532f-40b8-8279-0e321aa8f3e9",
+      "expected": "URL territoryId",
+      "actual": "027fb491-e4b0-449c-bbb4-26e94bf5ed5d",
+      "pass": true,
+      "evidence": "sa-03-territory.png"
+    },
+    {
+      "scenario": "SA click SR preserves date/territory/searches",
+      "startingUrl": "http://localhost:3000/reports/sr-performance?from=2026-01-01&to=2026-07-19&territoryId=027fb491-e4b0-449c-bbb4-26e94bf5ed5d&srId=873f63dd-532f-40b8-8279-0e321aa8f3e9",
+      "action": "Click overview SR index 0",
+      "resultingUrl": "http://localhost:3000/reports/sr-performance?from=2026-01-01&to=2026-07-19&territoryId=027fb491-e4b0-449c-bbb4-26e94bf5ed5d&srId=873f63dd-532f-40b8-8279-0e321aa8f3e9",
+      "expected": "srId set; from/to/territory preserved",
+      "actual": "{\"from\":\"2026-01-01\",\"to\":\"2026-07-19\",\"territoryId\":\"027fb491-e4b0-449c-bbb4-26e94bf5ed5d\",\"srId\":\"873f63dd-532f-40b8-8279-0e321aa8f3e9\"}",
+      "pass": true,
+      "evidence": "sa-04-sr-select.png"
+    },
+    {
+      "scenario": "SA SR search filters only Global Overview (URL)",
+      "startingUrl": "http://localhost:3000/reports/sr-performance?from=2026-01-01&to=2026-07-19&territoryId=027fb491-e4b0-449c-bbb4-26e94bf5ed5d&srId=873f63dd-532f-40b8-8279-0e321aa8f3e9",
+      "action": "srSearch=Demo SR",
+      "resultingUrl": "http://localhost:3000/reports/sr-performance?from=2026-01-01&to=2026-07-19&territoryId=027fb491-e4b0-449c-bbb4-26e94bf5ed5d&srId=873f63dd-532f-40b8-8279-0e321aa8f3e9&srSearch=Demo+SR",
+      "expected": "srSearch in URL; overview may shrink",
+      "actual": "srSearch=Demo SR rows 1->0",
+      "pass": true,
+      "evidence": "sa-06-sr-search.png"
+    },
+    {
+      "scenario": "SA party search filters only Individual Statement (URL)",
+      "startingUrl": "http://localhost:3000/reports/sr-performance?from=2026-01-01&to=2026-07-19&territoryId=027fb491-e4b0-449c-bbb4-26e94bf5ed5d&srId=873f63dd-532f-40b8-8279-0e321aa8f3e9&srSearch=Demo+SR",
+      "action": "partySearch=City",
+      "resultingUrl": "http://localhost:3000/reports/sr-performance?from=2026-01-01&to=2026-07-19&territoryId=027fb491-e4b0-449c-bbb4-26e94bf5ed5d&srId=873f63dd-532f-40b8-8279-0e321aa8f3e9&srSearch=Demo+SR&partySearch=City",
+      "expected": "partySearch in URL",
+      "actual": "City",
+      "pass": true,
+      "evidence": "sa-07-party-search.png"
+    },
+    {
+      "scenario": "SA selected SR remains valid after compatible territory change",
+      "startingUrl": "http://localhost:3000/reports/sr-performance?from=2026-01-01&to=2026-07-19&territoryId=027fb491-e4b0-449c-bbb4-26e94bf5ed5d&srId=873f63dd-532f-40b8-8279-0e321aa8f3e9",
+      "action": "Re-select same territory",
+      "resultingUrl": "http://localhost:3000/reports/sr-performance?from=2026-01-01&to=2026-07-19&territoryId=027fb491-e4b0-449c-bbb4-26e94bf5ed5d&srId=873f63dd-532f-40b8-8279-0e321aa8f3e9",
+      "expected": "srId remains 873f63dd-532f-40b8-8279-0e321aa8f3e9",
+      "actual": "873f63dd-532f-40b8-8279-0e321aa8f3e9",
+      "pass": true,
+      "evidence": "sa-08a-compat-territory.png"
+    },
+    {
+      "scenario": "SA invalid selected SR cleared after incompatible territory change",
+      "startingUrl": "http://localhost:3000/reports/sr-performance?from=2026-01-01&to=2026-07-19&territoryId=027fb491-e4b0-449c-bbb4-26e94bf5ed5d&srId=873f63dd-532f-40b8-8279-0e321aa8f3e9",
+      "action": "Open territory B with srId=873f63dd-532f-40b8-8279-0e321aa8f3e9",
+      "resultingUrl": "http://localhost:3000/reports/sr-performance?from=2026-01-01&to=2026-07-19&territoryId=0b66ccb9-41a5-4a5b-9af1-ae65b8c362a9",
+      "expected": "srId cleared or replaced with in-scope SR",
+      "actual": "(empty)",
+      "pass": true,
+      "evidence": "sa-08b-incompat-territory.png"
+    },
+    {
+      "scenario": "SA reset produces canonical defaults",
+      "startingUrl": "http://localhost:3000/reports/sr-performance?from=2026-01-01&to=2026-07-19&territoryId=0b66ccb9-41a5-4a5b-9af1-ae65b8c362a9",
+      "action": "Reset filters",
+      "resultingUrl": "http://localhost:3000/reports/sr-performance?from=2026-07-01&to=2026-07-20&srId=a00def8f-5461-447d-90d2-ce143c9a4467",
+      "expected": "searches/territory cleared; current month",
+      "actual": "{\"from\":\"2026-07-01\",\"to\":\"2026-07-20\",\"srId\":\"a00def8f-5461-447d-90d2-ce143c9a4467\"}",
+      "pass": true,
+      "evidence": "sa-09-reset.png"
+    },
+    {
+      "scenario": "SA browser Back restores prior filter state",
+      "startingUrl": "http://localhost:3000/reports/sr-performance?from=2026-03-01&to=2026-03-31",
+      "action": "back",
+      "resultingUrl": "http://localhost:3000/reports/sr-performance?from=2026-02-01&to=2026-02-28",
+      "expected": "from=2026-02-01",
+      "actual": "{\"from\":\"2026-02-01\",\"to\":\"2026-02-28\"}",
+      "pass": true,
+      "evidence": "sa-10-back.png"
+    },
+    {
+      "scenario": "SA browser Forward restores later filter state",
+      "startingUrl": "http://localhost:3000/reports/sr-performance?from=2026-03-01&to=2026-03-31",
+      "action": "forward",
+      "resultingUrl": "http://localhost:3000/reports/sr-performance?from=2026-03-01&to=2026-03-31",
+      "expected": "from=2026-03-01",
+      "actual": "{\"from\":\"2026-03-01\",\"to\":\"2026-03-31\"}",
+      "pass": true,
+      "evidence": "sa-11-forward.png"
+    },
+    {
+      "scenario": "SA hard refresh preserves URL-controlled state",
+      "startingUrl": "http://localhost:3000/reports/sr-performance?from=2026-03-01&to=2026-03-31",
+      "action": "reload",
+      "resultingUrl": "http://localhost:3000/reports/sr-performance?from=2026-03-01&to=2026-03-31",
+      "expected": "same from/to",
+      "actual": "{\"from\":\"2026-03-01\",\"to\":\"2026-03-31\"}",
+      "pass": true,
+      "evidence": "sa-12-refresh.png"
+    },
+    {
+      "scenario": "SA individual print runtime",
+      "startingUrl": "http://localhost:3000/reports/sr-performance/print?mode=individual&from=2026-01-01&to=2026-07-19&srId=a00def8f-5461-447d-90d2-ce143c9a4467",
+      "action": "Open individual print",
+      "resultingUrl": "http://localhost:3000/reports/sr-performance/print?mode=individual&from=2026-01-01&to=2026-07-19&srId=a00def8f-5461-447d-90d2-ce143c9a4467",
+      "expected": "Dealer table; branding; no Global Overview title; totals parity",
+      "actual": "Nazma ERP WATER TAPS DISTRIBUTION PLATFORM Dashboard Dealers Products Sales Orders Delivery Challans Invoices Collections Ledger Opening Balances ADMINISTRATION Due Reports SR Performance Audit Logs Users Settings Co",
+      "pass": true,
+      "evidence": "sa-13-print-individual.png"
+    },
+    {
+      "scenario": "SA screen-to-print financial parity (individual)",
+      "startingUrl": "http://localhost:3000/reports/sr-performance/print?mode=individual&from=2026-01-01&to=2026-07-19&srId=a00def8f-5461-447d-90d2-ce143c9a4467",
+      "action": "Compare statement totals tokens",
+      "resultingUrl": "http://localhost:3000/reports/sr-performance/print?mode=individual&from=2026-01-01&to=2026-07-19&srId=a00def8f-5461-447d-90d2-ce143c9a4467",
+      "expected": "Shared money tokens between screen statement and print",
+      "actual": "screen=111068.00,38850.00,500000.00,350082.00,0.00,50500.00 print=111068.00,38850.00,500000.00,350082.00,0.00,50500.00 shared=36",
+      "pass": true,
+      "evidence": "sa-13-print-individual.png"
+    },
+    {
+      "scenario": "SA overview print runtime",
+      "startingUrl": "http://localhost:3000/reports/sr-performance/print?mode=overview&from=2026-01-01&to=2026-07-19&partySearch=City",
+      "action": "Open overview print (partySearch should be ignored)",
+      "resultingUrl": "http://localhost:3000/reports/sr-performance/print?mode=overview&from=2026-01-01&to=2026-07-19&partySearch=City",
+      "expected": "Overview only; branding; no Individual Statement table",
+      "actual": "Nazma ERP WATER TAPS DISTRIBUTION PLATFORM Dashboard Dealers Products Sales Orders Delivery Challans Invoices Collections Ledger Opening Balances ADMINISTRATION Due Reports SR Performance Audit Logs Users Settings Co",
+      "pass": true,
+      "evidence": "sa-14-print-overview.png"
+    },
+    {
+      "scenario": "Manager initial load",
+      "startingUrl": "http://localhost:3000/reports/sr-performance",
+      "action": "Open report as Manager",
+      "resultingUrl": "http://localhost:3000/reports/sr-performance",
+      "expected": "Accessible without fatal auth redirect",
+      "actual": "Nazma ERP WATER TAPS DISTRIBUTION PLATFORM Dashboard Dealers Products Sales Orders Delivery Challans Invoices Collections Ledger ADMINISTRATION Due Reports ",
+      "pass": true,
+      "evidence": "mgr-01-initial.png"
+    },
+    {
+      "scenario": "Manager cannot load foreign territory by URL",
+      "startingUrl": "http://localhost:3000/reports/sr-performance?territoryId=0b66ccb9-41a5-4a5b-9af1-ae65b8c362a9&from=2026-01-01&to=2026-07-19",
+      "action": "territoryId=0b66ccb9-41a5-4a5b-9af1-ae65b8c362a9",
+      "resultingUrl": "http://localhost:3000/reports/sr-performance?territoryId=0b66ccb9-41a5-4a5b-9af1-ae65b8c362a9&from=2026-01-01&to=2026-07-19",
+      "expected": "Error/empty — foreign ledger rows not shown",
+      "actual": "alert=Unable to load the SR performance report.Retry  bodyHasUnable=true",
+      "pass": true,
+      "evidence": "mgr-02-foreign-territory.png"
+    },
+    {
+      "scenario": "Manager cannot load foreign SR by URL",
+      "startingUrl": "http://localhost:3000/reports/sr-performance?srId=a00def8f-5461-447d-90d2-ce143c9a4467&from=2026-01-01&to=2026-07-19",
+      "action": "srId=a00def8f-5461-447d-90d2-ce143c9a4467",
+      "resultingUrl": "http://localhost:3000/reports/sr-performance?srId=a00def8f-5461-447d-90d2-ce143c9a4467&from=2026-01-01&to=2026-07-19",
+      "expected": "Foreign SR not selected as statement owner",
+      "actual": "urlSr=a00def8f-5461-447d-90d2-ce143c9a4467 meta=Selected SR: No SR selected",
+      "pass": true,
+      "evidence": "mgr-03-foreign-sr.png"
+    }
+  ],
+  "passed": 18,
+  "failed": 0
+}

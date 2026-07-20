@@ -1,0 +1,62 @@
+{
+  "generatedAt": "2026-07-20T09:26:40.932Z",
+  "baseUrl": "http://localhost:3000",
+  "browser": "Chromium (Playwright headless)",
+  "results": [
+    {
+      "scenario": "Login without locale preference renders without raw keys",
+      "pass": true,
+      "actual": "Nazma ERP\n\nSign in to continue to your dashboard\n\nEmail address*\nPassword*\nSign In\nForgot your password?\n\nNazma Metal Industries — Internal ERP Platform",
+      "evidence": "parity-01-login-no-locale.png"
+    },
+    {
+      "scenario": "SR Performance renders BN labels after locale switch",
+      "pass": true,
+      "actual": "lang=bn body=নাজমা ERP\n\nওয়াটার ট্যাপস বিতরণ প্ল্যাটফর্ম\n\nড্যাশবোর্ড\nডিলার\nপণ্য\nবিক্রয় অর্ডার\nডেলিভারি চালান\nচালান\nসংগ্রহ\nলেজার\nপ্রারম্ভিক ব্যালেন্স\n\nপ্রশাসন\n\nবকেয়া রিপোর্ট\nএসআর পারফরম্যান্স\nঅডিট লগ\nব্যবহারকারী\n",
+      "evidence": "parity-03-sr-bn.png"
+    },
+    {
+      "scenario": "BN persists across hard refresh",
+      "pass": true,
+      "actual": "lang=bn storage=bn",
+      "evidence": "parity-03-sr-bn.png"
+    },
+    {
+      "scenario": "EN restores and persists after switch + refresh",
+      "pass": true,
+      "actual": "lang=en body=Nazma ERP\n\nWATER TAPS DISTRIBUTION PLATFORM\n\nDashboard\nDealers\nProducts\nSales Orders\nDelivery Challans\nInvoices\nCollections\nLedger\nOpening Balances\n\nADMINISTRATION\n\nDue Reports\nSR Performance\nAudit Lo",
+      "evidence": "parity-04-sr-en.png"
+    },
+    {
+      "scenario": "Fresh context login has no hydration mismatch / raw keys",
+      "pass": true,
+      "actual": "Nazma ERP\n\nSign in to continue to your dashboard\n\nEmail address*\nPassword*\nSign In\nForgot your password?\n\nNazma Metal Industries — Internal ERP Platform",
+      "evidence": "parity-05-fresh-context-login.png"
+    },
+    {
+      "scenario": "Geography cascade loads and clears stale district/territory",
+      "pass": true,
+      "actual": "div=ca7f4eac-d1a9-4f76-89ff-59a0aa31fe16 districtOpts=6 territoryOpts=1 afterDistrict=(empty) staleOpts=0",
+      "evidence": "parity-06-geography-cascade.png"
+    },
+    {
+      "scenario": "Territory assignments panel updates with user selection",
+      "pass": true,
+      "actual": "users=14 tbody1=Bhola — Main\tBhola, Barishal\tActive\tYes\tRevoke\nBandarban — Main\tBandarban, Chatt tbody2=Rangamati — Main\tRangamati, Chattogram\tActive\tYes\tRevoke\nRangpur — Main\tRangpur,",
+      "evidence": "parity-07-territory-assignments.png"
+    },
+    {
+      "scenario": "No React hydration or external-store console errors",
+      "pass": true,
+      "actual": "none"
+    }
+  ],
+  "passed": 8,
+  "failed": 0,
+  "consoleErrors": [
+    "[error @ http://localhost:3000/login] Failed to load resource: net::ERR_CONNECTION_RESET",
+    "[error @ http://localhost:3000/login] Failed to load resource: net::ERR_CONNECTION_RESET",
+    "[error @ http://localhost:3000/login] Failed to load resource: net::ERR_CONNECTION_RESET",
+    "[error @ http://localhost:3000/login] Failed to load resource: net::ERR_CONNECTION_RESET"
+  ]
+}

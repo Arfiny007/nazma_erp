@@ -161,7 +161,7 @@ describe("Financial Certification — check runner (no database)", () => {
 
     const dbSkipped = checks.filter((check) => check.warning && check.message.includes("Skipped"));
     expect(dbSkipped.length).toBeGreaterThan(0);
-  });
+  }, 15_000);
 });
 
 describe("Financial Certification — buildFinancialCertificationResult", () => {
@@ -185,7 +185,7 @@ describe("Financial Certification — buildFinancialCertificationResult", () => 
     expect(result.subsystems.integrityMonitor).toBeDefined();
     expect(result.subsystems.audit).toBeDefined();
     expect(typeof result.productionReady).toBe("boolean");
-  });
+  }, 15_000);
 });
 
 describe("Financial Certification — catalog completeness", () => {

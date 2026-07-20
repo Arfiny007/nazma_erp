@@ -1,0 +1,25 @@
+{
+  "phase": "PHASE_12A.1",
+  "closure": "deployment-parity",
+  "generatedAt": "2026-07-20T09:29:00.000Z",
+  "composeService": "app",
+  "recreateCommand": "docker compose up -d --force-recreate --no-deps app",
+  "preRecreate": {
+    "containerId": "a54bf78b1ee3132bac9fee1b3a6572abfdb0f29088a67cca7b7a20bf3d6025af",
+    "imageId": "sha256:536768050f703888fbf56490cc93107a079cfd121ea501d48dd362c7d9a92829",
+    "stale": true
+  },
+  "postRecreateFinal": {
+    "containerId": "see-docker-inspect",
+    "imageId": "sha256:a57faf0cd8e8775dcb25e50bcb24242660f42636588a3b540278fb618fb6b323",
+    "RUNNING_IMAGE_MATCH": true
+  },
+  "intermediateImageWithLanguageProvider": "sha256:c56e95854bf9dd3dbbf1217c1e6e068a6863e6b4301bfc346bb72eeb0c4e074f",
+  "results": {
+    "parityPassed": 8,
+    "parityFailed": 0,
+    "srSmokePassed": 18,
+    "warningSmokePassed": 2,
+    "hydration418Fixed": true
+  }
+}

@@ -3,6 +3,10 @@
 import { Loader2 } from "lucide-react";
 import { useEffect, useId, useState } from "react";
 
+import {
+  resolveCascadingSelectViewState,
+  shouldClearCascadingSelection,
+} from "@/components/geography/cascading-select-state";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { listTerritoriesByDistrict } from "@/lib/actions/geography/list-territories-by-district";
 import { cn } from "@/lib/utils";
@@ -31,20 +35,23 @@ export function TerritorySelect({
   const generatedId = useId();
   const selectId = id ?? generatedId;
 
-  const [items, setItems] = useState<TerritoryDTO[]>([]);
+  const [loadedItems, setLoadedItems] = useState<TerritoryDTO[]>([]);
   const [loading, setLoading] = useState(false);
   const [loadError, setLoadError] = useState(false);
 
-  useEffect(() => {
-    let cancelled = false;
+  const { items, loading: isLoading, loadError: hasLoadError } =
+    resolveCascadingSelectViewState(districtId, {
+      items: loadedItems,
+      loading,
+      loadError,
+    });
 
+  useEffect(() => {
     if (!districtId) {
-      setItems([]);
-      setLoading(false);
-      setLoadError(false);
-      onChange(null);
       return;
     }
+
+    let cancelled = false;
 
     async function load(): Promise<void> {
       setLoading(true);
@@ -57,9 +64,9 @@ export function TerritorySelect({
 
       if (!result.success) {
         setLoadError(true);
-        setItems([]);
+        setLoadedItems([]);
       } else {
-        setItems(result.data);
+        setLoadedItems(result.data);
       }
 
       setLoading(false);
@@ -70,8 +77,15 @@ export function TerritorySelect({
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset selection when district changes
   }, [districtId]);
+
+  useEffect(() => {
+    if (shouldClearCascadingSelection(districtId, value)) {
+      onChange(null);
+    }
+    // Parent-driven identity reset only — avoid re-binding on every onChange identity change.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- reset selection when district clears
+  }, [districtId, value]);
 
   const displayName = (territory: TerritoryDTO): string => {
     if (locale === "bn" && territory.nameBn) {
@@ -80,7 +94,7 @@ export function TerritorySelect({
     return territory.name;
   };
 
-  const isDisabled = disabled || !districtId || loading;
+  const isDisabled = disabled || !districtId || isLoading;
 
   return (
     <div className={cn("relative", className)}>
@@ -89,7 +103,7 @@ export function TerritorySelect({
         value={value ?? ""}
         disabled={isDisabled}
         aria-invalid={hasError || undefined}
-        aria-busy={loading || undefined}
+        aria-busy={isLoading || undefined}
         onChange={(event) => {
           const nextId = event.target.value;
           if (!nextId) {
@@ -110,7 +124,7 @@ export function TerritorySelect({
         <option value="">
           {!districtId
             ? t("geography.select.selectDistrictFirst")
-            : loading
+            : isLoading
               ? t("geography.select.loading")
               : t("geography.select.territoryPlaceholder")}
         </option>
@@ -121,14 +135,14 @@ export function TerritorySelect({
         ))}
       </select>
 
-      {loading && (
+      {isLoading && (
         <Loader2
           aria-hidden="true"
           className="pointer-events-none absolute right-2.5 top-1/2 size-4 -translate-y-1/2 animate-spin text-slate-400"
         />
       )}
 
-      {loadError && (
+      {hasLoadError && (
         <p className="mt-1 text-xs text-red-600 dark:text-red-400">
           {t("geography.select.loadError")}
         </p>
