@@ -1,6 +1,45 @@
 # IMPLEMENTATION STATUS
 
-Last updated: 2026-07-20 (PHASE_12A.1 — FULLY CERTIFIED / deployment-parity)
+Last updated: 2026-07-20 (PHASE_12B.1 — Territory Product Sales Filter Hotfix)
+
+---
+
+## Territory Product Sales Filter Hotfix — Verification (PHASE_12B.1)
+
+| Criterion | Status |
+|-----------|--------|
+| `buildEligibleInvoiceItemFilters` uses `ii`/`p`/`c` (never `eii` in eligible CTE) | ✅ |
+| Product ID → `ii."productId"` | ✅ |
+| Category ID → `p."categoryId"` | ✅ |
+| Product search → `ii."productName"` / `ii."productCode"` (+ `c."name"`) | ✅ |
+| Regression Vitest for filter aliases | ✅ |
+| RULE_PRODUCT_SALES_16 | ✅ |
+| ADR-061 query-stage filter section | ✅ |
+| Prisma / tsc / eslint / vitest / build / docker | ✅ exit 0 (654 passed / 7 skipped) |
+| Runtime product/category/search SQL | ✅ |
+| Browser smoke product filter + reset | ✅ 34/34 |
+| `RUNNING_IMAGE_MATCH=true` | ✅ `sha256:7c717dc55cb3…` |
+| Certification RULE_PRODUCT_SALES_01–16 | ✅ `phase12bApproved` |
+
+---
+
+## Territory Product Sales — Verification (PHASE_12B)
+
+| Criterion | Status |
+|-----------|--------|
+| Route `/reports/product-sales-by-territory` | ✅ |
+| Permission `reports:territory-product-sales:view` (Super_Admin + Manager + SR) | ✅ |
+| Sold quantity = InvoiceItem.quantity (Issued/Paid/Partial/Overdue) | ✅ |
+| Historical ownership attribution as-of issueDate | ✅ |
+| Shared `parseTerritoryProductSalesFilters` | ✅ |
+| Dashboard top-products chart via analytics architecture | ✅ |
+| ADR-061 authored | ✅ |
+| `runTerritoryProductSalesCertification()` RULE_PRODUCT_SALES_01–15 | ✅ (structural) |
+| Focused Vitest product-sales + certification + analytics | ✅ |
+| Full mandatory gates + runtime smoke | ✅ |
+| `RUNNING_IMAGE_MATCH=true` | ✅ |
+| Browser smoke Super_Admin / Manager / SR / Accounts denied | ✅ |
+| Certification `phase12bApproved` / `approved` | ✅ |
 
 ---
 

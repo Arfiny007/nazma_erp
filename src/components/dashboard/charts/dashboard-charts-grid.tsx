@@ -1,6 +1,9 @@
 "use client";
 
+import Link from "next/link";
+
 import type { DashboardChart } from "@/lib/dashboard/analytics";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 import { DashboardAreaChart } from "./dashboard-area-chart";
 import { DashboardBarChart } from "./dashboard-bar-chart";
@@ -18,7 +21,12 @@ function renderChart(chart: DashboardChart) {
     case "line":
       return <DashboardLineChart data={chart.data} />;
     case "bar":
-      return <DashboardBarChart data={chart.data} />;
+      return (
+        <DashboardBarChart
+          data={chart.data}
+          orientation={chart.orientation ?? "vertical"}
+        />
+      );
     case "pie":
       return <DashboardPieChart data={chart.data} />;
     case "area":
@@ -29,12 +37,29 @@ function renderChart(chart: DashboardChart) {
 }
 
 export function DashboardChartRenderer({ chart }: DashboardChartRendererProps) {
+  const { t } = useLanguage();
+
   return (
     <DashboardChartCard titleKey={chart.titleKey}>
       {chart.data.length === 0 ? (
         <DashboardChartEmpty />
       ) : (
-        renderChart(chart)
+        <>
+          {renderChart(chart)}
+          {chart.href ? (
+            <div className="mt-3">
+              <Link
+                href={chart.href}
+                className="text-xs font-medium text-blue-700 underline-offset-2 hover:underline dark:text-blue-400"
+              >
+                {t(
+                  chart.hrefLabelKey ??
+                    "dashboard.analytics.charts.viewTerritoryBreakdown",
+                )}
+              </Link>
+            </div>
+          ) : null}
+        </>
       )}
     </DashboardChartCard>
   );

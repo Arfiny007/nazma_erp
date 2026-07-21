@@ -52,6 +52,8 @@ Priority Order:
 27. Printable SR Performance & Ledger Dashboard ✅ (PHASE_12A)
 28. SR Performance Filter Stabilization & Split Print ✅ (PHASE_12A.1)
 29. Repository-Wide ESLint Closure (React state architecture) ✅ (PHASE_12A.1)
+30. Territory-wise Product Sales Report & Dashboard Analytics ✅ (PHASE_12B)
+31. Territory Product Sales Filter Query Hotfix ✅ (PHASE_12B.1)
 
 ---
 

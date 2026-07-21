@@ -103,6 +103,13 @@ export const NAV_SECTIONS: NavSection[] = [
         permission: "reports:sr-performance:view",
       },
       {
+        id: "product-sales-by-territory",
+        labelKey: "nav.territoryProductSales",
+        href: "/reports/product-sales-by-territory",
+        icon: FileText,
+        permission: "reports:territory-product-sales:view",
+      },
+      {
         id: "audit",
         labelKey: "nav.audit",
         href: "/audit",

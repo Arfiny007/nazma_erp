@@ -1,10 +1,14 @@
 import type { UserRole } from "@prisma/client";
 
+import { startOfDay, startOfMonth } from "@/lib/dashboard/dashboard-validation";
 import { getLatestIntegrityScan } from "@/lib/ledger/monitor";
 import { prisma } from "@/lib/prisma";
 import { getCompanyDueSummary } from "@/lib/reports/due";
+import {
+  DEFAULT_TOP_PRODUCTS_LIMIT,
+  getTopSellingProductsByTerritory,
+} from "@/lib/reports/product-sales-territory";
 import { buildTerritoryScope } from "@/lib/rbac/territory";
-import { startOfMonth } from "@/lib/dashboard/dashboard-validation";
 
 import {
   aggregateTerritoryDue,
@@ -31,6 +35,7 @@ import {
   mapSrLeaderboardChart,
   mapTerritoryComparisonChart,
   mapTerritoryHeatmap,
+  mapTopProductsByQuantityChart,
 } from "./analytics-mappers";
 import type {
   AccountsAnalyticsPayload,
@@ -51,6 +56,27 @@ async function loadAnalyticsScope(userId: string) {
   return scope;
 }
 
+async function loadTopProductsChart(
+  scope: Awaited<ReturnType<typeof loadAnalyticsScope>>,
+  generatedAt: Date,
+) {
+  try {
+    const chart = await getTopSellingProductsByTerritory(
+      {
+        from: startOfMonth(generatedAt),
+        to: startOfDay(generatedAt),
+        limit: DEFAULT_TOP_PRODUCTS_LIMIT,
+      },
+      scope,
+    );
+    return mapTopProductsByQuantityChart(chart.points, {
+      href: chart.reportHref,
+    });
+  } catch {
+    return mapTopProductsByQuantityChart([], undefined);
+  }
+}
+
 /**
  * SR analytics — territory-scoped BI charts.
  */
@@ -62,12 +88,13 @@ export async function getSrAnalytics(
   const generatedAt = new Date();
   const scope = await loadAnalyticsScope(userId);
 
-  const [salesTrend, collectionTrend, outstandingTrend, dealerGrowth] =
+  const [salesTrend, collectionTrend, outstandingTrend, dealerGrowth, topProducts] =
     await Promise.all([
       buildMonthlySalesTrend(scope, undefined, generatedAt, client),
       buildMonthlyCollectionTrend(scope, undefined, generatedAt, client),
       buildMonthlyOutstandingTrend(scope, undefined, generatedAt, client),
       buildMonthlyDealerGrowthTrend(scope, undefined, generatedAt, client),
+      loadTopProductsChart(scope, generatedAt),
     ]);
 
   return {
@@ -97,6 +124,7 @@ export async function getSrAnalytics(
         "bar",
         dealerGrowth,
       ),
+      topProducts,
     ],
     generatedAt: generatedAt.toISOString(),
   };
@@ -114,13 +142,14 @@ export async function getManagerAnalytics(
   const scope = await loadAnalyticsScope(userId);
   const monthStart = startOfMonth(generatedAt);
 
-  const [territorySales, territoryDueMap, srMetrics, riskDealers, dueSummary] =
+  const [territorySales, territoryDueMap, srMetrics, riskDealers, dueSummary, topProducts] =
     await Promise.all([
       aggregateTerritorySalesCollections(scope, monthStart, generatedAt, client),
       aggregateTerritoryDue(scope, client),
       buildSrLeaderboardMetrics(scope, monthStart, generatedAt, 8, client),
       buildRiskDealerAgingBuckets(scope, 8, generatedAt, client),
       getCompanyDueSummary({}, scope, client),
+      loadTopProductsChart(scope, generatedAt),
     ]);
 
   const territoryDueRows = territorySales.map((row) => ({
@@ -152,6 +181,7 @@ export async function getManagerAnalytics(
         "dashboard.analytics.charts.territoryDue",
         territoryDueRows,
       ),
+      topProducts,
       mapSrLeaderboardChart(
         "srSalesLeaderboard",
         "dashboard.analytics.charts.srSales",
@@ -234,6 +264,7 @@ export async function getAdminAnalytics(
     userGrowth,
     territorySales,
     territoryDueMap,
+    topProducts,
   ] = await Promise.all([
     buildMonthlySalesTrend(scope, undefined, generatedAt, client),
     buildMonthlyDealerGrowthTrend(scope, undefined, generatedAt, client),
@@ -241,6 +272,7 @@ export async function getAdminAnalytics(
     buildMonthlyUserGrowth(undefined, generatedAt, client),
     aggregateTerritorySalesCollections(scope, monthStart, generatedAt, client),
     aggregateTerritoryDue(scope, client),
+    loadTopProductsChart(scope, generatedAt),
   ]);
 
   return {
@@ -270,6 +302,7 @@ export async function getAdminAnalytics(
         "line",
         userGrowth,
       ),
+      topProducts,
     ],
     territoryHeatmap: mapTerritoryHeatmap(territorySales, territoryDueMap),
     generatedAt: generatedAt.toISOString(),

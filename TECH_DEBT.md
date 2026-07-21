@@ -2,7 +2,16 @@
 
 Known deferred improvements categorized by priority. Each item includes rationale for deferral.
 
-**Last updated:** 2026-07-20 (PHASE_12A.1 — ESLint closure)
+**Last updated:** 2026-07-20 (PHASE_12B.1 — Territory Product Sales Filter Hotfix)
+
+### PHASE_12B / 12B.1 notes
+
+| ID | Item | Description | Why deferred | Target |
+|----|------|-------------|--------------|--------|
+| PS1 | Product sales Excel/PDF export | Screen + dashboard chart only | Quantity report prioritized | Dashboard/report exports |
+| PS2 | Revenue / margin product analytics | Quantity-only metric in 12B | Separate financial architecture required | Future BI phase |
+| PS3 | Ownership fallback when history missing | Uses current `Dealer.territoryId` with diagnostics | Pre-ownership backfill gaps | Mitigated via diagnostics |
+| PS4 | ~~Eligible CTE filter used `eii` alias~~ | ~~`missing FROM-clause entry for table "eii"`~~ | **Resolved PHASE_12B.1** — `buildEligibleInvoiceItemFilters` | ✅ DONE |
 
 ### PHASE_12A / 12A.1 notes
 

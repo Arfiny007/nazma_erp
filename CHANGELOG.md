@@ -4,6 +4,59 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_12B.1] — 2026-07-20 — Territory Product Sales Filter Query Hotfix
+
+### Fixed
+
+- Dynamic product/category/search filters incorrectly referenced CTE alias `eii` inside `eligible_invoice_items` (PostgreSQL: `missing FROM-clause entry for table "eii"`)
+- Introduced stage-aware `buildEligibleInvoiceItemFilters()` using aliases `ii` / `p` / `c` only
+
+### Added
+
+- Regression tests for productId / categoryId / productSearch SQL scope aliases
+- Certification RULE_PRODUCT_SALES_16 — dynamic filters must not reference unavailable CTE aliases
+- ADR-061 query-stage filter alias documentation
+
+### Verified
+
+- `PRISMA_EXIT_CODE=0` `TSC_EXIT_CODE=0` `ESLINT_EXIT_CODE=0` `VITEST_EXIT_CODE=0` (654 passed / 7 skipped) `BUILD_EXIT_CODE=0` `DOCKER_BUILD_EXIT_CODE=0`
+- Runtime SQL: product/category/search filters OK; broken `eii` alias still rejected
+- Browser smoke 34/34 including product filter load + reset (Super_Admin / Manager / SR / Accounts denied)
+- `RUNNING_IMAGE_MATCH=true` (`sha256:7c717dc55cb3…`)
+- Certification `phase12bApproved: true` / `approved: true` / RULE_PRODUCT_SALES_01–16
+
+### Explicitly NOT Changed
+
+- InvoiceItem source of truth, territory attribution, dealer ownership, dashboard analytics, RBAC, Decimal quantity handling
+
+---
+
+## [PHASE_12B] — 2026-07-20 — Territory-wise Product Sales Report & Dashboard Analytics
+
+### Added
+
+- Route `/reports/product-sales-by-territory` with URL-canonical filters
+- Permission `reports:territory-product-sales:view` (Super_Admin, Manager, SR)
+- Read-only module `src/lib/reports/product-sales-territory/` — InvoiceItem sold quantity + historical territory attribution
+- Dashboard top-10 products horizontal bar chart via certified analytics architecture
+- ADR-061 + `runTerritoryProductSalesCertification()` RULE_PRODUCT_SALES_01–15
+- EN/BN localization for report + dashboard chart
+
+### Verified
+
+- `PRISMA_EXIT_CODE=0` `TSC_EXIT_CODE=0` `ESLINT_EXIT_CODE=0` `VITEST_EXIT_CODE=0` (649 passed / 7 skipped) `BUILD_EXIT_CODE=0` `DOCKER_BUILD_EXIT_CODE=0`
+- Browser smoke 28/28 (Super_Admin, Manager, SR, Accounts denied)
+- `RUNNING_IMAGE_MATCH=true` (`sha256:46d529cdb3ec…`)
+- Certification `phase12bApproved: true` / `approved: true`
+
+### Explicitly NOT Changed
+
+- posting-service, dealer-lock, ledger engines, due report engine, territory RBAC implementation
+- Prisma schema / financial indexes
+- Order/challan quantity sources (never used as sold quantity)
+
+---
+
 ## [PHASE_12A.1] — 2026-07-20 — Deployment-Parity Closure
 
 ### Verified

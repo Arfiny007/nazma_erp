@@ -80,6 +80,8 @@ export type Permission =
   | "reports:view"
   // SR Performance & Ledger Dashboard (Manager + Super_Admin)
   | "reports:sr-performance:view"
+  // Territory-wise Product Sales (Super_Admin + Manager + SR)
+  | "reports:territory-product-sales:view"
   // Administration
   | "audit:view"
   | "settings:view"
@@ -146,6 +148,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     // Reports — Full
     "reports:view",
     "reports:sr-performance:view",
+    "reports:territory-product-sales:view",
     // Administration — Full
     "audit:view",
     "settings:view",
@@ -192,6 +195,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     // Reports — Read
     "reports:view",
     "reports:sr-performance:view",
+    "reports:territory-product-sales:view",
     // Audit — territory-scoped visibility
     "audit:view",
     // User management — limited SR provisioning in assigned territories
@@ -257,6 +261,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, readonly Permission[]> = {
     "ledger:view",
     // Reports — Read
     "reports:view",
+    "reports:territory-product-sales:view",
     // Audit — own dealers / orders / collections
     "audit:view",
   ],

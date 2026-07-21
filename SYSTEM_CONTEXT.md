@@ -4,9 +4,9 @@ Definitive engineering context for AI sessions and new maintainers.
 
 Read this document first. Then consult `PROJECT_BRAIN.md`, `CURRENT_PHASE.md`, and relevant ADRs.
 
-**Last updated:** 2026-07-20 (PHASE_12A.1 — FULLY CERTIFIED / deployment-parity)
-**Current phase:** PHASE_12A.1 FULLY CERTIFIED → Next: git commit + follow-on exports/demo
-**Production readiness:** 9.8 / 10 (ADR-041 through ADR-060)
+**Last updated:** 2026-07-20 (PHASE_12B.1 — Territory Product Sales Filter Hotfix)
+**Current phase:** PHASE_12B.1 — Territory Product Sales Filter Query Hotfix
+**Production readiness:** 9.8 / 10 (ADR-041 through ADR-061)
 
 ---
 

@@ -3,7 +3,17 @@
 Operational risk register as of PHASE_06D completion. None are blocking for controlled production use of the Order → Invoice → Collection pipeline.
 
 **Overall readiness:** 9.3 / 10 (ADR-037)  
-**Last updated:** 2026-07-20 (PHASE_12A.1 — ESLint closure)
+**Last updated:** 2026-07-20 (PHASE_12B.1)
+
+### PHASE_12B / 12B.1 — Territory product sales risks
+
+| ID | Risk | Mitigation | Status |
+|----|------|------------|--------|
+| PS-R1 | Missing ownership history for old invoices | Fallback to current dealer territory + diagnostics banner | Mitigated |
+| PS-R2 | Ambiguous overlapping ownership intervals | Deterministic rank-1 pick + ambiguous diagnostic | Mitigated |
+| PS-R3 | Chart presentation uses JS number at SVG boundary | Aggregation remains Decimal; `valueLabel` preserves string | Accepted |
+| PS-R4 | No invoice territory snapshot | Historical ownership as-of `issueDate` (ADR-061) | Accepted |
+| PS-R5 | ~~Dynamic filters referenced `eii` before CTE existed~~ | Stage-aware `buildEligibleInvoiceItemFilters` + RULE_PRODUCT_SALES_16 | **Resolved** (PHASE_12B.1) |
 
 ### PHASE_12A / 12A.1 — SR Performance reporting risks
 

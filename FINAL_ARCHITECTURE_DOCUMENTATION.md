@@ -1,5 +1,34 @@
 # FINAL ARCHITECTURE DOCUMENTATION — Nazma Water Taps ERP
 
+## PHASE_12B.1 Addendum (2026-07-20)
+
+Territory Product Sales dynamic filter SQL alias hotfix.
+
+| Concern | Decision |
+|---------|----------|
+| Bug | `eligible_invoice_items` WHERE referenced `eii.*` before that CTE existed |
+| Fix | Stage-aware `buildEligibleInvoiceItemFilters()` — aliases `ii` / `p` / `c` only |
+| Certification | RULE_PRODUCT_SALES_16 |
+| ADR | ADR-061 query-stage filter section |
+| Architecture | Unchanged CTE pipeline; localized query-generation regression only |
+
+## PHASE_12B Addendum (2026-07-20)
+
+Territory-wise Product Sales Report & role-aware Top-Selling Products dashboard chart.
+
+| Concern | Decision |
+|---------|----------|
+| Sold quantity | `SUM(InvoiceItem.quantity)` for Issued/Paid/Partial/Overdue |
+| Sale date | `Invoice.issueDate` |
+| Territory attribution | `DealerOwnershipHistory` as-of issueDate; fallback to current dealer territory with diagnostics |
+| Permission | `reports:territory-product-sales:view` — Super_Admin + Manager + SR |
+| Route | `/reports/product-sales-by-territory` |
+| Filters | Shared `parseTerritoryProductSalesFilters` (URL canonical) |
+| Dashboard | Additive `topProductsByQuantity` horizontal bar via analytics service |
+| Decimal | Aggregation in Prisma.Decimal; chart converts only at visual boundary |
+| ADR | ADR-061 |
+| Frozen engines | Untouched |
+
 ## PHASE_12A.1 Addendum (2026-07-20)
 
 SR Performance Filter Stabilization, Split Print, Repository-Wide ESLint Closure, and Deployment-Parity.

@@ -36,6 +36,26 @@ vi.mock("@/lib/ledger/monitor", () => ({
   getLatestIntegrityScan: vi.fn(),
 }));
 
+vi.mock("@/lib/reports/product-sales-territory", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/reports/product-sales-territory")>();
+  return {
+    ...actual,
+    getTopSellingProductsByTerritory: vi.fn().mockResolvedValue({
+      points: [],
+      series: [],
+      diagnostics: {
+        missingHistoricalTerritoryCount: 0,
+        ambiguousHistoricalOwnershipCount: 0,
+        currentTerritoryFallbackCount: 0,
+        excludedRecordCount: 0,
+      },
+      reportHref: "/reports/product-sales-by-territory",
+      generatedAt: new Date(),
+    }),
+  };
+});
+
 vi.mock("./analytics-query", async (importOriginal) => {
   const actual = await importOriginal<typeof import("./analytics-query")>();
   return {
@@ -178,7 +198,10 @@ describe("SR analytics isolation", () => {
   it("returns SR charts scoped via territory scope", async () => {
     const payload = await getSrAnalytics("user-sr");
     expect(payload.role).toBe("SR");
-    expect(payload.charts).toHaveLength(4);
+    expect(payload.charts).toHaveLength(5);
+    expect(payload.charts.some((c) => c.id === "topProductsByQuantity")).toBe(
+      true,
+    );
     expect(buildMonthlySalesTrend).toHaveBeenCalledWith(
       TERRITORY_SCOPE,
       undefined,

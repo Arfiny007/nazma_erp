@@ -14,6 +14,12 @@ export type DashboardChartType = "line" | "bar" | "pie" | "area";
 export interface ChartPoint {
   label: string;
   value: number;
+  /** Presentation-only exact quantity string (Decimal transport). */
+  valueLabel?: string;
+  meta?: {
+    productCode?: string;
+    territoryCount?: number;
+  };
 }
 
 export interface DashboardChart {
@@ -21,6 +27,11 @@ export interface DashboardChart {
   titleKey: string;
   type: DashboardChartType;
   data: ChartPoint[];
+  /** Optional deep-link to detailed report (PHASE_12B). */
+  href?: string;
+  hrefLabelKey?: string;
+  /** Bar charts may render horizontally for long product labels. */
+  orientation?: "horizontal" | "vertical";
 }
 
 export interface TerritoryHeatmapPoint {

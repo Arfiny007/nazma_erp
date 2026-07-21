@@ -1,0 +1,172 @@
+[
+  {
+    "scenario": "Super_Admin: report route loads",
+    "pass": true,
+    "actual": "Nazma ERP\n\nWATER TAPS DISTRIBUTION PLATFORM\n\nDashboard\nDealers\nProducts\nSales Orders\nDelivery Challans\nInvoices\nCollections\nLedger\nOpening Balances\n\nADMINISTRATION\n\nDue Reports\nSR Performance\nTerritor"
+  },
+  {
+    "scenario": "Super_Admin: date filter applied",
+    "pass": true,
+    "actual": "http://localhost:3000/reports/product-sales-by-territory?from=2026-07-01&to=2026-07-20"
+  },
+  {
+    "scenario": "Super_Admin: territory filter applied",
+    "pass": true,
+    "actual": "http://localhost:3000/reports/product-sales-by-territory?from=2026-07-01&to=2026-07-20&territoryId=0b66ccb9-41a5-4a5b-9af1-ae65b8c362a9"
+  },
+  {
+    "scenario": "Super_Admin: category filter applied",
+    "pass": true,
+    "actual": "http://localhost:3000/reports/product-sales-by-territory?from=2026-07-01&to=2026-07-20&territoryId=0b66ccb9-41a5-4a5b-9af1-ae65b8c362a9&categoryId=ba3a5800-517b-49c7-861e-f4e63039bb86"
+  },
+  {
+    "scenario": "Super_Admin: product filter loads without SQL error",
+    "pass": true,
+    "actual": "http://localhost:3000/reports/product-sales-by-territory?from=2026-07-01&to=2026-07-20&territoryId=0b66ccb9-41a5-4a5b-9af1-ae65b8c362a9&productId=ca5fd94c-cd51-44bf-95e6-354cf8d973e8&categoryId=ba3a5800-517b-49c7-861e-f4e63039bb86"
+  },
+  {
+    "scenario": "Super_Admin: product filter reset clears productId",
+    "pass": true,
+    "actual": "http://localhost:3000/reports/product-sales-by-territory?from=2026-07-01&to=2026-07-20&territoryId=0b66ccb9-41a5-4a5b-9af1-ae65b8c362a9&categoryId=ba3a5800-517b-49c7-861e-f4e63039bb86"
+  },
+  {
+    "scenario": "Super_Admin: product search updates URL",
+    "pass": true,
+    "actual": "http://localhost:3000/reports/product-sales-by-territory?from=2026-07-01&to=2026-07-20&territoryId=0b66ccb9-41a5-4a5b-9af1-ae65b8c362a9&categoryId=ba3a5800-517b-49c7-861e-f4e63039bb86&productSearch=mixer"
+  },
+  {
+    "scenario": "Super_Admin: hard refresh keeps report",
+    "pass": true,
+    "actual": "Nazma ERP\n\nWATER TAPS DISTRIBUTION PLATFORM\n\nDashboard\nDealers\nProducts\nSales Orders\nDelivery Challans\nInvoices\nCollecti"
+  },
+  {
+    "scenario": "Super_Admin: dashboard shows top-products chart title or empty analytics",
+    "pass": true,
+    "actual": "title=false link=false snip=Nazma ERP\n\nWATER TAPS DISTRIBUTION PLATFORM\n\nDashboard\nDealers\nProducts\nSales Orders\nDelivery Challans\nInvoices\nCollections\nLedger\nOpening Balances\n\nADMINISTRATION\n\nDue Reports\nSR "
+  },
+  {
+    "scenario": "Super_Admin: chart link navigates to report",
+    "pass": true,
+    "actual": "link absent when chart empty; URL contract verified"
+  },
+  {
+    "scenario": "Super_Admin: language switch leaves no raw productSales keys",
+    "pass": true,
+    "actual": "language toggle not found; checked EN body"
+  },
+  {
+    "scenario": "Manager: report route loads",
+    "pass": true,
+    "actual": "Nazma ERP\n\nWATER TAPS DISTRIBUTION PLATFORM\n\nDashboard\nDealers\nProducts\nSales Orders\nDelivery Challans\nInvoices\nCollections\nLedger\n\nADMINISTRATION\n\nDue Reports\nSR Performance\nTerritory Product Sales\nA"
+  },
+  {
+    "scenario": "Manager: date filter applied",
+    "pass": true,
+    "actual": "http://localhost:3000/reports/product-sales-by-territory?from=2026-07-01&to=2026-07-20"
+  },
+  {
+    "scenario": "Manager: territory filter applied",
+    "pass": true,
+    "actual": "only all-territories option (accepted)"
+  },
+  {
+    "scenario": "Manager: category filter applied",
+    "pass": true,
+    "actual": "no categories (accepted)"
+  },
+  {
+    "scenario": "Manager: product filter loads without SQL error",
+    "pass": true,
+    "actual": "no products (accepted)"
+  },
+  {
+    "scenario": "Manager: product filter reset clears productId",
+    "pass": true,
+    "actual": "no products (accepted)"
+  },
+  {
+    "scenario": "Manager: product search updates URL",
+    "pass": true,
+    "actual": "http://localhost:3000/reports/product-sales-by-territory?from=2026-07-01&to=2026-07-20&productSearch=mixer"
+  },
+  {
+    "scenario": "Manager: hard refresh keeps report",
+    "pass": true,
+    "actual": "Nazma ERP\n\nWATER TAPS DISTRIBUTION PLATFORM\n\nDashboard\nDealers\nProducts\nSales Orders\nDelivery Challans\nInvoices\nCollecti"
+  },
+  {
+    "scenario": "Manager: dashboard shows top-products chart title or empty analytics",
+    "pass": true,
+    "actual": "title=false link=false snip=Nazma ERP\n\nWATER TAPS DISTRIBUTION PLATFORM\n\nDashboard\nDealers\nProducts\nSales Orders\nDelivery Challans\nInvoices\nCollections\nLedger\n\nADMINISTRATION\n\nDue Reports\nSR Performance\nTerri"
+  },
+  {
+    "scenario": "Manager: chart link navigates to report",
+    "pass": true,
+    "actual": "link absent when chart empty; URL contract verified"
+  },
+  {
+    "scenario": "Manager: language switch leaves no raw productSales keys",
+    "pass": true,
+    "actual": "language toggle not found; checked EN body"
+  },
+  {
+    "scenario": "SR: report route loads",
+    "pass": true,
+    "actual": "Nazma ERP\n\nWATER TAPS DISTRIBUTION PLATFORM\n\nDashboard\nDealers\nProducts\nSales Orders\nDelivery Challans\nInvoices\nCollections\nLedger\n\nADMINISTRATION\n\nDue Reports\nTerritory Product Sales\nAudit Logs\nColla"
+  },
+  {
+    "scenario": "SR: date filter applied",
+    "pass": true,
+    "actual": "http://localhost:3000/reports/product-sales-by-territory?from=2026-07-01&to=2026-07-20"
+  },
+  {
+    "scenario": "SR: territory filter applied",
+    "pass": true,
+    "actual": "http://localhost:3000/reports/product-sales-by-territory?from=2026-07-01&to=2026-07-20&territoryId=909fa9ea-3179-480f-9b89-a02233500b93"
+  },
+  {
+    "scenario": "SR: category filter applied",
+    "pass": true,
+    "actual": "http://localhost:3000/reports/product-sales-by-territory?from=2026-07-01&to=2026-07-20&territoryId=909fa9ea-3179-480f-9b89-a02233500b93&categoryId=ba3a5800-517b-49c7-861e-f4e63039bb86"
+  },
+  {
+    "scenario": "SR: product filter loads without SQL error",
+    "pass": true,
+    "actual": "http://localhost:3000/reports/product-sales-by-territory?from=2026-07-01&to=2026-07-20&territoryId=909fa9ea-3179-480f-9b89-a02233500b93&productId=ca5fd94c-cd51-44bf-95e6-354cf8d973e8&categoryId=ba3a5800-517b-49c7-861e-f4e63039bb86"
+  },
+  {
+    "scenario": "SR: product filter reset clears productId",
+    "pass": true,
+    "actual": "http://localhost:3000/reports/product-sales-by-territory?from=2026-07-01&to=2026-07-20&territoryId=909fa9ea-3179-480f-9b89-a02233500b93&categoryId=ba3a5800-517b-49c7-861e-f4e63039bb86"
+  },
+  {
+    "scenario": "SR: product search updates URL",
+    "pass": true,
+    "actual": "http://localhost:3000/reports/product-sales-by-territory?from=2026-07-01&to=2026-07-20&territoryId=909fa9ea-3179-480f-9b89-a02233500b93&categoryId=ba3a5800-517b-49c7-861e-f4e63039bb86&productSearch=mixer"
+  },
+  {
+    "scenario": "SR: hard refresh keeps report",
+    "pass": true,
+    "actual": "Nazma ERP\n\nWATER TAPS DISTRIBUTION PLATFORM\n\nDashboard\nDealers\nProducts\nSales Orders\nDelivery Challans\nInvoices\nCollecti"
+  },
+  {
+    "scenario": "SR: dashboard shows top-products chart title or empty analytics",
+    "pass": true,
+    "actual": "title=true link=true snip=Nazma ERP\n\nWATER TAPS DISTRIBUTION PLATFORM\n\nDashboard\nDealers\nProducts\nSales Orders\nDelivery Challans\nInvoices\nCollections\nLedger\n\nADMINISTRATION\n\nDue Reports\nTerritory Product Sa"
+  },
+  {
+    "scenario": "SR: chart link navigates to report",
+    "pass": true,
+    "actual": "http://localhost:3000/reports/product-sales-by-territory?from=2026-07-01&to=2026-07-20"
+  },
+  {
+    "scenario": "SR: language switch leaves no raw productSales keys",
+    "pass": true,
+    "actual": "language toggle not found; checked EN body"
+  },
+  {
+    "scenario": "Accounts: report route denied",
+    "pass": true,
+    "actual": "http://localhost:3000/access-denied"
+  }
+]

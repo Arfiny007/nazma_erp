@@ -24,6 +24,7 @@ export {
   mapDecimalTrendToChart,
   mapIntegrityOverviewChart,
   decimalToChartValue,
+  mapTopProductsByQuantityChart,
 } from "./analytics-mappers";
 
 export {

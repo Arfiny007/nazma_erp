@@ -52,6 +52,10 @@ const ROUTE_PERMISSIONS: ReadonlyArray<{
     prefix: "/reports/sr-performance",
     permission: "reports:sr-performance:view",
   },
+  {
+    prefix: "/reports/product-sales-by-territory",
+    permission: "reports:territory-product-sales:view",
+  },
   { prefix: "/reports", permission: "reports:view" },
   { prefix: "/audit", permission: "audit:view" },
   { prefix: "/settings/notifications", permission: "notifications:view" },

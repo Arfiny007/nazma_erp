@@ -2,7 +2,7 @@
 
 Permanent record of significant client and business requests, architectural responses, and delivery status.
 
-**Last updated:** 2026-07-20 (PHASE_12A.1 CERTIFIED — ESLint closure)
+**Last updated:** 2026-07-20 (PHASE_12B — Territory Product Sales)
 
 ---
 
@@ -21,7 +21,7 @@ Permanent record of significant client and business requests, architectural resp
 
 ### Implemented
 
-Enterprise ERP quality; EN/BN localization; RBAC; partial invoicing; delivery challan workflow; partial delivery; invoice from challan only; mandatory InvoiceItem; credit limit at invoice issue; enterprise invoice UI; client-approved invoice layout; dynamic invoice rows; bank details omitted; Nazma branding + logo; enterprise blue theme; typography/spacing/margins; browser vector PDF; previous/current/outstanding due block; 30-day payment terms; VAT-included pricing; collections cash pool; generic allocation (Invoice); advance payment; collection reversal; collections UI; money receipt; document platform extraction; invoice QA fixes; dealer combobox fix; enterprise data tables; invoice layout revision 2; sales person = order creator; blank signature areas; design tokens; enterprise header hierarchy; single B2B dealer section; rebalanced product table; tabular numerals; grouped financial summary; single authorized signature; professional Terms & Conditions notes; enterprise footer; document platform production design freeze (PHASE_06D.2); printable SR Performance & Ledger Dashboard with dealer-level statement + global SR overview (PHASE_12A / ADR-060); SR Performance filter URL contract + independent individual/overview print + ownership-attribution diagnostics (PHASE_12A.1); repository-wide ESLint gate closure for baseline React state defects (PHASE_12A.1 ESLint closure).
+Enterprise ERP quality; EN/BN localization; RBAC; partial invoicing; delivery challan workflow; partial delivery; invoice from challan only; mandatory InvoiceItem; credit limit at invoice issue; enterprise invoice UI; client-approved invoice layout; dynamic invoice rows; bank details omitted; Nazma branding + logo; enterprise blue theme; typography/spacing/margins; browser vector PDF; previous/current/outstanding due block; 30-day payment terms; VAT-included pricing; collections cash pool; generic allocation (Invoice); advance payment; collection reversal; collections UI; money receipt; document platform extraction; invoice QA fixes; dealer combobox fix; enterprise data tables; invoice layout revision 2; sales person = order creator; blank signature areas; design tokens; enterprise header hierarchy; single B2B dealer section; rebalanced product table; tabular numerals; grouped financial summary; single authorized signature; professional Terms & Conditions notes; enterprise footer; document platform production design freeze (PHASE_06D.2); printable SR Performance & Ledger Dashboard with dealer-level statement + global SR overview (PHASE_12A / ADR-060); SR Performance filter URL contract + independent individual/overview print + ownership-attribution diagnostics (PHASE_12A.1); repository-wide ESLint gate closure for baseline React state defects (PHASE_12A.1 ESLint closure); territory-wise product sales report + top-selling products dashboard chart from InvoiceItem quantities (PHASE_12B / ADR-061).
 
 ### Pending
 

@@ -222,6 +222,40 @@ export function mapTerritoryHeatmap(
   });
 }
 
+/**
+ * Top-selling products by InvoiceItem sold quantity — PHASE_12B.
+ * Converts Decimal → number only at the visual boundary; valueLabel preserves
+ * the exact quantity string for tooltips/labels.
+ */
+export function mapTopProductsByQuantityChart(
+  points: readonly {
+    productId: string;
+    productCode: string;
+    productName: string;
+    soldQuantity: Prisma.Decimal;
+    territoryCount: number;
+  }[],
+  options?: { href?: string },
+): DashboardChart {
+  return {
+    id: "topProductsByQuantity",
+    titleKey: "dashboard.analytics.charts.topProductsByQuantity",
+    type: "bar",
+    orientation: "horizontal",
+    href: options?.href,
+    hrefLabelKey: "dashboard.analytics.charts.viewTerritoryBreakdown",
+    data: points.map((point) => ({
+      label: point.productName,
+      value: decimalToChartValue(point.soldQuantity),
+      valueLabel: point.soldQuantity.toFixed(2),
+      meta: {
+        productCode: point.productCode,
+        territoryCount: point.territoryCount,
+      },
+    })),
+  };
+}
+
 export function buildAnalyticsPayload<T extends { charts: DashboardChart[]; generatedAt: string }>(
   payload: T,
 ): T {
