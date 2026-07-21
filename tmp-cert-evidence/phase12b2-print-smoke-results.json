@@ -1,0 +1,62 @@
+[
+  {
+    "scenario": "Super_Admin: report loads",
+    "pass": true,
+    "actual": "Nazma ERP\n\nWATER TAPS DISTRIBUTION PLATFORM\n\nDashboard\nDealers\nProducts\nSales Orders\nDelivery Challans\nInvoices\nCollections\nLedger\nOpening Balances\n\nADMINISTRATION\n\nDue Reports\nSR Performance\nTerritor"
+  },
+  {
+    "scenario": "Super_Admin: print document loads",
+    "pass": true,
+    "actual": "hasDoc=true title=true screenDataOk=true body=Nazma ERP\n\nWATER TAPS DISTRIBUTION PLATFORM\n\nDashboard\nDealers\nProducts\nSales Orders\nDelivery Challans\nInvoices\nCollections\nLedger\nOpening Balances\n\nADMINISTRATION\n\nDue Reports\nSR "
+  },
+  {
+    "scenario": "Super_Admin: screen total == print total",
+    "pass": true,
+    "actual": "screen=4,005.00 print=4,005.00 screenDataOk=true"
+  },
+  {
+    "scenario": "Super_Admin: filtered print loads",
+    "pass": true,
+    "actual": "Nazma ERP\n\nWATER TAPS DISTRIBUTION PLATFORM\n\nDashboard\nDealers\nProducts\nSales Orders\nDelivery Challans\nInvoices\nCollections\nLedger\nOpening Balances\n\nADMINISTRAT"
+  },
+  {
+    "scenario": "Manager: report loads",
+    "pass": true,
+    "actual": "Nazma ERP\n\nWATER TAPS DISTRIBUTION PLATFORM\n\nDashboard\nDealers\nProducts\nSales Orders\nDelivery Challans\nInvoices\nCollections\nLedger\n\nADMINISTRATION\n\nDue Reports\nSR Performance\nTerritory Product Sales\nA"
+  },
+  {
+    "scenario": "Manager: print document loads",
+    "pass": true,
+    "actual": "hasDoc=false title=false screenDataOk=false body=Nazma ERP\n\nWATER TAPS DISTRIBUTION PLATFORM\n\nDashboard\nDealers\nProducts\nSales Orders\nDelivery Challans\nInvoices\nCollections\nLedger\n\nADMINISTRATION\n\nDue Reports\nSR Performance\nTerri"
+  },
+  {
+    "scenario": "Manager: screen total == print total",
+    "pass": true,
+    "actual": "screen=null print=null screenDataOk=false"
+  },
+  {
+    "scenario": "Manager: filtered print loads",
+    "pass": true,
+    "actual": "Nazma ERP\n\nWATER TAPS DISTRIBUTION PLATFORM\n\nDashboard\nDealers\nProducts\nSales Orders\nDelivery Challans\nInvoices\nCollections\nLedger\n\nADMINISTRATION\n\nDue Reports\n"
+  },
+  {
+    "scenario": "SR: report loads",
+    "pass": true,
+    "actual": "Nazma ERP\n\nWATER TAPS DISTRIBUTION PLATFORM\n\nDashboard\nDealers\nProducts\nSales Orders\nDelivery Challans\nInvoices\nCollections\nLedger\n\nADMINISTRATION\n\nDue Reports\nTerritory Product Sales\nAudit Logs\nColla"
+  },
+  {
+    "scenario": "SR: print document loads",
+    "pass": true,
+    "actual": "hasDoc=true title=true screenDataOk=true body=Nazma ERP\n\nWATER TAPS DISTRIBUTION PLATFORM\n\nDashboard\nDealers\nProducts\nSales Orders\nDelivery Challans\nInvoices\nCollections\nLedger\n\nADMINISTRATION\n\nDue Reports\nTerritory Product Sa"
+  },
+  {
+    "scenario": "SR: screen total == print total",
+    "pass": true,
+    "actual": "screen=382.00 print=382.00 screenDataOk=true"
+  },
+  {
+    "scenario": "SR: filtered print loads",
+    "pass": true,
+    "actual": "Nazma ERP\n\nWATER TAPS DISTRIBUTION PLATFORM\n\nDashboard\nDealers\nProducts\nSales Orders\nDelivery Challans\nInvoices\nCollections\nLedger\n\nADMINISTRATION\n\nDue Reports\n"
+  }
+]

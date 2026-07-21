@@ -1,5 +1,22 @@
 # FINAL ARCHITECTURE DOCUMENTATION — Nazma Water Taps ERP
 
+## PHASE_12B.2 Addendum (2026-07-21)
+
+Territory Product Sales printable Document Platform extension.
+
+| Concern | Decision |
+|---------|----------|
+| Architecture | Presentation only — consumes certified report service / DTO |
+| Route | `/reports/product-sales-by-territory/print?mode=report` |
+| Mode | `z.enum(["report"])` — future modes reserved |
+| Permission | Same `reports:territory-product-sales:view` (auth + role + territory scope) |
+| Filters | Shared `parseTerritoryProductSalesFilters` |
+| Totals | Screen summary == print summary (server DTO; no React math) |
+| Document | `DocumentLayout` + CompanyHeader/Footer + dense A4 table |
+| Certification | RULE_PRODUCT_SALES_17 |
+| ADR | ADR-061 print section |
+| Forbidden | Separate SQL / aggregation / attribution / print permission |
+
 ## PHASE_12B.1 Addendum (2026-07-20)
 
 Territory Product Sales dynamic filter SQL alias hotfix.

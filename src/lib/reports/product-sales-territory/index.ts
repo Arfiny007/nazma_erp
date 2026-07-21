@@ -21,6 +21,7 @@ export {
 export type { ProductSalesErrorCode } from "./product-sales-errors";
 
 export {
+  toTerritoryProductSalesPrintPayloadDTO,
   toTerritoryProductSalesReportDTO,
   toTopSellingProductsChartDTO,
 } from "./product-sales-mapper";
@@ -47,6 +48,7 @@ export type {
 export {
   getAllowedTerritoryOptions,
   getProductSalesFilterOptions,
+  getTerritoryProductSalesPrintPayload,
   getTerritoryProductSalesReport,
   getTopSellingProductsByTerritory,
 } from "./product-sales-service";
@@ -56,6 +58,7 @@ export {
   assertTerritoryInScope,
   assertValidDateRange,
   assertValidPagination,
+  assertValidPrintMode,
   buildProductSalesQuery,
   defaultReportDateRange,
   defaultUrlFilters,
@@ -73,12 +76,14 @@ export type {
   ProductSalesAttributionDiagnostics,
   ProductSalesFilterParams,
   ProductSalesPageSize,
+  ProductSalesPrintMode,
   ProductSalesServiceContext,
   ProductSalesSort,
   ProductSalesUrlFilters,
   ProductSalesViewMode,
   TerritoryProductChartSeries,
   TerritoryProductSalesAggregateRow,
+  TerritoryProductSalesPrintPayload,
   TerritoryProductSalesReport,
   TerritoryProductSalesRow,
   TerritoryProductSalesSummary,

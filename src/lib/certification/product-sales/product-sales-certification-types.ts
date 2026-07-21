@@ -2,7 +2,7 @@
  * Territory Product Sales certification types — PHASE_12B / ADR-061.
  */
 
-export const PRODUCT_SALES_CERTIFICATION_VERSION = "12B.1.1";
+export const PRODUCT_SALES_CERTIFICATION_VERSION = "12B.2.0";
 
 export type ProductSalesCheckStatus = "passed" | "failed" | "warning";
 

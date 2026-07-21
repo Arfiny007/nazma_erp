@@ -130,6 +130,25 @@ Additive chart on certified Dashboard Analytics:
 
 Shared service: `getTopSellingProductsByTerritory`.
 
+### Print document (PHASE_12B.2)
+
+Presentation extension only. Print consumes the certified Territory Product
+Sales report service — never separate SQL, aggregation, attribution, or RBAC.
+
+```text
+Report Filter
+  → Territory Product Sales Service
+  → TerritoryProductSalesDTO
+  → Screen Table | Printable Document
+```
+
+- Route: `/reports/product-sales-by-territory/print?mode=report`
+- Mode contract: `z.enum(["report"])` (future modes reserved)
+- Permission: same `reports:territory-product-sales:view` (no print-specific permission)
+- Filters: shared `parseTerritoryProductSalesFilters()`
+- Document Platform: `DocumentLayout` + company branding + dense A4 table
+- Screen and print totals must always match (server DTO summary)
+
 ### Explicit non-goals
 
 Revenue/margin/COGS, returns/credit notes, inventory, forecasting, Excel/PDF
@@ -138,6 +157,8 @@ export, new chart libraries, territory/ownership/financial engine redesigns.
 ## Consequences
 
 - Route `/reports/product-sales-by-territory` under Reports nav
-- Certification: `runTerritoryProductSalesCertification()` RULE_PRODUCT_SALES_01–16
+- Print route `/reports/product-sales-by-territory/print?mode=report`
+- Certification: `runTerritoryProductSalesCertification()` RULE_PRODUCT_SALES_01–17
 - Frozen financial engines remain untouched
 - PHASE_12B.1 hotfix: query-stage-aware dynamic filter aliases
+- PHASE_12B.2: Document Platform print over certified report DTO

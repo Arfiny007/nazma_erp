@@ -84,6 +84,7 @@ export default async function ProductSalesByTerritoryPage({
     page: report?.pagination.page ?? filters.page,
     pageSize: report?.pagination.pageSize ?? filters.pageSize,
     limit: filters.limit,
+    mode: null,
   };
 
   return (

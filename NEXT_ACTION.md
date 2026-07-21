@@ -2,21 +2,20 @@
 
 ## Current State
 
-**PHASE_12B.1 CERTIFIED** (2026-07-20)
+**PHASE_12B.2 CERTIFIED** (2026-07-21)
 
-- Hotfix: dynamic report filters use `ii`/`p`/`c` inside `eligible_invoice_items` (never `eii`)
-- Certification: RULE_PRODUCT_SALES_01–16, `phase12bApproved: true`, version `12B.1.1`
-- Gates: Prisma / tsc / eslint / vitest 654+7 / build / docker — all exit 0
-- Runtime SQL product/category/search OK; browser smoke 34/34 including product filter
-- `RUNNING_IMAGE_MATCH=true` (`sha256:7c717dc55cb3…`)
+- Print document for Territory Product Sales via Document Platform
+- Shared report DTO: screen totals == print totals
+- Certification: RULE_PRODUCT_SALES_01–17, `phase12bApproved: true`, version `12B.2.0`
+- Route: `/reports/product-sales-by-territory/print?mode=report`
 
 ---
 
 ## Next Steps
 
-### 1. Git commit for PHASE_12B + PHASE_12B.1
+### 1. Git commit for PHASE_12B + 12B.1 + 12B.2
 
-- Commit territory product sales module + filter alias hotfix + ADR-061 + governance
+- Commit territory product sales module + filter hotfix + print document + ADR-061 + governance
 - Do not include `.env`, secrets, or `tmp-cert-*` evidence scratch files
 
 ### 2. Follow-on candidates
@@ -50,4 +49,4 @@
 * Sold quantity = `SUM(InvoiceItem.quantity)` only — never order or challan quantities
 * Sale date = `Invoice.issueDate`
 * Territory from ownership history as-of issue date; fallback diagnostics when missing
-* Dynamic filters are query-stage-aware (`buildEligibleInvoiceItemFilters`)
+* Print is a presentation extension only — never separate SQL/aggregation/RBAC

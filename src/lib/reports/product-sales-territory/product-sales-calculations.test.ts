@@ -12,6 +12,8 @@ import {
 import {
   assertTerritoryInScope,
   assertValidDateRange,
+  assertValidPrintMode,
+  buildProductSalesQuery,
   defaultReportDateRange,
   formatLocalDateOnly,
   mergeProductSalesFilters,
@@ -211,6 +213,39 @@ describe("parseTerritoryProductSalesFilters", () => {
         "t-foreign",
       ),
     ).toThrow(TerritoryOutOfScopeError);
+  });
+
+  it("parses print mode=report and ignores unknown modes", () => {
+    const withMode = parseTerritoryProductSalesFilters({
+      from: "2026-07-01",
+      to: "2026-07-20",
+      mode: "report",
+    });
+    expect(withMode.mode).toBe("report");
+
+    const withoutMode = parseTerritoryProductSalesFilters({
+      from: "2026-07-01",
+      to: "2026-07-20",
+      mode: "overview",
+    });
+    expect(withoutMode.mode).toBeNull();
+  });
+
+  it("buildProductSalesQuery includes mode only when requested", () => {
+    const filters = parseTerritoryProductSalesFilters({
+      from: "2026-07-01",
+      to: "2026-07-20",
+      mode: "report",
+    });
+    expect(buildProductSalesQuery(filters)).not.toContain("mode=");
+    expect(
+      buildProductSalesQuery(filters, { includeMode: true }),
+    ).toContain("mode=report");
+  });
+
+  it("assertValidPrintMode accepts report only", () => {
+    expect(() => assertValidPrintMode("report")).not.toThrow();
+    expect(() => assertValidPrintMode(null)).toThrow();
   });
 
   it("accepts valid ascending date range", () => {

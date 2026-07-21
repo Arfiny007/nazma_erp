@@ -1,6 +1,26 @@
 # IMPLEMENTATION STATUS
 
-Last updated: 2026-07-20 (PHASE_12B.1 — Territory Product Sales Filter Hotfix)
+Last updated: 2026-07-21 (PHASE_12B.2 — Territory Product Sales Print Document)
+
+---
+
+## Territory Product Sales Print — Verification (PHASE_12B.2)
+
+| Criterion | Status |
+|-----------|--------|
+| Route `/reports/product-sales-by-territory/print?mode=report` | ✅ |
+| Permission reuse `reports:territory-product-sales:view` | ✅ |
+| Print consumes `getTerritoryProductSalesReport` (includeAllRows) | ✅ |
+| Shared `parseTerritoryProductSalesFilters` | ✅ |
+| Document Platform (`DocumentLayout` / branding / table) | ✅ |
+| Screen summary totals == print summary totals | ✅ Super_Admin / SR |
+| RULE_PRODUCT_SALES_17 | ✅ |
+| ADR-061 print section | ✅ |
+| Prisma / tsc / eslint / vitest / build / docker | ✅ exit 0 (664 passed / 7 skipped) |
+| Browser print smoke | ✅ 12/12 |
+| `RUNNING_IMAGE_MATCH=true` | ✅ `sha256:1efe623dd5a3…` |
+| Existing financial / SR / statement print regression untouched | ✅ |
+| Certification `phase12bApproved` / RULE_PRODUCT_SALES_01–17 | ✅ |
 
 ---
 

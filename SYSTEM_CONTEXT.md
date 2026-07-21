@@ -4,8 +4,8 @@ Definitive engineering context for AI sessions and new maintainers.
 
 Read this document first. Then consult `PROJECT_BRAIN.md`, `CURRENT_PHASE.md`, and relevant ADRs.
 
-**Last updated:** 2026-07-20 (PHASE_12B.1 — Territory Product Sales Filter Hotfix)
-**Current phase:** PHASE_12B.1 — Territory Product Sales Filter Query Hotfix
+**Last updated:** 2026-07-21 (PHASE_12B.2 — Territory Product Sales Print Document)
+**Current phase:** PHASE_12B.2 — Territory Product Sales Print Document
 **Production readiness:** 9.8 / 10 (ADR-041 through ADR-061)
 
 ---

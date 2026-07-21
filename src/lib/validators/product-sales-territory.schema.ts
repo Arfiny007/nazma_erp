@@ -12,6 +12,8 @@ export const productSalesSortSchema = z.enum([
   "territory-asc",
 ]);
 
+export const productSalesPrintModeSchema = z.enum(["report"]);
+
 export const getTerritoryProductSalesSchema = z.object({
   from: z.string().optional(),
   to: z.string().optional(),
@@ -36,9 +38,23 @@ export const getTopSellingProductsSchema = z.object({
   limit: z.coerce.number().int().min(1).max(50).optional(),
 });
 
+export const getTerritoryProductSalesPrintPayloadSchema =
+  getTerritoryProductSalesSchema
+    .omit({
+      page: true,
+      pageSize: true,
+      limit: true,
+    })
+    .extend({
+      mode: productSalesPrintModeSchema,
+    });
+
 export type GetTerritoryProductSalesInput = z.infer<
   typeof getTerritoryProductSalesSchema
 >;
 export type GetTopSellingProductsInput = z.infer<
   typeof getTopSellingProductsSchema
+>;
+export type GetTerritoryProductSalesPrintPayloadInput = z.infer<
+  typeof getTerritoryProductSalesPrintPayloadSchema
 >;

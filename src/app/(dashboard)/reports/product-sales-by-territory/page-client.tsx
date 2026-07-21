@@ -1,11 +1,18 @@
 "use client";
 
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import Link from "next/link";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 
+import {
+  TerritoryProductSalesDocumentPreview,
+} from "@/components/documents/product-sales-territory";
 import { PageContainer } from "@/components/layout/page-container";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { getTerritoryProductSales } from "@/lib/actions/reports/product-sales-territory";
+import {
+  getTerritoryProductSales,
+  getTerritoryProductSalesPrintPayload,
+} from "@/lib/actions/reports/product-sales-territory";
 import {
   PRODUCT_SALES_PAGE_SIZES,
   buildProductSalesQuery,
@@ -21,6 +28,7 @@ import type {
   ProductSalesFiltersDTO,
   ProductSalesSort,
   ProductSalesViewMode,
+  TerritoryProductSalesPrintPayloadDTO,
   TerritoryProductSalesReportDTO,
 } from "@/types/product-sales-territory";
 
@@ -44,6 +52,7 @@ function toUrlFilters(state: ProductSalesFiltersDTO): ProductSalesUrlFilters {
     page: state.page,
     pageSize: state.pageSize as 10 | 25 | 50 | 100,
     limit: state.limit,
+    mode: state.mode ?? null,
   };
 }
 
@@ -60,6 +69,7 @@ function toFilterState(filters: ProductSalesUrlFilters): ProductSalesFiltersDTO 
     page: filters.page,
     pageSize: filters.pageSize,
     limit: filters.limit,
+    mode: filters.mode,
   };
 }
 
@@ -109,6 +119,9 @@ export function ProductSalesPageClient({
   const [report, setReport] = useState(initialReport);
   const [errorKey, setErrorKey] = useState(initialErrorKey);
   const [loading, setLoading] = useState(false);
+  const [printOpen, setPrintOpen] = useState(false);
+  const [printPayload, setPrintPayload] =
+    useState<TerritoryProductSalesPrintPayloadDTO | null>(null);
   const requestId = useRef(0);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const skipUrlLoadRef = useRef(true);
@@ -190,6 +203,38 @@ export function ProductSalesPageClient({
   const resetFilters = () => {
     const defaults = defaultUrlFilters();
     syncUrl(toFilterState(defaults));
+  };
+
+  const handlePrint = () => {
+    startTransition(async () => {
+      const result = await getTerritoryProductSalesPrintPayload({
+        from: filters.from,
+        to: filters.to,
+        territoryId: filters.territoryId,
+        productId: filters.productId,
+        categoryId: filters.categoryId,
+        productSearch: filters.productSearch,
+        view: filters.view,
+        sort: filters.sort,
+        mode: "report",
+      });
+      if (!result.success) {
+        setErrorKey(result.error.messageKey);
+        return;
+      }
+      setPrintPayload(result.data);
+      setPrintOpen(true);
+    });
+  };
+
+  const printHref = () => {
+    const merged = mergeProductSalesFilters(toUrlFilters(filters), {
+      mode: "report",
+    });
+    return `/reports/product-sales-by-territory/print?${buildProductSalesQuery(
+      merged,
+      { includeMode: true },
+    )}`;
   };
 
   const territoryLabel =
@@ -409,7 +454,7 @@ export function ProductSalesPageClient({
             </select>
           </label>
         </div>
-        <div className="mt-3 flex gap-2">
+        <div className="mt-3 flex flex-wrap gap-2">
           <button
             type="button"
             onClick={resetFilters}
@@ -417,6 +462,20 @@ export function ProductSalesPageClient({
           >
             {t("productSales.filters.reset")}
           </button>
+          <button
+            type="button"
+            onClick={handlePrint}
+            disabled={isPending || loading}
+            className="h-8 rounded-md border border-slate-200 px-3 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200"
+          >
+            {t("productSales.actions.print")}
+          </button>
+          <Link
+            href={printHref()}
+            className="inline-flex h-8 items-center rounded-md border border-slate-200 px-3 text-xs font-medium text-slate-700 hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200"
+          >
+            {t("productSales.actions.openPrint")}
+          </Link>
         </div>
       </section>
 
@@ -681,6 +740,14 @@ export function ProductSalesPageClient({
           </div>
         ) : null}
       </section>
+
+      {printPayload ? (
+        <TerritoryProductSalesDocumentPreview
+          payload={printPayload}
+          open={printOpen}
+          onClose={() => setPrintOpen(false)}
+        />
+      ) : null}
     </PageContainer>
   );
 }

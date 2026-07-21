@@ -298,6 +298,8 @@ export function runProductSalesCertificationChecks(): ProductSalesCertificationC
     "productSales.title",
     "productSales.columns.soldQuantity",
     "productSales.summary.totalQuantity",
+    "productSales.print.documentTitle",
+    "productSales.actions.print",
     "dashboard.analytics.charts.topProductsByQuantity",
     "dashboard.analytics.charts.viewTerritoryBreakdown",
   ];
@@ -309,7 +311,7 @@ export function runProductSalesCertificationChecks(): ProductSalesCertificationC
       "Localization is complete",
       missingEn.length === 0 && missingBn.length === 0,
       missingEn.length === 0 && missingBn.length === 0
-        ? "EN/BN keys present for nav, report, and dashboard chart"
+        ? "EN/BN keys present for nav, report, print, and dashboard chart"
         : `Missing EN=${missingEn.join(",")} BN=${missingBn.join(",")}`,
     ),
   );
@@ -391,6 +393,81 @@ export function runProductSalesCertificationChecks(): ProductSalesCertificationC
       productFilterValid && categoryFilterValid && searchFilterValid
         ? "Eligible CTE filters use ii/p/c aliases; never unavailable eii"
         : "Product/category/search filters reference invalid CTE aliases",
+    ),
+  );
+
+  // RULE_PRODUCT_SALES_17 — print uses certified report DTO + Document Platform
+  const printRoute = fileExists(
+    "src/app/(dashboard)/reports/product-sales-by-territory/print/page.tsx",
+  );
+  const printDoc = fileExists(
+    "src/components/documents/product-sales-territory/territory-product-sales-document.tsx",
+  );
+  const printSource = [
+    printRoute
+      ? readSource(
+          "src/app/(dashboard)/reports/product-sales-by-territory/print/page.tsx",
+        )
+      : "",
+    fileExists(
+      "src/lib/reports/product-sales-territory/product-sales-service.ts",
+    )
+      ? readSource(
+          "src/lib/reports/product-sales-territory/product-sales-service.ts",
+        )
+      : "",
+    printDoc
+      ? readSource(
+          "src/components/documents/product-sales-territory/territory-product-sales-document.tsx",
+        )
+      : "",
+    fileExists(
+      "src/lib/actions/reports/product-sales-territory/get-territory-product-sales-print-payload.ts",
+    )
+      ? readSource(
+          "src/lib/actions/reports/product-sales-territory/get-territory-product-sales-print-payload.ts",
+        )
+      : "",
+  ].join("\n");
+  const printUsesReportService =
+    printSource.includes("getTerritoryProductSalesPrintPayload") &&
+    printSource.includes("getTerritoryProductSalesReport") &&
+    printSource.includes("includeAllRows");
+  const printUsesDocumentPlatform =
+    printSource.includes("DocumentLayout") &&
+    printSource.includes("CompanyHeader") &&
+    printSource.includes("CompanyFooter");
+  const printUsesSamePermission =
+    printSource.includes("reports:territory-product-sales:view") &&
+    !printSource.includes("reports:territory-product-sales:print");
+  const printNoSeparateSql =
+    !printSource.includes("$queryRawUnsafe") &&
+    !printSource.includes("$executeRaw");
+  const printModeReport =
+    moduleSource.includes('mode: z.enum(["report"])') ||
+    readSource("src/lib/validators/product-sales-territory.schema.ts").includes(
+      'z.enum(["report"])',
+    );
+  checks.push(
+    check(
+      "RULE_PRODUCT_SALES_17",
+      "Territory Product Sales print uses certified report DTO and Document Platform",
+      printRoute &&
+        printDoc &&
+        printUsesReportService &&
+        printUsesDocumentPlatform &&
+        printUsesSamePermission &&
+        printNoSeparateSql &&
+        printModeReport,
+      printRoute &&
+        printDoc &&
+        printUsesReportService &&
+        printUsesDocumentPlatform &&
+        printUsesSamePermission &&
+        printNoSeparateSql &&
+        printModeReport
+        ? "Print consumes report service + Document Platform; same view permission; mode=report"
+        : "Print bypasses report DTO, Document Platform, RBAC, or mode contract",
     ),
   );
 

@@ -16,6 +16,7 @@ import {
 import type {
   ProductSalesFilterParams,
   ProductSalesSort,
+  TerritoryProductSalesPrintPayload,
   TerritoryProductSalesReport,
   TerritoryProductSalesRow,
   TerritorySubtotal,
@@ -24,6 +25,7 @@ import type {
 import {
   assertScopedReportAccess,
   assertTerritoryInScope,
+  assertValidPrintMode,
   buildProductSalesQuery,
   formatLocalDateOnly,
   normalizeFilters,
@@ -177,6 +179,7 @@ export async function getTerritoryProductSalesReport(
   params: ProductSalesFilterParams,
   scope: TerritoryScope,
   client: ProductSalesReadClient = prisma,
+  options?: { includeAllRows?: boolean },
 ): Promise<TerritoryProductSalesReport> {
   assertScopedReportAccess(scope);
   const filters = normalizeFilters(params);
@@ -209,10 +212,15 @@ export async function getTerritoryProductSalesReport(
   );
 
   const totalRows = ordered.length;
-  const totalPages = Math.max(1, Math.ceil(totalRows / filters.pageSize) || 1);
-  const page = Math.min(filters.page, totalPages);
+  const includeAllRows = options?.includeAllRows === true;
+  const totalPages = includeAllRows
+    ? 1
+    : Math.max(1, Math.ceil(totalRows / filters.pageSize) || 1);
+  const page = includeAllRows ? 1 : Math.min(filters.page, totalPages);
   const start = (page - 1) * filters.pageSize;
-  const pageRows = ordered.slice(start, start + filters.pageSize);
+  const pageRows = includeAllRows
+    ? ordered
+    : ordered.slice(start, start + filters.pageSize);
 
   const productIds = new Set(ordered.map((r) => r.productId));
   const territoryIds = new Set(ordered.map((r) => r.territoryId));
@@ -229,12 +237,64 @@ export async function getTerritoryProductSalesReport(
     diagnostics: aggregate.diagnostics,
     pagination: {
       page,
-      pageSize: filters.pageSize,
+      pageSize: includeAllRows
+        ? Math.max(totalRows, filters.pageSize)
+        : filters.pageSize,
       totalRows,
       totalPages,
     },
     territorySubtotals: buildTerritorySubtotals(ordered),
     generatedAt,
+  };
+}
+
+/**
+ * Print payload — consumes certified report service (same filters, totals, RBAC).
+ * Presentation extension only; no separate SQL/aggregation/attribution.
+ */
+export async function getTerritoryProductSalesPrintPayload(
+  params: ProductSalesFilterParams,
+  scope: TerritoryScope,
+  preparedForRole: string,
+  client: ProductSalesReadClient = prisma,
+): Promise<TerritoryProductSalesPrintPayload> {
+  assertScopedReportAccess(scope);
+  const filters = normalizeFilters({ ...params, page: 1 });
+  assertTerritoryInScope(scope, filters.territoryId);
+  assertValidPrintMode(filters.mode ?? params.mode);
+
+  const report = await getTerritoryProductSalesReport(
+    filters,
+    scope,
+    client,
+    { includeAllRows: true },
+  );
+
+  let territoryName: string | null = null;
+  if (filters.territoryId) {
+    const territories = await findTerritoryOptionsForScope(client, scope);
+    territoryName =
+      territories.find((row) => row.id === filters.territoryId)?.name ?? null;
+  }
+
+  return {
+    mode: "report",
+    generatedAt: report.generatedAt,
+    preparedForRole,
+    filters: {
+      from: filters.from,
+      to: filters.to,
+      territoryId: filters.territoryId,
+      territoryName,
+      productId: filters.productId,
+      categoryId: filters.categoryId,
+      productSearch: filters.productSearch,
+      view: filters.view,
+      sort: filters.sort,
+    },
+    rows: report.rows,
+    summary: report.summary,
+    diagnostics: report.diagnostics,
   };
 }
 

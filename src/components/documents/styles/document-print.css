@@ -147,6 +147,10 @@
   white-space: nowrap;
 }
 
+.doc-table thead {
+  display: table-header-group;
+}
+
 .doc-table th {
   font-weight: 700;
   text-align: left;
@@ -301,6 +305,17 @@
   .doc-statement-table tbody tr {
     page-break-inside: avoid;
     break-inside: avoid;
+  }
+
+  .doc-product-sales-layout .doc-table th,
+  .doc-product-sales-layout .doc-table td {
+    font-size: 7.5pt;
+    white-space: normal;
+    word-break: break-word;
+  }
+
+  .doc-product-sales-layout .doc-table thead {
+    display: table-header-group;
   }
 }
 

@@ -2,36 +2,38 @@
 
 Current Phase:
 
-PHASE_12B.1 — Territory Product Sales Filter Query Hotfix
+PHASE_12B.2 — Territory Product Sales Print Document
 
 Status:
 
-PHASE_12B.1 CERTIFIED
+PHASE_12B.2 CERTIFIED
 
 ---
 
-# PHASE_12B.1 — Territory Product Sales Filter Query Hotfix
+# PHASE_12B.2 — Territory Product Sales Print Document
 
-Status: CERTIFIED (2026-07-20)
+Status: CERTIFIED (2026-07-21)
 
 ## Objectives completed
 
-* Fixed dynamic SQL filter aliasing: `eligible_invoice_items` predicates use `ii`/`p`/`c`, never unavailable `eii`
-* Explicit `buildEligibleInvoiceItemFilters()` query-stage builder
-* Regression tests for productId / categoryId / productSearch aliases
-* Certification RULE_PRODUCT_SALES_16
-* ADR-061 query-stage filter alias section
+* Print route `/reports/product-sales-by-territory/print?mode=report`
+* Document Platform components under `src/components/documents/product-sales-territory/`
+* Print consumes certified `getTerritoryProductSalesReport` (same filters, totals, RBAC)
+* Permission reuse: `reports:territory-product-sales:view` (no second print permission)
+* Certification RULE_PRODUCT_SALES_17
+* ADR-061 print document section
 
 ## Explicitly NOT Changed
 
-* InvoiceItem source of truth
+* Product Sales query architecture / InvoiceItem aggregation
 * Territory attribution / dealer ownership logic
 * Dashboard analytics architecture
-* RBAC architecture
-* Decimal quantity handling
-* posting-service, dealer-lock, ledger engines
+* Territory RBAC architecture
+* Financial engines (posting-service, dealer-lock, ledger)
 
 ## Prior Phase
+
+**PHASE_12B.1 CERTIFIED** (2026-07-20) — Territory Product Sales Filter Query Hotfix
 
 **PHASE_12B FULLY CERTIFIED** (2026-07-20)
 

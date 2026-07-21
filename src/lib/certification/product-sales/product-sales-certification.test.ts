@@ -6,11 +6,14 @@ import {
 } from "@/lib/certification/product-sales";
 
 describe("PHASE_12B product sales certification", () => {
-  it("passes RULE_PRODUCT_SALES_01–16 structural gates", () => {
+  it("passes RULE_PRODUCT_SALES_01–17 structural gates", () => {
     const checks = runProductSalesCertificationChecks();
     const failed = checks.filter((c) => !c.passed);
     expect(failed.map((c) => `${c.id}: ${c.message}`)).toEqual([]);
     expect(checks.some((c) => c.id === "RULE_PRODUCT_SALES_16" && c.passed)).toBe(
+      true,
+    );
+    expect(checks.some((c) => c.id === "RULE_PRODUCT_SALES_17" && c.passed)).toBe(
       true,
     );
   });

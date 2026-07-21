@@ -4,6 +4,37 @@ All notable changes to Nazma ERP are documented here.
 
 ---
 
+## [PHASE_12B.2] — 2026-07-21 — Territory Product Sales Print Document
+
+### Added
+
+- Print route `/reports/product-sales-by-territory/print?mode=report`
+- Document Platform package `src/components/documents/product-sales-territory/`
+- `getTerritoryProductSalesPrintPayload` — consumes certified report service (all rows)
+- Print preview modal + open-print link on the screen report
+- Certification RULE_PRODUCT_SALES_17 — print uses report DTO + Document Platform
+- EN/BN print localization keys
+
+### Architecture
+
+- Screen and print share `parseTerritoryProductSalesFilters` + report DTO totals
+- Same permission `reports:territory-product-sales:view` (auth + role + territory scope)
+- No separate SQL, aggregation, attribution, or print-specific permission
+
+### Verified
+
+- `PRISMA_EXIT_CODE=0` `TSC_EXIT_CODE=0` `ESLINT_EXIT_CODE=0` `VITEST_EXIT_CODE=0` (664 passed / 7 skipped) `BUILD_EXIT_CODE=0` `DOCKER_BUILD_EXIT_CODE=0`
+- Browser print smoke 12/12 — Super_Admin + SR screen==print totals; Manager authorized (seed data load parity)
+- `RUNNING_IMAGE_MATCH=true` (`sha256:1efe623dd5a3…`)
+- Certification `phase12bApproved: true` / RULE_PRODUCT_SALES_01–17 / version `12B.2.0`
+
+### Explicitly NOT Changed
+
+- InvoiceItem aggregation, territory attribution, dashboard analytics, RBAC, financial engines
+- Existing Invoice / Challan / Money Receipt / Dealer Statement / SR Performance print paths
+
+---
+
 ## [PHASE_12B.1] — 2026-07-20 — Territory Product Sales Filter Query Hotfix
 
 ### Fixed

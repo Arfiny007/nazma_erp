@@ -13,6 +13,7 @@ import {
   PRODUCT_SALES_PAGE_SIZES,
   type ProductSalesFilterParams,
   type ProductSalesPageSize,
+  type ProductSalesPrintMode,
   type ProductSalesSort,
   type ProductSalesUrlFilters,
   type ProductSalesViewMode,
@@ -166,6 +167,27 @@ function parseSort(value: string | undefined): ProductSalesSort {
   }
 }
 
+function parsePrintMode(value: string | undefined): ProductSalesPrintMode | null {
+  if (value === "report") {
+    return "report";
+  }
+  return null;
+}
+
+/**
+ * Print mode must be explicitly `report` (future modes reserved).
+ */
+export function assertValidPrintMode(
+  mode: ProductSalesPrintMode | null | undefined,
+): asserts mode is ProductSalesPrintMode {
+  if (mode !== "report") {
+    throw new ProductSalesError(
+      "VALIDATION_ERROR",
+      "Print mode must be report",
+    );
+  }
+}
+
 function parsePageSize(value: string | undefined): ProductSalesPageSize {
   const n = value ? Number(value) : DEFAULT_PRODUCT_SALES_PAGE_SIZE;
   if (PRODUCT_SALES_PAGE_SIZES.includes(n as ProductSalesPageSize)) {
@@ -226,6 +248,7 @@ export function parseTerritoryProductSalesFilters(
       DEFAULT_TOP_PRODUCTS_LIMIT,
       50,
     ),
+    mode: parsePrintMode(firstParam(searchParams.mode)),
   };
 }
 
@@ -277,6 +300,7 @@ export function normalizeFilters(
       params.limit && params.limit >= 1
         ? Math.min(50, Math.floor(params.limit))
         : DEFAULT_TOP_PRODUCTS_LIMIT,
+    mode: params.mode === "report" ? "report" : null,
   };
 }
 
@@ -296,6 +320,7 @@ export function defaultUrlFilters(
     page: 1,
     pageSize: DEFAULT_PRODUCT_SALES_PAGE_SIZE,
     limit: DEFAULT_TOP_PRODUCTS_LIMIT,
+    mode: null,
   };
 }
 
@@ -332,6 +357,7 @@ export function mergeProductSalesFilters(
 
 export function buildProductSalesQuery(
   filters: ProductSalesUrlFilters,
+  options?: { includeMode?: boolean },
 ): string {
   const params = new URLSearchParams();
   params.set("from", formatLocalDateOnly(filters.from));
@@ -359,6 +385,9 @@ export function buildProductSalesQuery(
   }
   if (filters.pageSize !== DEFAULT_PRODUCT_SALES_PAGE_SIZE) {
     params.set("pageSize", String(filters.pageSize));
+  }
+  if (options?.includeMode && filters.mode) {
+    params.set("mode", filters.mode);
   }
   return params.toString();
 }

@@ -12,6 +12,7 @@ export const DEFAULT_PRODUCT_SALES_PAGE_SIZE: ProductSalesPageSize = 25;
 export const DEFAULT_TOP_PRODUCTS_LIMIT = 10;
 
 export type ProductSalesViewMode = "territory-product" | "product-territory";
+export type ProductSalesPrintMode = "report";
 export type ProductSalesSort =
   | "quantity-desc"
   | "quantity-asc"
@@ -36,6 +37,8 @@ export interface ProductSalesUrlFilters {
   page: number;
   pageSize: ProductSalesPageSize;
   limit: number;
+  /** Print route only — null on screen report. */
+  mode: ProductSalesPrintMode | null;
 }
 
 export interface ProductSalesFilterParams {
@@ -50,6 +53,27 @@ export interface ProductSalesFilterParams {
   page?: number | null;
   pageSize?: number | null;
   limit?: number | null;
+  mode?: ProductSalesPrintMode | null;
+}
+
+export interface TerritoryProductSalesPrintPayload {
+  mode: ProductSalesPrintMode;
+  generatedAt: Date;
+  preparedForRole: string;
+  filters: {
+    from: Date;
+    to: Date;
+    territoryId: string | null;
+    territoryName: string | null;
+    productId: string | null;
+    categoryId: string | null;
+    productSearch: string;
+    view: ProductSalesViewMode;
+    sort: ProductSalesSort;
+  };
+  rows: TerritoryProductSalesRow[];
+  summary: TerritoryProductSalesSummary;
+  diagnostics: ProductSalesAttributionDiagnostics;
 }
 
 export interface ProductSalesAttributionDiagnostics {

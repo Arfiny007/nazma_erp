@@ -1,6 +1,7 @@
 import { quantityToFixed } from "./product-sales-calculations";
 import type {
   ProductSalesAttributionDiagnostics,
+  TerritoryProductSalesPrintPayload,
   TerritoryProductSalesReport,
   TerritoryProductSalesRow,
   TerritoryProductSalesSummary,
@@ -11,6 +12,7 @@ import type {
 } from "./product-sales-types";
 import type {
   ProductSalesAttributionDiagnosticsDTO,
+  TerritoryProductSalesPrintPayloadDTO,
   TerritoryProductSalesReportDTO,
   TerritoryProductSalesRowDTO,
   TerritoryProductSalesSummaryDTO,
@@ -18,6 +20,7 @@ import type {
   TopSellingProductsChartDTO,
   TerritoryProductChartSeriesDTO,
 } from "@/types/product-sales-territory";
+import { formatLocalDateOnly } from "./product-sales-validation";
 
 function toDiagnosticsDTO(
   diagnostics: ProductSalesAttributionDiagnostics,
@@ -113,5 +116,29 @@ export function toTopSellingProductsChartDTO(
     diagnostics: toDiagnosticsDTO(chart.diagnostics),
     reportHref: chart.reportHref,
     generatedAt: chart.generatedAt.toISOString(),
+  };
+}
+
+export function toTerritoryProductSalesPrintPayloadDTO(
+  payload: TerritoryProductSalesPrintPayload,
+): TerritoryProductSalesPrintPayloadDTO {
+  return {
+    mode: payload.mode,
+    generatedAt: payload.generatedAt.toISOString(),
+    preparedForRole: payload.preparedForRole,
+    filters: {
+      from: formatLocalDateOnly(payload.filters.from),
+      to: formatLocalDateOnly(payload.filters.to),
+      territoryId: payload.filters.territoryId,
+      territoryName: payload.filters.territoryName,
+      productId: payload.filters.productId,
+      categoryId: payload.filters.categoryId,
+      productSearch: payload.filters.productSearch,
+      view: payload.filters.view,
+      sort: payload.filters.sort,
+    },
+    rows: payload.rows.map(toRowDTO),
+    summary: toSummaryDTO(payload.summary),
+    diagnostics: toDiagnosticsDTO(payload.diagnostics),
   };
 }

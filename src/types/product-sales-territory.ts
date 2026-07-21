@@ -29,6 +29,8 @@ export type ActionResult<T> =
 
 export type ProductSalesViewMode = "territory-product" | "product-territory";
 
+export type ProductSalesPrintMode = "report";
+
 export type ProductSalesSort =
   | "quantity-desc"
   | "quantity-asc"
@@ -123,4 +125,31 @@ export interface ProductSalesFiltersDTO {
   page: number;
   pageSize: number;
   limit: number;
+  mode?: ProductSalesPrintMode | null;
+}
+
+export interface TerritoryProductSalesPrintFiltersDTO {
+  from: string;
+  to: string;
+  territoryId: string | null;
+  territoryName: string | null;
+  productId: string | null;
+  categoryId: string | null;
+  productSearch: string;
+  view: ProductSalesViewMode;
+  sort: ProductSalesSort;
+}
+
+/**
+ * Print payload — same report DTO rows/summary/diagnostics, plus print metadata.
+ * Quantities are Decimal(18,2) strings from the certified report mapper.
+ */
+export interface TerritoryProductSalesPrintPayloadDTO {
+  mode: ProductSalesPrintMode;
+  generatedAt: string;
+  preparedForRole: string;
+  filters: TerritoryProductSalesPrintFiltersDTO;
+  rows: TerritoryProductSalesRowDTO[];
+  summary: TerritoryProductSalesSummaryDTO;
+  diagnostics: ProductSalesAttributionDiagnosticsDTO;
 }

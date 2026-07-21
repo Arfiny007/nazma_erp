@@ -32,6 +32,7 @@ function buildScores(
       "RULE_PRODUCT_SALES_08",
       "RULE_PRODUCT_SALES_12",
       "RULE_PRODUCT_SALES_16",
+      "RULE_PRODUCT_SALES_17",
     ]),
     performance: scoreFromChecks(checks, [
       "RULE_PRODUCT_SALES_09",
@@ -42,11 +43,13 @@ function buildScores(
       "RULE_PRODUCT_SALES_14",
       "RULE_PRODUCT_SALES_15",
       "RULE_PRODUCT_SALES_16",
+      "RULE_PRODUCT_SALES_17",
     ]),
     dashboardReadiness: scoreFromChecks(checks, [
       "RULE_PRODUCT_SALES_11",
       "RULE_PRODUCT_SALES_12",
       "RULE_PRODUCT_SALES_13",
+      "RULE_PRODUCT_SALES_17",
     ]),
   };
 }
@@ -80,6 +83,8 @@ export function runTerritoryProductSalesCertification(): ProductSalesCertificati
       "Confirm Accounts cannot open /reports/product-sales-by-territory",
       "Confirm Manager foreign territoryId is rejected",
       "Confirm product/category/search filters load without SQL alias errors",
+      "Confirm print route uses mode=report and Document Platform branding",
+      "Confirm screen summary totals equal print summary totals",
       "Confirm Docker image recreate parity after final build",
     ],
     phase12bApproved,

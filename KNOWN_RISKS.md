@@ -3,9 +3,9 @@
 Operational risk register as of PHASE_06D completion. None are blocking for controlled production use of the Order → Invoice → Collection pipeline.
 
 **Overall readiness:** 9.3 / 10 (ADR-037)  
-**Last updated:** 2026-07-20 (PHASE_12B.1)
+**Last updated:** 2026-07-21 (PHASE_12B.2)
 
-### PHASE_12B / 12B.1 — Territory product sales risks
+### PHASE_12B / 12B.1 / 12B.2 — Territory product sales risks
 
 | ID | Risk | Mitigation | Status |
 |----|------|------------|--------|
@@ -14,6 +14,7 @@ Operational risk register as of PHASE_06D completion. None are blocking for cont
 | PS-R3 | Chart presentation uses JS number at SVG boundary | Aggregation remains Decimal; `valueLabel` preserves string | Accepted |
 | PS-R4 | No invoice territory snapshot | Historical ownership as-of `issueDate` (ADR-061) | Accepted |
 | PS-R5 | ~~Dynamic filters referenced `eii` before CTE existed~~ | Stage-aware `buildEligibleInvoiceItemFilters` + RULE_PRODUCT_SALES_16 | **Resolved** (PHASE_12B.1) |
+| PS-R6 | Print totals diverge from screen | Print consumes certified report DTO; RULE_PRODUCT_SALES_17 | **Resolved** (PHASE_12B.2) |
 
 ### PHASE_12A / 12A.1 — SR Performance reporting risks
 
